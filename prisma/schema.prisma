@@ -13,11 +13,17 @@ model User{
   user_nick String // 닉네임
   user_email String @unique
   user_allergy String? // 19가지 외 따로 입력받는 알러지
+  user_pro_img String @default("0") // 프로필 이미지 -> storage에서 받아옴, 지정 안하면 디폴트 0번으로 해둠
+  user_is_halal Int @default(0) // 0: 할랄아님, 1: 할랄인 회원
 
   user_apple Int?  @default(0) // 0: 일반 회원, 1: 애플로그인
 
+  
+  user_vegan Int? @default(0) // 0: 비건아님, 이외에는 비건 단계
+  vegan Vegan? @relation(fields: [user_vegan], references: [veg_id])
+
   // 다대다
-  user_allergy_common CommonAl[] @relation("UserAllergyCommon")
+  user_allergy_common CommonAl[] @relation("UserAllergyCommon") // 회원 가입시 입력받을때 "1,2,3,4,5" 숫자 스트링으로 받아올 예정 잘 갈라서 쓰셈
   
   LoginData LoginData[]
 }
@@ -40,7 +46,9 @@ model Sajang{
   sa_id Int @id @default(autoincrement())
   sa_email String @unique
   sa_signboard String // 가게 이름
+  sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int // 0 : 인증 불량, 1: 인증완료
+  sa_halal Int? // 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
 
   foods Food[] // 1:N 관계
   loginData LoginData[] // Opposite relation field for LoginData model
@@ -51,8 +59,8 @@ model Food {
   foo_id Int @id @default(autoincrement())
   foo_name String // 음식이름
   foo_material String? // 재료, 할랄은 할랄테이블에서 받아옴
-  foo_ishalal Int @default(0) // 0: 할랄아님 1: 할랄 => 블록체인 데이터 받아온다음에 확인해보기
-  foo_price Int? // 가격
+  // foo_ishalal Int @default(0) // 0: 할랄아님 1: 할랄인증 받음 => 블록체인 데이터 받아온다음에 확인해보기 => 인증 진위만 받아올 수 있음
+  foo_price Int // 가격
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
   
   
@@ -61,22 +69,15 @@ model Food {
   foo_sa_id Int // 업주 사장아이디
   Sajang Sajang @relation(fields: [foo_sa_id], references: [sa_id])
   
+  foo_vegan Int? // 비건 단계, 0: 비건아님, 1: 비건단계1, 2: 비건단계2, 3: 비건단계3
+  foo_vegan_data Vegan? @relation(fields: [foo_vegan], references: [veg_id])
+  
   // 할랄 nullable 1:1
-  foo_halal Int? @unique // 할랄음식이라면 데이터 조회할 키, 1:1
-  halal Halal? @relation(fields: [foo_halal], references: [hal_id])
+  // foo_halal Int? @unique // 할랄음식이라면 데이터 조회할 키, 1:1
+  // halal Halal? @relation(fields: [foo_halal], references: [hal_id])
 
   // 알러지 다대다
   CommonAl CommonAl[] @relation("CommonAlFood")
-}
-
-// 블록체인에서 받아올 할랄 음식 데이터
-model Halal{
-  hal_id Int @id @default(autoincrement())
-  hal_foo_name String // 음식 이름
-  hal_foo_material String // 음식 재료
-  hal_foo_img String? // 음식 이미지
-
-  food Food? @relation
 }
 
 // 19가지 보편적인 알러지
@@ -84,9 +85,19 @@ model Halal{
 model CommonAl{
   coal_id Int @id @default(autoincrement())
   coal_name String // 알러지 원료이름
+  coal_img String // 알러지 원료 이미지 -> storage에 저장할 예정
 
   food Food[] @relation("CommonAlFood")
 
   // 알러지 여러개 선택할 수 있음 , 다대다
   user User[] @relation("UserAllergyCommon")
+}
+
+model Vegan{
+  veg_id Int @id @default(autoincrement())
+  veg_name String // 비건 단계 이름
+  // veg_img String? // 비건 단계 이미지는 내장으로 함
+
+  food Food[] // 음식과 다대다 관계
+  user User[] // 유저와 1:1 
 }
