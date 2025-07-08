@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { EmailModule } from './email/email.module';
 import { AzureStorageModule } from './azure-storage/azure-storage.module';
+import { SajangModule } from './sajang/sajang.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { AzureStorageModule } from './azure-storage/azure-storage.module';
     CacheConfigModule,
     EmailModule,
     AzureStorageModule,
+    SajangModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

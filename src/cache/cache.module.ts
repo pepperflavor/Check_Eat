@@ -27,6 +27,6 @@ import { RedisCache, redisStore } from 'cache-manager-ioredis-yet';
     ConfigModule,
   ],
   controllers: [CacheController],
-  providers: [CacheService],
+  providers: [CacheService, CacheModule],
 })
 export class CacheConfigModule {}

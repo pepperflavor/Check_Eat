@@ -20,6 +20,7 @@ export class EmailService implements OnModuleInit {
       throw new Error('SEND_GRID_SENDER_EMAIL is not defined');
     }
 
+    // 유저가 지정한 언어에 따라서 안내 메일 언어
     const supportedLanguages = ['ko', 'en', 'ja', 'zh'];
 
     const msg = {
