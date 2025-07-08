@@ -2,7 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { CacheService } from 'src/cache/cache.service';
+import { EmailService } from 'src/email/email.service';
 import { SajangService } from 'src/sajang/sajang.service';
+import { CreateSajangDTO } from 'src/sajang/sajang_dto/create-sajang.dto';
 import { UserService } from 'src/user/user.service';
 import { CreateUserDTO } from 'src/user/user_dto/create-user.dto';
 
@@ -14,8 +16,20 @@ export class AuthService {
     private cacheService: CacheService,
     private userService: UserService,
     private sajangService: SajangService,
+    private readonly emailService: EmailService,
   ) {}
 
+
+  // 유저 회원가입
+  async signUpUser(){
+
+  }
+
+  // 사장 회원가입
+  async signUpSajang(){
+
+  }
+  
   // 유저 존재 여부 확인
   async validateUser(log_id: string, log_pwd: string) {
     const user = await this.userService.findById({ log_id, log_pwd });
@@ -28,6 +42,9 @@ export class AuthService {
     if (ld_usergrade == 0) {
       const result = await this.userService.createUser(data as CreateUserDTO);
     } else if (ld_usergrade == 1) {
+      const result = await this.sajangService.createSajang(
+        data as CreateSajangDTO,
+      );
     }
   }
 

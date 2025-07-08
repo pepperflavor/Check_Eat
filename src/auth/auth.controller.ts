@@ -2,6 +2,7 @@ import { Controller, Post } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { CreateUserDTO } from 'src/user/user_dto/create-user.dto';
+import { CreateSajangDTO } from 'src/sajang/sajang_dto/create-sajang.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -17,11 +18,13 @@ export class AuthController {
   // sajang.service에 로직 분리
   @Post('signup/sajang')
   @ApiOperation({summary: '사장 회원가입', description: '사장 회원가입'})
-  @ApiBody({ type: CreateUserDTO })
+  @ApiBody({ type: CreateSajangDTO })
   async registerSajang() {}
 
   // 이메일 중복확인
-  async checkEmailUnique() {}
+  async checkEmailUnique() {
+    
+  }
 
   // 이메일 본인인증, 토큰인증
   async checkEmailToken() {}

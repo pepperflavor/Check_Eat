@@ -10,6 +10,7 @@ import { PrismaService } from './prisma.service';
 import { EmailModule } from './email/email.module';
 import { AzureStorageModule } from './azure-storage/azure-storage.module';
 import { SajangModule } from './sajang/sajang.module';
+import { LoginDataModule } from './login-data/login-data.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SajangModule } from './sajang/sajang.module';
     EmailModule,
     AzureStorageModule,
     SajangModule,
+    LoginDataModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

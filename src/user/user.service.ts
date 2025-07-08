@@ -59,7 +59,7 @@ export class UserService {
     };
   }
 
-  // 로그인시 존재하는 아이디 인지 확인
+  // 로그인/ 회원가입때 존재하는 아이디 인지 확인
   async findById(loginDataDto: SignInDTO) {
     // const plainPWD = loginDataDto.ld_pwd;
 
@@ -74,6 +74,7 @@ export class UserService {
         '사용자 아이디가 존재하지 않습니다.',
         HttpStatus.NOT_FOUND,
       );
+
     }
 
     return user;
@@ -82,4 +83,5 @@ export class UserService {
   async comparePassword(plainPWD: string, hashedPWD: string): Promise<boolean> {
     return bcrypt.compare(plainPWD, hashedPWD);
   }
+
 }
