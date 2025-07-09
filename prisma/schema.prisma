@@ -49,8 +49,9 @@ model Sajang{
   sa_signboard String // 가게 이름
   sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int? // 인증 변경 횟수
+  sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
   sa_halal Int? // 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
-  sa_type Int? @default(0)// 업종, 0: 음식점, 1: 카페
+  sa_type Int? @default(0)// 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
   
   // 휴일
   holiday Holiday[] // Opposite relation field for Holiday model
@@ -66,7 +67,7 @@ model Food {
   foo_material String? // 재료, 할랄은 할랄테이블에서 받아옴
   foo_price Int // 가격
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
-  
+  foo_status Int @default(0) // 0: 정상판매중, 1: 사장 요청으로 판매 일시중지, 2: 삭제된 음식
   
   foo_allergy_common Int? // 19가지 보편적인 알러지중에서 포함된거
 
@@ -84,7 +85,13 @@ model Holiday{
   holi_id Int @id @default(autoincrement())
   holi_weekday Int // 요일, 0: 일요일, 1:월요일 ...
   holi_break String // 브레이크 타임
-  holi_runtime String // 영업시간
+  holi_runtime_sun String? // 일요일 영업시간
+  holi_runtime_mon String? // 월요일 영업시간... 이런식으로 요일별 컬럼 추가하기
+  holi_runtime_tue String? // 화요일 영업시간  0
+  holi_runtime_wed String? // 수요일 영업시간
+  holi_runtime_thu String? // 목요일 영업시간
+  holi_runtime_fri String? // 금요일 영업시간
+  holi_runtime_sat String? // 토요일 영업시간
 
   holi_regular String? // 정기 휴일
   holi_public String? // 한국 공휴일들 중에 쉬는날
@@ -113,4 +120,10 @@ model Vegan{
 
   food Food[] // 음식과 다대다 관계
   user User[] // 유저와 1:1 
+}
+
+// 리뷰 테이블 추가 해야함
+model Review{
+  revi_id Int @id @default(autoincrement())
+  revi_content String
 }
