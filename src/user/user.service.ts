@@ -4,6 +4,7 @@ import { SignInDTO } from './user_dto/sign-in.dto';
 import * as bcrypt from 'bcrypt';
 import { CreateUserDTO } from './user_dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
+import { randomNickMaker } from './randomNick';
 
 @Injectable()
 export class UserService {
@@ -15,7 +16,7 @@ export class UserService {
   async createUser(createDTO: CreateUserDTO) {
     const SALT = this.config.get('BCRYPT_SALT_ROUNDS');
 
-    const {
+    let {
       log_Id,
       log_pwd,
       email,
@@ -27,6 +28,10 @@ export class UserService {
     } = createDTO;
 
     const hashedPWD = await bcrypt.hash(log_pwd, SALT);
+
+    if (nickname == '' || nickname == undefined) {
+      nickname = randomNickMaker(1, 'ko');
+    }
 
     const user = await this.prisma.user.create({
       data: {
@@ -74,7 +79,6 @@ export class UserService {
         '사용자 아이디가 존재하지 않습니다.',
         HttpStatus.NOT_FOUND,
       );
-
     }
 
     return user;
@@ -84,4 +88,5 @@ export class UserService {
     return bcrypt.compare(plainPWD, hashedPWD);
   }
 
+  // 닉네임 변경
 }

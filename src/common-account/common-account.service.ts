@@ -7,7 +7,7 @@ import { PrismaService } from 'src/prisma.service';
 
 // 로그인, 회원가입시 공통 기능 부분 분리
 @Injectable()
-export class LoginDataService {
+export class CommonAccountService {
   constructor(private readonly prisma: PrismaService) {}
 
   //  이메일 중복확인
@@ -158,4 +158,25 @@ export class LoginDataService {
   // 아이디 잊었을때
 
   // 아이디 비번으로 로그인
+  async findById(inputId: string) {
+    const isExist = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: inputId,
+      },
+    });
+
+    return isExist;
+  }
+
+  async updateRefreshToken(ld_id, refreshToken) {
+    const result = await this.prisma.loginData.update({
+      where: {
+        ld_id: ld_id,
+      },
+      data: {
+        ld_refresh_token: refreshToken,
+      },
+    });
+    return result;
+  }
 }

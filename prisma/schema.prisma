@@ -46,18 +46,19 @@ model LoginData{
 model Sajang{
   sa_id Int @id @default(autoincrement())
   sa_email String @unique
-  sa_signboard String // 가게 이름
   sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int? // 인증 변경 횟수
   sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
-  sa_halal Int? // 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
-  sa_type Int? @default(0)// 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
+  // sa_halal Int? // 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
+  // sa_type Int? @default(0)// 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
   
   // 휴일
-  holiday Holiday[] // Opposite relation field for Holiday model
+  // holiday Holiday[] // Opposite relation field for Holiday model
 
   foods Food[] // 1:N 관계
   loginData LoginData[] // Opposite relation field for LoginData model
+
+  Store Store[] @relation("SajangStore") // 사장이 가게 여러개 가질 수 있다고 함 수정필요
 }
 
 
@@ -79,6 +80,10 @@ model Food {
 
   // 알러지 다대다
   CommonAl CommonAl[] @relation("CommonAlFood")
+
+  Store Store[]
+
+  review Review[] @relation("ReviewFoods") // 음식과 다대다 관계
 }
 
 model Holiday{
@@ -97,7 +102,9 @@ model Holiday{
   holi_public String? // 한국 공휴일들 중에 쉬는날
 
   holi_sajang_id Int
-  sajang Sajang @relation(fields: [holi_sajang_id], references: [sa_id])
+  // sajang Sajang @relation(fields: [holi_sajang_id], references: [sa_id])
+
+  Store Store[]
 }
 
 // 19가지 보편적인 알러지
@@ -125,5 +132,29 @@ model Vegan{
 // 리뷰 테이블 추가 해야함
 model Review{
   revi_id Int @id @default(autoincrement())
-  revi_content String
+  revi_img String? // 음식사진
+  revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함
+  revi_content String? // 추천/ 추천안했을 때 텍스트
+  
+
+foods Food[] @relation("ReviewFoods") // 음식과 다대다 관계
+
+  Store Store[]
+}
+
+model Store{
+  sto_id Int @id @default(autoincrement())
+  sto_name String // 가게 이름
+  sto_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
+  sto_halal Int @default(0)// 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
+  sto_type String? // 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
+
+  sto_sa_id Int
+  sajang Sajang @relation("SajangStore", fields: [sto_sa_id], references: [sa_id])
+
+
+  holiday Holiday[] // Opposite relation field for Holiday model
+  review Review[] // Opposite relation field for Review model
+
+  Food Food[]
 }

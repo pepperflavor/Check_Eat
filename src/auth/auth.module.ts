@@ -6,6 +6,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UserModule } from 'src/user/user.module';
 import { CacheConfigModule } from 'src/cache/cache.module';
 import { EmailModule } from 'src/email/email.module';
+import { CommonAccountModule } from 'src/common-account/common-account.module';
+import { SajangModule } from 'src/sajang/sajang.module';
 
 @Module({
   imports: [
@@ -22,6 +24,8 @@ import { EmailModule } from 'src/email/email.module';
     UserModule,
     CacheConfigModule,
     EmailModule,
+    CommonAccountModule,
+    SajangModule,
   ],
   controllers: [AuthController],
   providers: [AuthService],
