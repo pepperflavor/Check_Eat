@@ -36,7 +36,7 @@ export class UserService {
     const user = await this.prisma.user.create({
       data: {
         user_nick: nickname,
-        user_email: email,
+
         user_allergy: allergy,
         user_vegan: vegan,
         user_is_halal: isHalal,
@@ -52,6 +52,7 @@ export class UserService {
       data: {
         ld_log_id: log_Id,
         ld_pwd: hashedPWD,
+        ld_email: email,
         ld_usergrade: 0,
         ld_user_id: user.user_id, // 유저 아이디 연결
       },
@@ -84,9 +85,8 @@ export class UserService {
     return user;
   }
 
-  async comparePassword(plainPWD: string, hashedPWD: string): Promise<boolean> {
-    return bcrypt.compare(plainPWD, hashedPWD);
-  }
-
   // 닉네임 변경
+
+  // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장
+  async updateUserMypage() {}
 }

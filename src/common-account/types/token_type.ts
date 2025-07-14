@@ -28,6 +28,11 @@ export type SajangLoginToken = Prisma.LoginDataGetPayload<{
         sa_id: true;
         sa_email: true;
         sa_certi_status: true;
+        Store: {
+          select: {
+            sto_id: true;
+          };
+        };
       };
     };
   };

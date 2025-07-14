@@ -11,7 +11,6 @@ datasource db {
 model User{
   user_id Int @id @default(autoincrement())
   user_nick String // 닉네임
-  user_email String @unique
   user_allergy String? // 19가지 외 따로 입력받는 알러지
   user_pro_img String @default("0") // 프로필 이미지 -> storage에서 받아옴, 지정 안하면 디폴트 0번으로 해둠
   user_is_halal Int @default(0) // 0: 할랄아님, 1: 할랄인 회원
@@ -32,9 +31,11 @@ model LoginData{
   ld_id Int @id @default(autoincrement())
   ld_usergrade Int // 0: 일반유저, 1: 업주
   ld_log_id String @unique // 로그인 아이디
+  ld_email String @unique // 이메일
   ld_pwd String // 비밀번호
   ld_refresh_token String? // 리프레시 토큰
   ld_status Int @default(0) // 0: 활성화 되어있음, 1: 탈퇴 대기, 2: 회원 탈퇴함
+
 
   ld_user_id Int? // 유저 테이블에 저장되어있는 id 인덱스
   user User? @relation(fields: [ld_user_id], references: [user_id])
@@ -45,15 +46,10 @@ model LoginData{
 
 model Sajang{
   sa_id Int @id @default(autoincrement())
-  sa_email String @unique
+
   sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int? // 인증 변경 횟수
   sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
-  // sa_halal Int? // 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
-  // sa_type Int? @default(0)// 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
-  
-  // 휴일
-  // holiday Holiday[] // Opposite relation field for Holiday model
 
   foods Food[] // 1:N 관계
   loginData LoginData[] // Opposite relation field for LoginData model
@@ -80,10 +76,26 @@ model Food {
 
   // 알러지 다대다
   CommonAl CommonAl[] @relation("CommonAlFood")
-
   Store Store[]
 
-  review Review[] @relation("ReviewFoods") // 음식과 다대다 관계
+  // 음식과 다대다 관계
+  review Review[] @relation("ReviewFoods") 
+
+  // 음식 번역
+  ft_id Int // 다국어 
+  FoodTranslate FoodTranslate @relation(fields: [ft_id], references: [ft_id])
+}
+
+model FoodTranslate{
+  ft_id Int @id @default(autoincrement())
+  ft_name_en String? // 음식 이름 영어
+  ft_name_ab String? // 음식 이름 아랍어
+  ft_mt_en String? // 재료 영어
+  ft_mt_ab String? // 재료 아랍어
+  ft_price_en String? // 가격 영어
+  ft_price_ab String? // 가격 아랍어
+  
+  Food Food[]
 }
 
 model Holiday{

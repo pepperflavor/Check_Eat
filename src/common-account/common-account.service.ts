@@ -4,102 +4,74 @@ import {
   UserLoginToken,
 } from 'src/common-account/types/token_type';
 import { PrismaService } from 'src/prisma.service';
+import * as bcrypt from 'bcrypt';
+import { CacheService } from 'src/cache/cache.service';
 
 // 로그인, 회원가입시 공통 기능 부분 분리
 @Injectable()
 export class CommonAccountService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private cache: CacheService,
+  ) {}
 
   //  이메일 중복확인
-  async isExistEmail(id: string, user_grade: number) {
+  async isExistEmail(inputEmail: string) {
     const checkLogEmail = await this.prisma.loginData.findUnique({
       where: {
-        ld_log_id: id,
+        ld_email: inputEmail,
       },
     });
 
-    if (
-      checkLogEmail &&
-      checkLogEmail.ld_usergrade == 0 &&
-      checkLogEmail.ld_user_id !== null
-    ) {
-      // 개인유저
-      const isExistUserEmail = await this.prisma.user.findUnique({
-        where: {
-          user_id: checkLogEmail.ld_user_id,
-        },
-        select: {
-          user_email: true,
-        },
-      });
-
-      return isExistUserEmail
-        ? { message: '이메일이 존재합니다', status: HttpStatus.CONFLICT }
-        : {
-            message: '이메일이 존재하지 않습니다',
-            status: HttpStatus.OK,
-          };
-    } else if (
-      checkLogEmail &&
-      checkLogEmail.ld_usergrade == 1 &&
-      checkLogEmail.ld_sajang_id !== null
-    ) {
-      // 사장일때
-      const isExistSajangEmail = await this.prisma.sajang.findUnique({
-        where: {
-          sa_id: checkLogEmail.ld_sajang_id,
-        },
-        select: {
-          sa_email: true,
-        },
-      });
-
-      return isExistSajangEmail
-        ? { message: '이메일이 존재합니다', status: HttpStatus.CONFLICT }
-        : {
-            message: '이메일이 존재하지 않습니다',
-            status: HttpStatus.OK,
-          };
-    }
+    return checkLogEmail
+      ? {
+          message: '이미 가입된 이메일입니다',
+          status: HttpStatus.CONFLICT,
+        }
+      : {
+          message: '가입 가능한 이메일입니다',
+          status: HttpStatus.OK,
+        };
   }
 
   // 아이디 중복확인
-  async isExistID(id: string, user_grade: number) {
-    const idData = await this.prisma.loginData.findUnique({
+  async isExistID(inputId: string) {
+    const result = await this.prisma.loginData.findUnique({
       where: {
-        ld_log_id: id,
+        ld_log_id: inputId,
       },
     });
 
-    if (idData && user_grade == 0 && idData.ld_user_id !== null) {
-      // 개인유저
-      const isExistUserID = await this.prisma.user.findUnique({
-        where: {
-          user_id: idData.ld_user_id,
-        },
-        select: {
-          user_id: true,
-        },
-      });
+    return result
+      ? { message: '아이디가 존재합니다', status: HttpStatus.CONFLICT }
+      : { message: '아이디가 존재하지 않습니다', status: HttpStatus.OK };
 
-      return isExistUserID
-        ? { message: '아이디가 존재합니다', status: HttpStatus.CONFLICT }
-        : { message: '아이디가 존재하지 않습니다', status: HttpStatus.OK };
-    } else if (idData && user_grade == 1 && idData.ld_sajang_id !== null) {
-      // 사장일때
-      const isExistSajangID = await this.prisma.sajang.findUnique({
-        where: {
-          sa_id: idData.ld_sajang_id,
-        },
-        select: {
-          sa_id: true,
-        },
-      });
+    // if (idData && user_grade == 0 && idData.ld_user_id !== null) {
+    //   // 개인유저
+    //   const isExistUserID = await this.prisma.user.findUnique({
+    //     where: {
+    //       user_id: idData.ld_user_id,
+    //     },
+    //     select: {
+    //       user_id: true,
+    //     },
+    //   });
 
-      return isExistSajangID
-        ? { message: '아이디가 존재합니다', status: HttpStatus.CONFLICT }
-        : { message: '아이디가 존재하지 않습니다', status: HttpStatus.OK };
-    }
+    //   return isExistUserID
+    //     ? { message: '아이디가 존재합니다', status: HttpStatus.CONFLICT }
+    //     : { message: '아이디가 존재하지 않습니다', status: HttpStatus.OK };
+    // } else if (idData && user_grade == 1 && idData.ld_sajang_id !== null) {
+    //   // 사장일때
+    //   const isExistSajangID = await this.prisma.sajang.findUnique({
+    //     where: {
+    //       sa_id: idData.ld_sajang_id,
+    //     },
+    //     select: {
+    //       sa_id: true,
+    //     },
+    //   });
+
+    // }
   }
 
   // 로그인 시 데이터 조회, 토큰 생성 데이터
@@ -109,15 +81,12 @@ export class CommonAccountService {
   ): Promise<UserLoginToken | SajangLoginToken> {
     if (ld_usergrade == 0) {
       const data = await this.prisma.loginData.findUnique({
-        where: {
-          ld_log_id: ld_id,
-        },
+        where: { ld_log_id: ld_id },
         include: {
           user: {
             select: {
               user_id: true,
               user_nick: true,
-              user_email: true,
               user_allergy: true,
               user_vegan: true,
               user_is_halal: true,
@@ -131,7 +100,7 @@ export class CommonAccountService {
           },
         },
       });
-      return data!;
+      return data! as UserLoginToken;
     } else if (ld_usergrade == 1) {
       const data = await this.prisma.loginData.findUnique({
         where: {
@@ -141,14 +110,18 @@ export class CommonAccountService {
           sajang: {
             select: {
               sa_id: true,
-              sa_email: true,
               sa_certi_status: true,
+              Store: {
+                select: {
+                  sto_id: true,
+                },
+              },
             },
           },
         },
       });
 
-      return data!;
+      return data! as SajangLoginToken;
     }
     throw new Error('유저데이터 조회안됨');
   }
@@ -168,7 +141,8 @@ export class CommonAccountService {
     return isExist;
   }
 
-  async updateRefreshToken(ld_id, refreshToken) {
+  // 리프레시 토큰 업데이트
+  async updateRefreshToken(ld_id, refreshToken: string) {
     const result = await this.prisma.loginData.update({
       where: {
         ld_id: ld_id,
@@ -179,4 +153,13 @@ export class CommonAccountService {
     });
     return result;
   }
+
+  async comparePassword(plainPWD: string, hashedPWD: string): Promise<boolean> {
+    return bcrypt.compare(plainPWD, hashedPWD);
+  }
+
+  // 이메일 본인 인증 관련
+
+  // 이메일 토큰 검증
+  async verifyEmailToken(email: string, inputCode: string) {}
 }

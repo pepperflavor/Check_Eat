@@ -10,8 +10,9 @@ import { PrismaService } from './prisma.service';
 import { EmailModule } from './email/email.module';
 import { AzureStorageModule } from './azure-storage/azure-storage.module';
 import { SajangModule } from './sajang/sajang.module';
-import { LoginDataModule } from './login-data/login-data.module';
+
 import { CommonAccountModule } from './common-account/common-account.module';
+import { TranslateModule } from './translate/translate.module';
 
 @Module({
   imports: [
@@ -25,8 +26,9 @@ import { CommonAccountModule } from './common-account/common-account.module';
     EmailModule,
     AzureStorageModule,
     SajangModule,
-    LoginDataModule,
+
     CommonAccountModule,
+    TranslateModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -5,9 +5,20 @@ import { SajangService } from './sajang.service';
 export class SajangController {
   constructor(private readonly sajangService: SajangService) {}
 
+
+  // 음식 사진 찍으면 재료명 추출해줌
+  @Post('recommend-meterials')
+  async recommendMeterials(){
+    return await this.sajangService.recommendMeterials();
+  }
+
+
+
   // 음식 등록
   @Post('regist-food')
-  async registFood() {}
+  async registFood() {
+    return await this.sajangService.registFood()
+  }
 
   // 할랄 업장 인증
   @Post('regist-halal')

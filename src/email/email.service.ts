@@ -23,6 +23,16 @@ export class EmailService implements OnModuleInit {
     // 유저가 지정한 언어에 따라서 안내 메일 언어
     const supportedLanguages = ['ko', 'en', 'ja', 'zh'];
 
+    let userlang = '';
+
+    switch (userlang) {
+      case 'ko':
+        break;
+
+      default:
+        break;
+    }
+
     const msg = {
       to: email,
       from: from,
