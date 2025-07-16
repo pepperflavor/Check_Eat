@@ -27,6 +27,6 @@ export class SajangService {
     return materials;
   }
 
-  // 음식 등록 -> 등록하면 이떄 번역도 해서 db에 저장
+  // 음식 등록 -> 등록하면 이때 번역도 해서 db에 저장
   async registFood() {}
 }

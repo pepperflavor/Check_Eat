@@ -28,7 +28,22 @@ export class AuthService {
   ) {}
 
   // 유저 회원가입
-  async signUpUser() {}
+  async signUpUser(data: CreateUserDTO) {
+    // 한번더 검증
+    const isId = await this.commonService.isExistID(data.log_Id);
+    const isEmail = await this.commonService.isExistEmail(data.email);
+
+    if (isId && isEmail) {
+      throw new UnauthorizedException(
+        '이미 존재하는 아이디 또는 이메일입니다.',
+      );
+    }
+
+    const result = await this.userService.createUser(data);
+
+    console.log(result);
+    return result;
+  }
 
   // 사장 회원가입
   async signUpSajang() {}

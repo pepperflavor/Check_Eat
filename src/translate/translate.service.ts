@@ -32,7 +32,7 @@ export class TranslateService {
       //   console.log(JSON.stringify(response.data, null, 4));
       const translations = response.data[0]?.translations;
 
-      console.log(translations[0].text); // 텍스트만 나옴
+      console.log(translations[0].text); // 텍스트만 나옴, 첫번째 언어 번역본
 
       return translations[0].text;
       /*
@@ -62,7 +62,7 @@ export class TranslateService {
   }
 
   // 여러 단어, 다국어
-  // 영어 아랍어로 픽스하자...ㅎ
+  // 영어 아랍어로 픽스?
   async translateMany(inputText: string, to: string, from: string | string[]) {
     const URL = `${this.config.get('TRANSLATE_ENDPOINT')}/translate`;
     // [ar, en] - 아랍어, 영어로 번역

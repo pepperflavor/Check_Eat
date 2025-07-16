@@ -24,7 +24,9 @@ export class AuthController {
     description: '개인 유저 회원가입',
   })
   @ApiBody({ type: CreateUserDTO })
-  async registerUser() {}
+  async registerUser(@Body() data: CreateUserDTO) {
+    return await this.authService.signUpUser(data)
+  }
 
   // 사장 회원가입, 사업자 등록증 데이터를 받아야 해서 엔드포인트 분리함
   // sajang.service에 로직 분리

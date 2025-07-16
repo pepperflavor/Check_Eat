@@ -29,6 +29,7 @@ export class UserService {
 
     const hashedPWD = await bcrypt.hash(log_pwd, SALT);
 
+    // 여기서 닉네임 랜덤인거 수정해주기
     if (nickname == '' || nickname == undefined) {
       nickname = randomNickMaker(1, 'ko');
     }
@@ -36,7 +37,6 @@ export class UserService {
     const user = await this.prisma.user.create({
       data: {
         user_nick: nickname,
-
         user_allergy: allergy,
         user_vegan: vegan,
         user_is_halal: isHalal,
