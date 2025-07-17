@@ -126,7 +126,9 @@ export class AuthService {
           user_nick: user.user.user_nick,
         };
       }
+      
       return payload;
+
     } else if (ld_usergrade == 1) {
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,

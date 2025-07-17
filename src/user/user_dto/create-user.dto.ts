@@ -13,7 +13,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CreateUserDTO {
   @ApiProperty({
     example: 'loveHALAL',
-    description: '로그인을 위함 아이디, 유니크',
+    description: '가입을 위한 아이디, 유니크',
   })
   @IsString()
   log_Id: string;

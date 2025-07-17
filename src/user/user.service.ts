@@ -31,7 +31,7 @@ export class UserService {
 
     // 여기서 닉네임 랜덤인거 수정해주기
     if (nickname == '' || nickname == undefined) {
-      nickname = randomNickMaker(1, 'ko');
+      nickname = randomNickMaker(1, 'ko'); // 닉네임도 랜덤으로 돌리기
     }
 
     const user = await this.prisma.user.create({
