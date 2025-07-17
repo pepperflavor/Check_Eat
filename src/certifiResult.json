@@ -1,0 +1,5242 @@
+{
+	"status": "succeeded",
+	"createdDateTime": "2025-07-17T17:59:25Z",
+	"lastUpdatedDateTime": "2025-07-17T17:59:25Z",
+	"analyzeResult": {
+		"apiVersion": "2024-11-30",
+		"modelId": "business-Certification",
+		"stringIndexType": "utf16CodeUnit",
+		"content": "nts.go.k\n사업자 등록 증 ( 간이과세자 ) 등록번호 : 158-21-01074\n상 성\n호 : 베이커스키친\n명 : 이나래 생 년 월 일 : 1985 년 08 월 29 일\n개 업 연 월 일 : 2019 년 12 월 16 일\n사업장 소재지 : 경기도 수원시 장안구 장안로 232, 상가동 2층 10호(정자동, 동신아 파트)\n사 업 의 종류 : 업태 음식점업\n종목 커피 전문점\n발급 사 유 : 신규 공동 사업 자 :\nWANTTO SERVICE FEE O NATIONAL TAX SER\n국세청\n사업자 단위 과세 적용사업자 여부 : 여( ) 부(V)\n전자세금계산서 전용 전자우편주소 :\n2019 년 12 월 03 일\n수원 세 무서 장\n유리하게 대책회의 ツ\n국세청\n국세청 National Tax Service\nツ\nツ :unselected: :selected:",
+		"pages": [
+			{
+				"pageNumber": 1,
+				"angle": -0.024800000712275505,
+				"width": 1280,
+				"height": 1706,
+				"unit": "pixel",
+				"words": [
+					{
+						"content": "nts.go.k",
+						"polygon": [
+							1046,
+							84,
+							1046,
+							1,
+							1067,
+							1,
+							1068,
+							85
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 0,
+							"length": 8
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							395,
+							87,
+							448,
+							87,
+							448,
+							145,
+							395,
+							145
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 9,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							488,
+							87,
+							531,
+							87,
+							531,
+							145,
+							488,
+							146
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 10,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							576,
+							87,
+							627,
+							86,
+							627,
+							145,
+							575,
+							145
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 11,
+							"length": 1
+						}
+					},
+					{
+						"content": "등",
+						"polygon": [
+							664,
+							86,
+							715,
+							86,
+							715,
+							145,
+							664,
+							146
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 13,
+							"length": 1
+						}
+					},
+					{
+						"content": "록",
+						"polygon": [
+							753,
+							86,
+							804,
+							86,
+							805,
+							146,
+							753,
+							146
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 14,
+							"length": 1
+						}
+					},
+					{
+						"content": "증",
+						"polygon": [
+							842,
+							86,
+							896,
+							87,
+							896,
+							145,
+							842,
+							145
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 16,
+							"length": 1
+						}
+					},
+					{
+						"content": "(",
+						"polygon": [
+							499,
+							158,
+							512,
+							158,
+							512,
+							202,
+							499,
+							202
+						],
+						"confidence": 0.993,
+						"span": {
+							"offset": 18,
+							"length": 1
+						}
+					},
+					{
+						"content": "간",
+						"polygon": [
+							543,
+							158,
+							575,
+							158,
+							575,
+							202,
+							543,
+							202
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 20,
+							"length": 1
+						}
+					},
+					{
+						"content": "이",
+						"polygon": [
+							581,
+							158,
+							616,
+							157,
+							616,
+							201,
+							581,
+							202
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 21,
+							"length": 1
+						}
+					},
+					{
+						"content": "과",
+						"polygon": [
+							627,
+							158,
+							656,
+							158,
+							656,
+							201,
+							627,
+							201
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 22,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							674,
+							158,
+							701,
+							157,
+							701,
+							201,
+							674,
+							201
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 23,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							712,
+							157,
+							746,
+							157,
+							746,
+							201,
+							712,
+							201
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 24,
+							"length": 1
+						}
+					},
+					{
+						"content": ")",
+						"polygon": [
+							776,
+							157,
+							789,
+							157,
+							789,
+							201,
+							776,
+							201
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 26,
+							"length": 1
+						}
+					},
+					{
+						"content": "등",
+						"polygon": [
+							436,
+							219,
+							470,
+							219,
+							470,
+							257,
+							436,
+							258
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 28,
+							"length": 1
+						}
+					},
+					{
+						"content": "록",
+						"polygon": [
+							477,
+							219,
+							509,
+							219,
+							509,
+							257,
+							477,
+							257
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 29,
+							"length": 1
+						}
+					},
+					{
+						"content": "번",
+						"polygon": [
+							518,
+							219,
+							547,
+							219,
+							547,
+							257,
+							518,
+							257
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 30,
+							"length": 1
+						}
+					},
+					{
+						"content": "호",
+						"polygon": [
+							556,
+							219,
+							589,
+							219,
+							589,
+							257,
+							556,
+							257
+						],
+						"confidence": 0.993,
+						"span": {
+							"offset": 31,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							611,
+							219,
+							617,
+							219,
+							617,
+							257,
+							611,
+							257
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 33,
+							"length": 1
+						}
+					},
+					{
+						"content": "158-21-01074",
+						"polygon": [
+							641,
+							219,
+							875,
+							219,
+							875,
+							256,
+							641,
+							256
+						],
+						"confidence": 0.975,
+						"span": {
+							"offset": 35,
+							"length": 12
+						}
+					},
+					{
+						"content": "상",
+						"polygon": [
+							107,
+							284,
+							133,
+							287,
+							132,
+							312,
+							106,
+							310
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 48,
+							"length": 1
+						}
+					},
+					{
+						"content": "성",
+						"polygon": [
+							107,
+							335,
+							132,
+							338,
+							132,
+							363,
+							106,
+							360
+						],
+						"confidence": 0.984,
+						"span": {
+							"offset": 50,
+							"length": 1
+						}
+					},
+					{
+						"content": "호",
+						"polygon": [
+							303,
+							284,
+							327,
+							284,
+							327,
+							312,
+							303,
+							311
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 52,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							354,
+							284,
+							359,
+							284,
+							359,
+							312,
+							354,
+							312
+						],
+						"confidence": 0.983,
+						"span": {
+							"offset": 54,
+							"length": 1
+						}
+					},
+					{
+						"content": "베",
+						"polygon": [
+							382,
+							284,
+							403,
+							284,
+							403,
+							312,
+							381,
+							312
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 56,
+							"length": 1
+						}
+					},
+					{
+						"content": "이",
+						"polygon": [
+							410,
+							284,
+							430,
+							284,
+							430,
+							312,
+							409,
+							312
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 57,
+							"length": 1
+						}
+					},
+					{
+						"content": "커",
+						"polygon": [
+							437,
+							283,
+							458,
+							283,
+							458,
+							312,
+							437,
+							312
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 58,
+							"length": 1
+						}
+					},
+					{
+						"content": "스",
+						"polygon": [
+							466,
+							283,
+							487,
+							284,
+							487,
+							312,
+							466,
+							312
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 59,
+							"length": 1
+						}
+					},
+					{
+						"content": "키",
+						"polygon": [
+							494,
+							283,
+							515,
+							283,
+							515,
+							312,
+							494,
+							312
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 60,
+							"length": 1
+						}
+					},
+					{
+						"content": "친",
+						"polygon": [
+							523,
+							283,
+							547,
+							283,
+							547,
+							312,
+							523,
+							312
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 61,
+							"length": 1
+						}
+					},
+					{
+						"content": "명",
+						"polygon": [
+							302,
+							335,
+							324,
+							335,
+							324,
+							362,
+							302,
+							362
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 63,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							354,
+							335,
+							359,
+							335,
+							359,
+							362,
+							354,
+							362
+						],
+						"confidence": 0.984,
+						"span": {
+							"offset": 65,
+							"length": 1
+						}
+					},
+					{
+						"content": "이",
+						"polygon": [
+							381,
+							335,
+							392,
+							335,
+							392,
+							362,
+							381,
+							362
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 67,
+							"length": 1
+						}
+					},
+					{
+						"content": "나",
+						"polygon": [
+							403,
+							335,
+							432,
+							335,
+							432,
+							362,
+							403,
+							362
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 68,
+							"length": 1
+						}
+					},
+					{
+						"content": "래",
+						"polygon": [
+							438,
+							335,
+							462,
+							335,
+							462,
+							362,
+							438,
+							362
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 69,
+							"length": 1
+						}
+					},
+					{
+						"content": "생",
+						"polygon": [
+							707,
+							332,
+							731,
+							332,
+							731,
+							361,
+							707,
+							361
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 71,
+							"length": 1
+						}
+					},
+					{
+						"content": "년",
+						"polygon": [
+							753,
+							332,
+							773,
+							332,
+							773,
+							361,
+							752,
+							361
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 73,
+							"length": 1
+						}
+					},
+					{
+						"content": "월",
+						"polygon": [
+							794,
+							332,
+							815,
+							332,
+							815,
+							360,
+							794,
+							360
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 75,
+							"length": 1
+						}
+					},
+					{
+						"content": "일",
+						"polygon": [
+							837,
+							332,
+							857,
+							332,
+							857,
+							360,
+							837,
+							360
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 77,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							888,
+							331,
+							892,
+							331,
+							892,
+							360,
+							888,
+							360
+						],
+						"confidence": 0.986,
+						"span": {
+							"offset": 79,
+							"length": 1
+						}
+					},
+					{
+						"content": "1985",
+						"polygon": [
+							915,
+							331,
+							968,
+							331,
+							968,
+							360,
+							915,
+							360
+						],
+						"confidence": 0.987,
+						"span": {
+							"offset": 81,
+							"length": 4
+						}
+					},
+					{
+						"content": "년",
+						"polygon": [
+							985,
+							331,
+							1007,
+							331,
+							1007,
+							360,
+							985,
+							360
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 86,
+							"length": 1
+						}
+					},
+					{
+						"content": "08",
+						"polygon": [
+							1026,
+							331,
+							1054,
+							331,
+							1054,
+							360,
+							1027,
+							360
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 88,
+							"length": 2
+						}
+					},
+					{
+						"content": "월",
+						"polygon": [
+							1071,
+							331,
+							1093,
+							331,
+							1093,
+							360,
+							1071,
+							360
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 91,
+							"length": 1
+						}
+					},
+					{
+						"content": "29",
+						"polygon": [
+							1111,
+							331,
+							1139,
+							330,
+							1140,
+							359,
+							1112,
+							359
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 93,
+							"length": 2
+						}
+					},
+					{
+						"content": "일",
+						"polygon": [
+							1157,
+							330,
+							1182,
+							330,
+							1182,
+							359,
+							1157,
+							359
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 96,
+							"length": 1
+						}
+					},
+					{
+						"content": "개",
+						"polygon": [
+							108,
+							384,
+							131,
+							383,
+							131,
+							413,
+							108,
+							414
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 98,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							158,
+							383,
+							178,
+							383,
+							178,
+							413,
+							158,
+							413
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 100,
+							"length": 1
+						}
+					},
+					{
+						"content": "연",
+						"polygon": [
+							207,
+							383,
+							228,
+							383,
+							228,
+							412,
+							207,
+							413
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 102,
+							"length": 1
+						}
+					},
+					{
+						"content": "월",
+						"polygon": [
+							254,
+							383,
+							276,
+							383,
+							276,
+							412,
+							254,
+							412
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 104,
+							"length": 1
+						}
+					},
+					{
+						"content": "일",
+						"polygon": [
+							304,
+							383,
+							325,
+							383,
+							325,
+							412,
+							304,
+							412
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 106,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							354,
+							382,
+							359,
+							382,
+							359,
+							412,
+							354,
+							412
+						],
+						"confidence": 0.953,
+						"span": {
+							"offset": 108,
+							"length": 1
+						}
+					},
+					{
+						"content": "2019",
+						"polygon": [
+							379,
+							382,
+							435,
+							382,
+							435,
+							412,
+							379,
+							412
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 110,
+							"length": 4
+						}
+					},
+					{
+						"content": "년",
+						"polygon": [
+							452,
+							382,
+							473,
+							382,
+							473,
+							411,
+							452,
+							412
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 115,
+							"length": 1
+						}
+					},
+					{
+						"content": "12",
+						"polygon": [
+							496,
+							382,
+							520,
+							382,
+							520,
+							411,
+							496,
+							411
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 117,
+							"length": 2
+						}
+					},
+					{
+						"content": "월",
+						"polygon": [
+							537,
+							382,
+							558,
+							382,
+							559,
+							411,
+							537,
+							411
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 120,
+							"length": 1
+						}
+					},
+					{
+						"content": "16",
+						"polygon": [
+							580,
+							382,
+							604,
+							381,
+							605,
+							410,
+							581,
+							411
+						],
+						"confidence": 0.993,
+						"span": {
+							"offset": 122,
+							"length": 2
+						}
+					},
+					{
+						"content": "일",
+						"polygon": [
+							622,
+							381,
+							647,
+							381,
+							647,
+							410,
+							622,
+							410
+						],
+						"confidence": 0.986,
+						"span": {
+							"offset": 125,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							109,
+							433,
+							134,
+							433,
+							134,
+							463,
+							109,
+							463
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 127,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							148,
+							433,
+							169,
+							433,
+							169,
+							463,
+							148,
+							463
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 128,
+							"length": 1
+						}
+					},
+					{
+						"content": "장",
+						"polygon": [
+							187,
+							433,
+							210,
+							433,
+							210,
+							462,
+							187,
+							462
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 129,
+							"length": 1
+						}
+					},
+					{
+						"content": "소",
+						"polygon": [
+							226,
+							432,
+							249,
+							432,
+							249,
+							462,
+							226,
+							462
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 131,
+							"length": 1
+						}
+					},
+					{
+						"content": "재",
+						"polygon": [
+							265,
+							432,
+							286,
+							432,
+							286,
+							462,
+							265,
+							462
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 132,
+							"length": 1
+						}
+					},
+					{
+						"content": "지",
+						"polygon": [
+							304,
+							432,
+							324,
+							432,
+							324,
+							462,
+							303,
+							462
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 133,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							354,
+							432,
+							359,
+							432,
+							359,
+							462,
+							354,
+							462
+						],
+						"confidence": 0.969,
+						"span": {
+							"offset": 135,
+							"length": 1
+						}
+					},
+					{
+						"content": "경",
+						"polygon": [
+							381,
+							432,
+							401,
+							432,
+							401,
+							461,
+							381,
+							461
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 137,
+							"length": 1
+						}
+					},
+					{
+						"content": "기",
+						"polygon": [
+							406,
+							432,
+							426,
+							432,
+							426,
+							461,
+							406,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 138,
+							"length": 1
+						}
+					},
+					{
+						"content": "도",
+						"polygon": [
+							432,
+							432,
+							454,
+							431,
+							454,
+							461,
+							432,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 139,
+							"length": 1
+						}
+					},
+					{
+						"content": "수",
+						"polygon": [
+							472,
+							431,
+							496,
+							431,
+							496,
+							461,
+							472,
+							461
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 141,
+							"length": 1
+						}
+					},
+					{
+						"content": "원",
+						"polygon": [
+							500,
+							431,
+							518,
+							431,
+							518,
+							461,
+							500,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 142,
+							"length": 1
+						}
+					},
+					{
+						"content": "시",
+						"polygon": [
+							524,
+							431,
+							543,
+							431,
+							543,
+							461,
+							524,
+							461
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 143,
+							"length": 1
+						}
+					},
+					{
+						"content": "장",
+						"polygon": [
+							562,
+							431,
+							586,
+							430,
+							586,
+							461,
+							562,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 145,
+							"length": 1
+						}
+					},
+					{
+						"content": "안",
+						"polygon": [
+							591,
+							430,
+							610,
+							430,
+							610,
+							461,
+							591,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 146,
+							"length": 1
+						}
+					},
+					{
+						"content": "구",
+						"polygon": [
+							614,
+							430,
+							636,
+							430,
+							636,
+							461,
+							614,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 147,
+							"length": 1
+						}
+					},
+					{
+						"content": "장",
+						"polygon": [
+							653,
+							430,
+							677,
+							430,
+							677,
+							461,
+							653,
+							461
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 149,
+							"length": 1
+						}
+					},
+					{
+						"content": "안",
+						"polygon": [
+							681,
+							430,
+							701,
+							430,
+							701,
+							460,
+							681,
+							461
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 150,
+							"length": 1
+						}
+					},
+					{
+						"content": "로",
+						"polygon": [
+							705,
+							430,
+							727,
+							430,
+							727,
+							460,
+							705,
+							460
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 151,
+							"length": 1
+						}
+					},
+					{
+						"content": "232,",
+						"polygon": [
+							742,
+							430,
+							789,
+							430,
+							789,
+							460,
+							742,
+							460
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 153,
+							"length": 4
+						}
+					},
+					{
+						"content": "상",
+						"polygon": [
+							809,
+							430,
+							831,
+							430,
+							831,
+							460,
+							809,
+							460
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 158,
+							"length": 1
+						}
+					},
+					{
+						"content": "가",
+						"polygon": [
+							831,
+							430,
+							850,
+							429,
+							850,
+							460,
+							831,
+							460
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 159,
+							"length": 1
+						}
+					},
+					{
+						"content": "동",
+						"polygon": [
+							867,
+							429,
+							883,
+							429,
+							883,
+							459,
+							867,
+							460
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 160,
+							"length": 1
+						}
+					},
+					{
+						"content": "2",
+						"polygon": [
+							897,
+							429,
+							913,
+							429,
+							914,
+							459,
+							897,
+							459
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 162,
+							"length": 1
+						}
+					},
+					{
+						"content": "층",
+						"polygon": [
+							918,
+							429,
+							935,
+							429,
+							935,
+							459,
+							918,
+							459
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 163,
+							"length": 1
+						}
+					},
+					{
+						"content": "10",
+						"polygon": [
+							953,
+							429,
+							977,
+							429,
+							977,
+							459,
+							953,
+							459
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 165,
+							"length": 2
+						}
+					},
+					{
+						"content": "호",
+						"polygon": [
+							977,
+							429,
+							996,
+							429,
+							996,
+							459,
+							977,
+							459
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 167,
+							"length": 1
+						}
+					},
+					{
+						"content": "(",
+						"polygon": [
+							997,
+							429,
+							1016,
+							429,
+							1016,
+							459,
+							997,
+							459
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 168,
+							"length": 1
+						}
+					},
+					{
+						"content": "정",
+						"polygon": [
+							1020,
+							429,
+							1040,
+							429,
+							1040,
+							459,
+							1020,
+							459
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 169,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							1044,
+							429,
+							1063,
+							429,
+							1063,
+							459,
+							1044,
+							459
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 170,
+							"length": 1
+						}
+					},
+					{
+						"content": "동",
+						"polygon": [
+							1072,
+							428,
+							1087,
+							428,
+							1087,
+							458,
+							1072,
+							459
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 171,
+							"length": 1
+						}
+					},
+					{
+						"content": ",",
+						"polygon": [
+							1087,
+							428,
+							1101,
+							428,
+							1101,
+							458,
+							1087,
+							458
+						],
+						"confidence": 0.988,
+						"span": {
+							"offset": 172,
+							"length": 1
+						}
+					},
+					{
+						"content": "동",
+						"polygon": [
+							1120,
+							428,
+							1146,
+							428,
+							1146,
+							458,
+							1120,
+							458
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 174,
+							"length": 1
+						}
+					},
+					{
+						"content": "신",
+						"polygon": [
+							1150,
+							428,
+							1170,
+							428,
+							1170,
+							458,
+							1150,
+							458
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 175,
+							"length": 1
+						}
+					},
+					{
+						"content": "아",
+						"polygon": [
+							1170,
+							428,
+							1199,
+							428,
+							1199,
+							458,
+							1170,
+							458
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 176,
+							"length": 1
+						}
+					},
+					{
+						"content": "파",
+						"polygon": [
+							380,
+							470,
+							398,
+							471,
+							398,
+							498,
+							380,
+							498
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 178,
+							"length": 1
+						}
+					},
+					{
+						"content": "트",
+						"polygon": [
+							409,
+							471,
+							426,
+							471,
+							426,
+							498,
+							409,
+							498
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 179,
+							"length": 1
+						}
+					},
+					{
+						"content": ")",
+						"polygon": [
+							427,
+							471,
+							443,
+							471,
+							443,
+							498,
+							427,
+							498
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 180,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							109,
+							528,
+							134,
+							529,
+							133,
+							557,
+							109,
+							558
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 182,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							158,
+							529,
+							179,
+							528,
+							179,
+							557,
+							158,
+							557
+						],
+						"confidence": 0.987,
+						"span": {
+							"offset": 184,
+							"length": 1
+						}
+					},
+					{
+						"content": "의",
+						"polygon": [
+							206,
+							528,
+							228,
+							528,
+							228,
+							557,
+							206,
+							557
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 186,
+							"length": 1
+						}
+					},
+					{
+						"content": "종",
+						"polygon": [
+							255,
+							528,
+							278,
+							528,
+							278,
+							556,
+							255,
+							557
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 188,
+							"length": 1
+						}
+					},
+					{
+						"content": "류",
+						"polygon": [
+							304,
+							528,
+							327,
+							528,
+							327,
+							556,
+							304,
+							556
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 189,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							355,
+							528,
+							363,
+							528,
+							363,
+							555,
+							355,
+							555
+						],
+						"confidence": 0.985,
+						"span": {
+							"offset": 191,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							387,
+							528,
+							410,
+							528,
+							410,
+							553,
+							387,
+							553
+						],
+						"confidence": 0.993,
+						"span": {
+							"offset": 193,
+							"length": 1
+						}
+					},
+					{
+						"content": "태",
+						"polygon": [
+							411,
+							528,
+							435,
+							528,
+							435,
+							553,
+							411,
+							553
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 194,
+							"length": 1
+						}
+					},
+					{
+						"content": "음",
+						"polygon": [
+							455,
+							527,
+							476,
+							527,
+							476,
+							554,
+							455,
+							554
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 196,
+							"length": 1
+						}
+					},
+					{
+						"content": "식",
+						"polygon": [
+							483,
+							527,
+							501,
+							527,
+							501,
+							553,
+							483,
+							553
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 197,
+							"length": 1
+						}
+					},
+					{
+						"content": "점",
+						"polygon": [
+							508,
+							527,
+							531,
+							527,
+							532,
+							553,
+							508,
+							553
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 198,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							535,
+							527,
+							556,
+							526,
+							556,
+							553,
+							535,
+							553
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 199,
+							"length": 1
+						}
+					},
+					{
+						"content": "종",
+						"polygon": [
+							770,
+							526,
+							791,
+							527,
+							791,
+							552,
+							771,
+							552
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 201,
+							"length": 1
+						}
+					},
+					{
+						"content": "목",
+						"polygon": [
+							801,
+							527,
+							818,
+							527,
+							818,
+							552,
+							801,
+							552
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 202,
+							"length": 1
+						}
+					},
+					{
+						"content": "커",
+						"polygon": [
+							837,
+							524,
+							859,
+							525,
+							859,
+							552,
+							837,
+							552
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 204,
+							"length": 1
+						}
+					},
+					{
+						"content": "피",
+						"polygon": [
+							864,
+							525,
+							885,
+							524,
+							885,
+							552,
+							865,
+							552
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 205,
+							"length": 1
+						}
+					},
+					{
+						"content": "전",
+						"polygon": [
+							904,
+							524,
+							925,
+							524,
+							925,
+							552,
+							904,
+							552
+						],
+						"confidence": 0.987,
+						"span": {
+							"offset": 207,
+							"length": 1
+						}
+					},
+					{
+						"content": "문",
+						"polygon": [
+							930,
+							524,
+							952,
+							524,
+							952,
+							551,
+							930,
+							552
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 208,
+							"length": 1
+						}
+					},
+					{
+						"content": "점",
+						"polygon": [
+							959,
+							524,
+							979,
+							524,
+							979,
+							551,
+							959,
+							551
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 209,
+							"length": 1
+						}
+					},
+					{
+						"content": "발",
+						"polygon": [
+							109,
+							794,
+							134,
+							794,
+							134,
+							821,
+							108,
+							821
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 211,
+							"length": 1
+						}
+					},
+					{
+						"content": "급",
+						"polygon": [
+							175,
+							794,
+							198,
+							793,
+							198,
+							821,
+							175,
+							821
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 212,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							240,
+							794,
+							264,
+							794,
+							264,
+							820,
+							240,
+							821
+						],
+						"confidence": 0.988,
+						"span": {
+							"offset": 214,
+							"length": 1
+						}
+					},
+					{
+						"content": "유",
+						"polygon": [
+							305,
+							794,
+							329,
+							794,
+							329,
+							820,
+							305,
+							820
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 216,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							356,
+							794,
+							361,
+							794,
+							361,
+							819,
+							356,
+							819
+						],
+						"confidence": 0.976,
+						"span": {
+							"offset": 218,
+							"length": 1
+						}
+					},
+					{
+						"content": "신",
+						"polygon": [
+							378,
+							794,
+							403,
+							795,
+							403,
+							820,
+							377,
+							819
+						],
+						"confidence": 0.986,
+						"span": {
+							"offset": 220,
+							"length": 1
+						}
+					},
+					{
+						"content": "규",
+						"polygon": [
+							409,
+							795,
+							431,
+							796,
+							431,
+							821,
+							408,
+							820
+						],
+						"confidence": 0.987,
+						"span": {
+							"offset": 221,
+							"length": 1
+						}
+					},
+					{
+						"content": "공",
+						"polygon": [
+							109,
+							837,
+							134,
+							837,
+							134,
+							866,
+							109,
+							866
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 223,
+							"length": 1
+						}
+					},
+					{
+						"content": "동",
+						"polygon": [
+							158,
+							838,
+							182,
+							837,
+							182,
+							866,
+							158,
+							866
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 224,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							207,
+							837,
+							232,
+							837,
+							232,
+							866,
+							207,
+							866
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 226,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							256,
+							837,
+							277,
+							837,
+							277,
+							865,
+							256,
+							866
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 227,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							306,
+							837,
+							329,
+							837,
+							329,
+							865,
+							306,
+							865
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 229,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							356,
+							837,
+							364,
+							838,
+							364,
+							864,
+							356,
+							864
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 231,
+							"length": 1
+						}
+					},
+					{
+						"content": "WANTTO",
+						"polygon": [
+							381,
+							791,
+							480,
+							660,
+							485,
+							695,
+							387,
+							838
+						],
+						"confidence": 0.006,
+						"span": {
+							"offset": 233,
+							"length": 6
+						}
+					},
+					{
+						"content": "SERVICE",
+						"polygon": [
+							497,
+							637,
+							669,
+							568,
+							672,
+							600,
+							502,
+							670
+						],
+						"confidence": 0.254,
+						"span": {
+							"offset": 240,
+							"length": 7
+						}
+					},
+					{
+						"content": "FEE",
+						"polygon": [
+							699,
+							566,
+							857,
+							745,
+							858,
+							808,
+							701,
+							600
+						],
+						"confidence": 0.028,
+						"span": {
+							"offset": 248,
+							"length": 3
+						}
+					},
+					{
+						"content": "O",
+						"polygon": [
+							524,
+							664,
+							829,
+							683,
+							829,
+							968,
+							534,
+							968
+						],
+						"confidence": 0.662,
+						"span": {
+							"offset": 252,
+							"length": 1
+						}
+					},
+					{
+						"content": "NATIONAL",
+						"polygon": [
+							479,
+							953,
+							410,
+							759,
+							431,
+							769,
+							498,
+							962
+						],
+						"confidence": 0.343,
+						"span": {
+							"offset": 254,
+							"length": 8
+						}
+					},
+					{
+						"content": "TAX",
+						"polygon": [
+							417,
+							721,
+							456,
+							648,
+							478,
+							668,
+							436,
+							736
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 263,
+							"length": 3
+						}
+					},
+					{
+						"content": "SER",
+						"polygon": [
+							480,
+							624,
+							541,
+							589,
+							556,
+							606,
+							499,
+							644
+						],
+						"confidence": 0.577,
+						"span": {
+							"offset": 267,
+							"length": 3
+						}
+					},
+					{
+						"content": "국",
+						"polygon": [
+							547,
+							973,
+							592,
+							983,
+							590,
+							1038,
+							545,
+							1029
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 271,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							625,
+							986,
+							668,
+							988,
+							672,
+							1044,
+							625,
+							1042
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 272,
+							"length": 1
+						}
+					},
+					{
+						"content": "청",
+						"polygon": [
+							699,
+							982,
+							750,
+							972,
+							756,
+							1025,
+							707,
+							1038
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 273,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							111,
+							1202,
+							132,
+							1202,
+							132,
+							1233,
+							111,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 275,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							145,
+							1202,
+							162,
+							1202,
+							162,
+							1233,
+							144,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 276,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							170,
+							1201,
+							192,
+							1201,
+							192,
+							1233,
+							169,
+							1233
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 277,
+							"length": 1
+						}
+					},
+					{
+						"content": "단",
+						"polygon": [
+							212,
+							1201,
+							234,
+							1201,
+							234,
+							1233,
+							212,
+							1233
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 279,
+							"length": 1
+						}
+					},
+					{
+						"content": "위",
+						"polygon": [
+							243,
+							1201,
+							261,
+							1201,
+							261,
+							1233,
+							242,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 280,
+							"length": 1
+						}
+					},
+					{
+						"content": "과",
+						"polygon": [
+							282,
+							1201,
+							299,
+							1201,
+							299,
+							1233,
+							282,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 282,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							312,
+							1201,
+							333,
+							1201,
+							333,
+							1233,
+							312,
+							1233
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 283,
+							"length": 1
+						}
+					},
+					{
+						"content": "적",
+						"polygon": [
+							355,
+							1201,
+							381,
+							1201,
+							381,
+							1233,
+							355,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 285,
+							"length": 1
+						}
+					},
+					{
+						"content": "용",
+						"polygon": [
+							386,
+							1201,
+							405,
+							1201,
+							405,
+							1233,
+							385,
+							1233
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 286,
+							"length": 1
+						}
+					},
+					{
+						"content": "사",
+						"polygon": [
+							410,
+							1201,
+							430,
+							1201,
+							430,
+							1233,
+							410,
+							1233
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 287,
+							"length": 1
+						}
+					},
+					{
+						"content": "업",
+						"polygon": [
+							447,
+							1201,
+							467,
+							1201,
+							467,
+							1233,
+							447,
+							1233
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 288,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							467,
+							1201,
+							492,
+							1201,
+							492,
+							1233,
+							467,
+							1233
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 289,
+							"length": 1
+						}
+					},
+					{
+						"content": "여",
+						"polygon": [
+							512,
+							1201,
+							532,
+							1201,
+							532,
+							1233,
+							511,
+							1233
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 291,
+							"length": 1
+						}
+					},
+					{
+						"content": "부",
+						"polygon": [
+							540,
+							1201,
+							564,
+							1201,
+							564,
+							1232,
+							540,
+							1233
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 292,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							592,
+							1201,
+							601,
+							1201,
+							601,
+							1232,
+							592,
+							1232
+						],
+						"confidence": 0.988,
+						"span": {
+							"offset": 294,
+							"length": 1
+						}
+					},
+					{
+						"content": "여",
+						"polygon": [
+							614,
+							1201,
+							634,
+							1201,
+							634,
+							1232,
+							614,
+							1232
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 296,
+							"length": 1
+						}
+					},
+					{
+						"content": "(",
+						"polygon": [
+							639,
+							1201,
+							651,
+							1201,
+							651,
+							1232,
+							639,
+							1232
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 297,
+							"length": 1
+						}
+					},
+					{
+						"content": ")",
+						"polygon": [
+							683,
+							1201,
+							690,
+							1201,
+							690,
+							1232,
+							683,
+							1232
+						],
+						"confidence": 0.984,
+						"span": {
+							"offset": 299,
+							"length": 1
+						}
+					},
+					{
+						"content": "부",
+						"polygon": [
+							708,
+							1201,
+							728,
+							1201,
+							728,
+							1232,
+							708,
+							1232
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 301,
+							"length": 1
+						}
+					},
+					{
+						"content": "(V)",
+						"polygon": [
+							729,
+							1201,
+							783,
+							1202,
+							783,
+							1232,
+							728,
+							1232
+						],
+						"confidence": 0.881,
+						"span": {
+							"offset": 302,
+							"length": 3
+						}
+					},
+					{
+						"content": "전",
+						"polygon": [
+							111,
+							1245,
+							134,
+							1245,
+							134,
+							1276,
+							111,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 306,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							142,
+							1245,
+							160,
+							1245,
+							160,
+							1276,
+							142,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 307,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							169,
+							1245,
+							191,
+							1245,
+							191,
+							1276,
+							169,
+							1276
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 308,
+							"length": 1
+						}
+					},
+					{
+						"content": "금",
+						"polygon": [
+							198,
+							1245,
+							221,
+							1245,
+							221,
+							1276,
+							197,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 309,
+							"length": 1
+						}
+					},
+					{
+						"content": "계",
+						"polygon": [
+							226,
+							1245,
+							248,
+							1245,
+							248,
+							1276,
+							225,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 310,
+							"length": 1
+						}
+					},
+					{
+						"content": "산",
+						"polygon": [
+							255,
+							1245,
+							278,
+							1245,
+							278,
+							1276,
+							255,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 311,
+							"length": 1
+						}
+					},
+					{
+						"content": "서",
+						"polygon": [
+							282,
+							1245,
+							304,
+							1245,
+							304,
+							1276,
+							282,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 312,
+							"length": 1
+						}
+					},
+					{
+						"content": "전",
+						"polygon": [
+							326,
+							1245,
+							348,
+							1245,
+							348,
+							1276,
+							326,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 314,
+							"length": 1
+						}
+					},
+					{
+						"content": "용",
+						"polygon": [
+							355,
+							1245,
+							378,
+							1245,
+							377,
+							1276,
+							355,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 315,
+							"length": 1
+						}
+					},
+					{
+						"content": "전",
+						"polygon": [
+							397,
+							1245,
+							419,
+							1245,
+							419,
+							1276,
+							397,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 317,
+							"length": 1
+						}
+					},
+					{
+						"content": "자",
+						"polygon": [
+							427,
+							1245,
+							448,
+							1245,
+							448,
+							1276,
+							427,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 318,
+							"length": 1
+						}
+					},
+					{
+						"content": "우",
+						"polygon": [
+							457,
+							1245,
+							477,
+							1245,
+							476,
+							1276,
+							457,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 319,
+							"length": 1
+						}
+					},
+					{
+						"content": "편",
+						"polygon": [
+							489,
+							1245,
+							509,
+							1245,
+							509,
+							1276,
+							489,
+							1276
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 320,
+							"length": 1
+						}
+					},
+					{
+						"content": "주",
+						"polygon": [
+							518,
+							1245,
+							537,
+							1245,
+							537,
+							1275,
+							517,
+							1275
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 321,
+							"length": 1
+						}
+					},
+					{
+						"content": "소",
+						"polygon": [
+							546,
+							1245,
+							563,
+							1245,
+							563,
+							1275,
+							546,
+							1275
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 322,
+							"length": 1
+						}
+					},
+					{
+						"content": ":",
+						"polygon": [
+							592,
+							1246,
+							599,
+							1246,
+							599,
+							1276,
+							591,
+							1276
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 324,
+							"length": 1
+						}
+					},
+					{
+						"content": "2019",
+						"polygon": [
+							481,
+							1343,
+							551,
+							1343,
+							551,
+							1376,
+							481,
+							1376
+						],
+						"confidence": 0.99,
+						"span": {
+							"offset": 326,
+							"length": 4
+						}
+					},
+					{
+						"content": "년",
+						"polygon": [
+							573,
+							1343,
+							599,
+							1343,
+							599,
+							1377,
+							573,
+							1377
+						],
+						"confidence": 0.993,
+						"span": {
+							"offset": 331,
+							"length": 1
+						}
+					},
+					{
+						"content": "12",
+						"polygon": [
+							626,
+							1343,
+							655,
+							1343,
+							655,
+							1377,
+							626,
+							1377
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 333,
+							"length": 2
+						}
+					},
+					{
+						"content": "월",
+						"polygon": [
+							675,
+							1343,
+							702,
+							1343,
+							702,
+							1377,
+							675,
+							1377
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 336,
+							"length": 1
+						}
+					},
+					{
+						"content": "03",
+						"polygon": [
+							725,
+							1343,
+							759,
+							1343,
+							759,
+							1377,
+							725,
+							1377
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 338,
+							"length": 2
+						}
+					},
+					{
+						"content": "일",
+						"polygon": [
+							780,
+							1343,
+							809,
+							1343,
+							809,
+							1377,
+							780,
+							1377
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 341,
+							"length": 1
+						}
+					},
+					{
+						"content": "수",
+						"polygon": [
+							454,
+							1422,
+							499,
+							1422,
+							499,
+							1470,
+							454,
+							1470
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 343,
+							"length": 1
+						}
+					},
+					{
+						"content": "원",
+						"polygon": [
+							523,
+							1422,
+							564,
+							1422,
+							563,
+							1470,
+							523,
+							1470
+						],
+						"confidence": 0.991,
+						"span": {
+							"offset": 344,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							592,
+							1421,
+							617,
+							1422,
+							617,
+							1470,
+							592,
+							1470
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 346,
+							"length": 1
+						}
+					},
+					{
+						"content": "무",
+						"polygon": [
+							660,
+							1422,
+							702,
+							1422,
+							702,
+							1470,
+							660,
+							1470
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 348,
+							"length": 1
+						}
+					},
+					{
+						"content": "서",
+						"polygon": [
+							729,
+							1422,
+							761,
+							1423,
+							761,
+							1470,
+							729,
+							1470
+						],
+						"confidence": 0.994,
+						"span": {
+							"offset": 349,
+							"length": 1
+						}
+					},
+					{
+						"content": "장",
+						"polygon": [
+							796,
+							1422,
+							842,
+							1422,
+							842,
+							1470,
+							796,
+							1470
+						],
+						"confidence": 0.989,
+						"span": {
+							"offset": 351,
+							"length": 1
+						}
+					},
+					{
+						"content": "유",
+						"polygon": [
+							901,
+							1352,
+							923,
+							1352,
+							923,
+							1406,
+							901,
+							1406
+						],
+						"confidence": 0.307,
+						"span": {
+							"offset": 353,
+							"length": 1
+						}
+					},
+					{
+						"content": "리",
+						"polygon": [
+							924,
+							1352,
+							951,
+							1353,
+							951,
+							1406,
+							924,
+							1406
+						],
+						"confidence": 0.163,
+						"span": {
+							"offset": 354,
+							"length": 1
+						}
+					},
+					{
+						"content": "하",
+						"polygon": [
+							952,
+							1353,
+							979,
+							1353,
+							979,
+							1406,
+							952,
+							1406
+						],
+						"confidence": 0.162,
+						"span": {
+							"offset": 355,
+							"length": 1
+						}
+					},
+					{
+						"content": "게",
+						"polygon": [
+							980,
+							1353,
+							1007,
+							1355,
+							1007,
+							1407,
+							980,
+							1406
+						],
+						"confidence": 0.496,
+						"span": {
+							"offset": 356,
+							"length": 1
+						}
+					},
+					{
+						"content": "대",
+						"polygon": [
+							903,
+							1458,
+							902,
+							1408,
+							924,
+							1407,
+							924,
+							1459
+						],
+						"confidence": 0.157,
+						"span": {
+							"offset": 358,
+							"length": 1
+						}
+					},
+					{
+						"content": "책",
+						"polygon": [
+							925,
+							1459,
+							925,
+							1407,
+							951,
+							1407,
+							952,
+							1460
+						],
+						"confidence": 0.077,
+						"span": {
+							"offset": 359,
+							"length": 1
+						}
+					},
+					{
+						"content": "회",
+						"polygon": [
+							953,
+							1460,
+							952,
+							1407,
+							979,
+							1407,
+							979,
+							1460
+						],
+						"confidence": 0.756,
+						"span": {
+							"offset": 360,
+							"length": 1
+						}
+					},
+					{
+						"content": "의",
+						"polygon": [
+							980,
+							1460,
+							979,
+							1407,
+							1009,
+							1407,
+							1009,
+							1460
+						],
+						"confidence": 0.952,
+						"span": {
+							"offset": 361,
+							"length": 1
+						}
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							908,
+							1499,
+							935,
+							1499,
+							935,
+							1525,
+							908,
+							1524
+						],
+						"confidence": 0.859,
+						"span": {
+							"offset": 363,
+							"length": 1
+						}
+					},
+					{
+						"content": "국",
+						"polygon": [
+							103,
+							1509,
+							144,
+							1509,
+							144,
+							1572,
+							103,
+							1573
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 365,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							161,
+							1509,
+							202,
+							1508,
+							202,
+							1572,
+							161,
+							1571
+						],
+						"confidence": 0.93,
+						"span": {
+							"offset": 366,
+							"length": 1
+						}
+					},
+					{
+						"content": "청",
+						"polygon": [
+							228,
+							1509,
+							274,
+							1510,
+							274,
+							1573,
+							228,
+							1573
+						],
+						"confidence": 0.832,
+						"span": {
+							"offset": 367,
+							"length": 1
+						}
+					},
+					{
+						"content": "국",
+						"polygon": [
+							175,
+							1589,
+							203,
+							1589,
+							203,
+							1624,
+							175,
+							1624
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 369,
+							"length": 1
+						}
+					},
+					{
+						"content": "세",
+						"polygon": [
+							208,
+							1588,
+							231,
+							1588,
+							231,
+							1623,
+							208,
+							1624
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 370,
+							"length": 1
+						}
+					},
+					{
+						"content": "청",
+						"polygon": [
+							250,
+							1587,
+							272,
+							1587,
+							272,
+							1623,
+							250,
+							1623
+						],
+						"confidence": 0.996,
+						"span": {
+							"offset": 371,
+							"length": 1
+						}
+					},
+					{
+						"content": "National",
+						"polygon": [
+							175,
+							1625,
+							214,
+							1624,
+							214,
+							1636,
+							175,
+							1637
+						],
+						"confidence": 0.984,
+						"span": {
+							"offset": 373,
+							"length": 8
+						}
+					},
+					{
+						"content": "Tax",
+						"polygon": [
+							217,
+							1624,
+							232,
+							1624,
+							232,
+							1635,
+							217,
+							1636
+						],
+						"confidence": 0.995,
+						"span": {
+							"offset": 382,
+							"length": 3
+						}
+					},
+					{
+						"content": "Service",
+						"polygon": [
+							235,
+							1624,
+							270,
+							1623,
+							270,
+							1634,
+							235,
+							1635
+						],
+						"confidence": 0.992,
+						"span": {
+							"offset": 386,
+							"length": 7
+						}
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							312,
+							1497,
+							338,
+							1497,
+							338,
+							1521,
+							312,
+							1521
+						],
+						"confidence": 0.829,
+						"span": {
+							"offset": 394,
+							"length": 1
+						}
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							609,
+							1497,
+							636,
+							1498,
+							636,
+							1522,
+							609,
+							1521
+						],
+						"confidence": 0.776,
+						"span": {
+							"offset": 396,
+							"length": 1
+						}
+					}
+				],
+				"selectionMarks": [
+					{
+						"state": "unselected",
+						"polygon": [
+							642,
+							1203,
+							693,
+							1203,
+							693,
+							1232,
+							642,
+							1232
+						],
+						"confidence": 0.1,
+						"span": {
+							"offset": 398,
+							"length": 12
+						}
+					},
+					{
+						"state": "selected",
+						"polygon": [
+							734,
+							1204,
+							782,
+							1204,
+							782,
+							1230,
+							734,
+							1230
+						],
+						"confidence": 0.1,
+						"span": {
+							"offset": 411,
+							"length": 10
+						}
+					}
+				],
+				"lines": [
+					{
+						"content": "nts.go.k",
+						"polygon": [
+							1046,
+							85,
+							1046,
+							2,
+							1068,
+							2,
+							1068,
+							85
+						],
+						"spans": [
+							{
+								"offset": 0,
+								"length": 8
+							}
+						]
+					},
+					{
+						"content": "사업자 등록 증",
+						"polygon": [
+							395,
+							86,
+							895,
+							86,
+							895,
+							145,
+							395,
+							145
+						],
+						"spans": [
+							{
+								"offset": 9,
+								"length": 8
+							}
+						]
+					},
+					{
+						"content": "( 간이과세자 )",
+						"polygon": [
+							499,
+							158,
+							789,
+							156,
+							789,
+							200,
+							499,
+							202
+						],
+						"spans": [
+							{
+								"offset": 18,
+								"length": 9
+							}
+						]
+					},
+					{
+						"content": "등록번호 : 158-21-01074",
+						"polygon": [
+							435,
+							219,
+							874,
+							218,
+							875,
+							256,
+							436,
+							257
+						],
+						"spans": [
+							{
+								"offset": 28,
+								"length": 19
+							}
+						]
+					},
+					{
+						"content": "상 성",
+						"polygon": [
+							107,
+							284,
+							133,
+							284,
+							132,
+							425,
+							106,
+							425
+						],
+						"spans": [
+							{
+								"offset": 48,
+								"length": 3
+							}
+						]
+					},
+					{
+						"content": "호 : 베이커스키친",
+						"polygon": [
+							303,
+							283,
+							546,
+							283,
+							546,
+							311,
+							303,
+							312
+						],
+						"spans": [
+							{
+								"offset": 52,
+								"length": 10
+							}
+						]
+					},
+					{
+						"content": "명 : 이나래",
+						"polygon": [
+							302,
+							335,
+							462,
+							335,
+							462,
+							362,
+							302,
+							362
+						],
+						"spans": [
+							{
+								"offset": 63,
+								"length": 7
+							}
+						]
+					},
+					{
+						"content": "생 년 월 일 : 1985 년 08 월 29 일",
+						"polygon": [
+							707,
+							332,
+							1181,
+							330,
+							1181,
+							359,
+							707,
+							361
+						],
+						"spans": [
+							{
+								"offset": 71,
+								"length": 26
+							}
+						]
+					},
+					{
+						"content": "개 업 연 월 일 : 2019 년 12 월 16 일",
+						"polygon": [
+							107,
+							383,
+							646,
+							381,
+							647,
+							410,
+							108,
+							413
+						],
+						"spans": [
+							{
+								"offset": 98,
+								"length": 28
+							}
+						]
+					},
+					{
+						"content": "사업장 소재지 : 경기도 수원시 장안구 장안로 232, 상가동 2층 10호(정자동, 동신아",
+						"polygon": [
+							109,
+							433,
+							1199,
+							428,
+							1199,
+							458,
+							109,
+							463
+						],
+						"spans": [
+							{
+								"offset": 127,
+								"length": 50
+							}
+						]
+					},
+					{
+						"content": "파트)",
+						"polygon": [
+							380,
+							470,
+							442,
+							471,
+							442,
+							497,
+							380,
+							497
+						],
+						"spans": [
+							{
+								"offset": 178,
+								"length": 3
+							}
+						]
+					},
+					{
+						"content": "사 업 의 종류 :",
+						"polygon": [
+							109,
+							528,
+							362,
+							527,
+							362,
+							556,
+							109,
+							557
+						],
+						"spans": [
+							{
+								"offset": 182,
+								"length": 10
+							}
+						]
+					},
+					{
+						"content": "업태",
+						"polygon": [
+							387,
+							528,
+							434,
+							528,
+							434,
+							553,
+							387,
+							553
+						],
+						"spans": [
+							{
+								"offset": 193,
+								"length": 2
+							}
+						]
+					},
+					{
+						"content": "음식점업",
+						"polygon": [
+							455,
+							527,
+							555,
+							526,
+							555,
+							553,
+							455,
+							553
+						],
+						"spans": [
+							{
+								"offset": 196,
+								"length": 4
+							}
+						]
+					},
+					{
+						"content": "종목",
+						"polygon": [
+							770,
+							526,
+							817,
+							526,
+							817,
+							552,
+							771,
+							552
+						],
+						"spans": [
+							{
+								"offset": 201,
+								"length": 2
+							}
+						]
+					},
+					{
+						"content": "커피 전문점",
+						"polygon": [
+							837,
+							524,
+							979,
+							524,
+							979,
+							551,
+							837,
+							552
+						],
+						"spans": [
+							{
+								"offset": 204,
+								"length": 6
+							}
+						]
+					},
+					{
+						"content": "발급 사 유 : 신규",
+						"polygon": [
+							108,
+							794,
+							431,
+							793,
+							431,
+							820,
+							108,
+							821
+						],
+						"spans": [
+							{
+								"offset": 211,
+								"length": 11
+							}
+						]
+					},
+					{
+						"content": "공동 사업 자 :",
+						"polygon": [
+							109,
+							837,
+							363,
+							837,
+							363,
+							866,
+							109,
+							866
+						],
+						"spans": [
+							{
+								"offset": 223,
+								"length": 9
+							}
+						]
+					},
+					{
+						"content": "WANTTO SERVICE FEE",
+						"polygon": [
+							380,
+							588,
+							843,
+							565,
+							858,
+							805,
+							384,
+							837
+						],
+						"spans": [
+							{
+								"offset": 233,
+								"length": 18
+							}
+						]
+					},
+					{
+						"content": "O",
+						"polygon": [
+							524,
+							656,
+							829,
+							656,
+							828,
+							968,
+							524,
+							967
+						],
+						"spans": [
+							{
+								"offset": 252,
+								"length": 1
+							}
+						]
+					},
+					{
+						"content": "NATIONAL TAX SER",
+						"polygon": [
+							405,
+							944,
+							476,
+							560,
+							645,
+							566,
+							523,
+							993
+						],
+						"spans": [
+							{
+								"offset": 254,
+								"length": 16
+							}
+						]
+					},
+					{
+						"content": "국세청",
+						"polygon": [
+							545,
+							973,
+							756,
+							973,
+							756,
+							1044,
+							545,
+							1044
+						],
+						"spans": [
+							{
+								"offset": 271,
+								"length": 3
+							}
+						]
+					},
+					{
+						"content": "사업자 단위 과세 적용사업자 여부 : 여( ) 부(V)",
+						"polygon": [
+							111,
+							1201,
+							783,
+							1201,
+							783,
+							1232,
+							111,
+							1233
+						],
+						"spans": [
+							{
+								"offset": 275,
+								"length": 30
+							}
+						]
+					},
+					{
+						"content": "전자세금계산서 전용 전자우편주소 :",
+						"polygon": [
+							111,
+							1245,
+							598,
+							1245,
+							598,
+							1275,
+							111,
+							1276
+						],
+						"spans": [
+							{
+								"offset": 306,
+								"length": 19
+							}
+						]
+					},
+					{
+						"content": "2019 년 12 월 03 일",
+						"polygon": [
+							481,
+							1342,
+							809,
+							1343,
+							809,
+							1377,
+							481,
+							1376
+						],
+						"spans": [
+							{
+								"offset": 326,
+								"length": 16
+							}
+						]
+					},
+					{
+						"content": "수원 세 무서 장",
+						"polygon": [
+							454,
+							1421,
+							841,
+							1422,
+							841,
+							1470,
+							454,
+							1470
+						],
+						"spans": [
+							{
+								"offset": 343,
+								"length": 9
+							}
+						]
+					},
+					{
+						"content": "유리하게",
+						"polygon": [
+							901,
+							1352,
+							1007,
+							1353,
+							1007,
+							1406,
+							901,
+							1405
+						],
+						"spans": [
+							{
+								"offset": 353,
+								"length": 4
+							}
+						]
+					},
+					{
+						"content": "대책회의",
+						"polygon": [
+							903,
+							1459,
+							902,
+							1407,
+							1008,
+							1406,
+							1009,
+							1459
+						],
+						"spans": [
+							{
+								"offset": 358,
+								"length": 4
+							}
+						]
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							908,
+							1499,
+							935,
+							1499,
+							934,
+							1524,
+							908,
+							1524
+						],
+						"spans": [
+							{
+								"offset": 363,
+								"length": 1
+							}
+						]
+					},
+					{
+						"content": "국세청",
+						"polygon": [
+							101,
+							1508,
+							273,
+							1508,
+							273,
+							1573,
+							101,
+							1572
+						],
+						"spans": [
+							{
+								"offset": 365,
+								"length": 3
+							}
+						]
+					},
+					{
+						"content": "국세청",
+						"polygon": [
+							174,
+							1588,
+							271,
+							1587,
+							272,
+							1622,
+							175,
+							1624
+						],
+						"spans": [
+							{
+								"offset": 369,
+								"length": 3
+							}
+						]
+					},
+					{
+						"content": "National Tax Service",
+						"polygon": [
+							175,
+							1625,
+							270,
+							1623,
+							270,
+							1634,
+							175,
+							1637
+						],
+						"spans": [
+							{
+								"offset": 373,
+								"length": 20
+							}
+						]
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							312,
+							1497,
+							338,
+							1497,
+							338,
+							1521,
+							312,
+							1521
+						],
+						"spans": [
+							{
+								"offset": 394,
+								"length": 1
+							}
+						]
+					},
+					{
+						"content": "ツ",
+						"polygon": [
+							609,
+							1497,
+							636,
+							1497,
+							636,
+							1521,
+							609,
+							1521
+						],
+						"spans": [
+							{
+								"offset": 396,
+								"length": 1
+							}
+						]
+					}
+				],
+				"spans": [
+					{
+						"offset": 0,
+						"length": 421
+					}
+				]
+			}
+		],
+		"tables": [],
+		"paragraphs": [
+			{
+				"spans": [
+					{
+						"offset": 0,
+						"length": 8
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							1046,
+							2,
+							1068,
+							2,
+							1068,
+							85,
+							1046,
+							85
+						]
+					}
+				],
+				"content": "nts.go.k"
+			},
+			{
+				"spans": [
+					{
+						"offset": 9,
+						"length": 38
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							395,
+							86,
+							895,
+							86,
+							895,
+							257,
+							395,
+							257
+						]
+					}
+				],
+				"content": "사업자 등록 증 ( 간이과세자 ) 등록번호 : 158-21-01074"
+			},
+			{
+				"spans": [
+					{
+						"offset": 48,
+						"length": 3
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							107,
+							284,
+							133,
+							284,
+							132,
+							425,
+							106,
+							425
+						]
+					}
+				],
+				"content": "상 성"
+			},
+			{
+				"spans": [
+					{
+						"offset": 52,
+						"length": 10
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							303,
+							283,
+							546,
+							283,
+							546,
+							311,
+							303,
+							312
+						]
+					}
+				],
+				"content": "호 : 베이커스키친"
+			},
+			{
+				"spans": [
+					{
+						"offset": 63,
+						"length": 34
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							302,
+							334,
+							1181,
+							330,
+							1181,
+							359,
+							302,
+							363
+						]
+					}
+				],
+				"content": "명 : 이나래 생 년 월 일 : 1985 년 08 월 29 일"
+			},
+			{
+				"spans": [
+					{
+						"offset": 98,
+						"length": 28
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							107,
+							383,
+							646,
+							381,
+							647,
+							410,
+							108,
+							413
+						]
+					}
+				],
+				"content": "개 업 연 월 일 : 2019 년 12 월 16 일"
+			},
+			{
+				"spans": [
+					{
+						"offset": 127,
+						"length": 54
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							109,
+							433,
+							1199,
+							428,
+							1199,
+							494,
+							109,
+							499
+						]
+					}
+				],
+				"content": "사업장 소재지 : 경기도 수원시 장안구 장안로 232, 상가동 2층 10호(정자동, 동신아 파트)"
+			},
+			{
+				"spans": [
+					{
+						"offset": 182,
+						"length": 18
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							109,
+							528,
+							555,
+							526,
+							555,
+							555,
+							109,
+							557
+						]
+					}
+				],
+				"content": "사 업 의 종류 : 업태 음식점업"
+			},
+			{
+				"spans": [
+					{
+						"offset": 201,
+						"length": 9
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							770,
+							525,
+							979,
+							524,
+							979,
+							551,
+							771,
+							552
+						]
+					}
+				],
+				"content": "종목 커피 전문점"
+			},
+			{
+				"spans": [
+					{
+						"offset": 211,
+						"length": 21
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							108,
+							794,
+							431,
+							793,
+							431,
+							866,
+							108,
+							866
+						]
+					}
+				],
+				"content": "발급 사 유 : 신규 공동 사업 자 :"
+			},
+			{
+				"spans": [
+					{
+						"offset": 233,
+						"length": 37
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							380,
+							562,
+							854,
+							554,
+							861,
+							987,
+							387,
+							995
+						]
+					}
+				],
+				"content": "WANTTO SERVICE FEE O NATIONAL TAX SER"
+			},
+			{
+				"spans": [
+					{
+						"offset": 271,
+						"length": 3
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							545,
+							973,
+							756,
+							973,
+							756,
+							1044,
+							545,
+							1044
+						]
+					}
+				],
+				"content": "국세청"
+			},
+			{
+				"spans": [
+					{
+						"offset": 275,
+						"length": 30
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							111,
+							1201,
+							783,
+							1201,
+							783,
+							1232,
+							111,
+							1233
+						]
+					}
+				],
+				"content": "사업자 단위 과세 적용사업자 여부 : 여( ) 부(V)"
+			},
+			{
+				"spans": [
+					{
+						"offset": 306,
+						"length": 19
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							111,
+							1245,
+							598,
+							1245,
+							598,
+							1275,
+							111,
+							1276
+						]
+					}
+				],
+				"content": "전자세금계산서 전용 전자우편주소 :"
+			},
+			{
+				"spans": [
+					{
+						"offset": 326,
+						"length": 16
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							481,
+							1342,
+							809,
+							1343,
+							809,
+							1377,
+							481,
+							1376
+						]
+					}
+				],
+				"content": "2019 년 12 월 03 일"
+			},
+			{
+				"spans": [
+					{
+						"offset": 343,
+						"length": 9
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							454,
+							1421,
+							841,
+							1422,
+							841,
+							1470,
+							454,
+							1470
+						]
+					}
+				],
+				"content": "수원 세 무서 장"
+			},
+			{
+				"spans": [
+					{
+						"offset": 353,
+						"length": 11
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							900,
+							1352,
+							1008,
+							1351,
+							1009,
+							1524,
+							901,
+							1524
+						]
+					}
+				],
+				"content": "유리하게 대책회의 ツ"
+			},
+			{
+				"spans": [
+					{
+						"offset": 365,
+						"length": 3
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							101,
+							1508,
+							273,
+							1508,
+							273,
+							1573,
+							101,
+							1572
+						]
+					}
+				],
+				"content": "국세청"
+			},
+			{
+				"spans": [
+					{
+						"offset": 369,
+						"length": 24
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							174,
+							1588,
+							271,
+							1587,
+							272,
+							1635,
+							175,
+							1637
+						]
+					}
+				],
+				"content": "국세청 National Tax Service"
+			},
+			{
+				"spans": [
+					{
+						"offset": 394,
+						"length": 1
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							312,
+							1497,
+							338,
+							1497,
+							338,
+							1521,
+							312,
+							1521
+						]
+					}
+				],
+				"content": "ツ"
+			},
+			{
+				"spans": [
+					{
+						"offset": 396,
+						"length": 1
+					}
+				],
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							609,
+							1497,
+							636,
+							1497,
+							636,
+							1521,
+							609,
+							1521
+						]
+					}
+				],
+				"content": "ツ"
+			}
+		],
+		"styles": [],
+		"documents": [
+			{
+				"docType": "business-Certification",
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							0,
+							0,
+							1280,
+							0,
+							1280,
+							1706,
+							0,
+							1706
+						]
+					}
+				],
+				"fields": {
+					"b_no": {
+						"type": "string",
+						"valueString": "등록번호 : 158-21-01074",
+						"content": "등록번호 : 158-21-01074",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									436,
+									219,
+									875,
+									219,
+									875,
+									258,
+									436,
+									258
+								]
+							}
+						],
+						"confidence": 0.781,
+						"spans": [
+							{
+								"offset": 28,
+								"length": 19
+							}
+						]
+					},
+					"b_nm": {
+						"type": "string",
+						"valueString": "호 : 베이커스키친",
+						"content": "호 : 베이커스키친",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									303,
+									283,
+									547,
+									283,
+									547,
+									312,
+									303,
+									312
+								]
+							}
+						],
+						"confidence": 0.83,
+						"spans": [
+							{
+								"offset": 52,
+								"length": 10
+							}
+						]
+					},
+					"p_nm": {
+						"type": "string",
+						"valueString": "명 : 이나래",
+						"content": "명 : 이나래",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									302,
+									335,
+									462,
+									335,
+									462,
+									362,
+									302,
+									362
+								]
+							}
+						],
+						"confidence": 0.859,
+						"spans": [
+							{
+								"offset": 63,
+								"length": 7
+							}
+						]
+					},
+					"start_dt": {
+						"type": "string",
+						"valueString": "개 업 연 월 일 : 2019 년 12 월 16 일",
+						"content": "개 업 연 월 일 : 2019 년 12 월 16 일",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									108,
+									381,
+									647,
+									381,
+									647,
+									414,
+									108,
+									414
+								]
+							}
+						],
+						"confidence": 0.703,
+						"spans": [
+							{
+								"offset": 98,
+								"length": 28
+							}
+						]
+					},
+					"b_adr": {
+						"type": "string",
+						"valueString": "사업장 소재지 : 경기도 수원시 장안구 장안로 232, 상가동 2층 10호(정자동, 동신아 파트)",
+						"content": "사업장 소재지 : 경기도 수원시 장안구 장안로 232, 상가동 2층 10호(정자동, 동신아 파트)",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									109,
+									428,
+									1199,
+									428,
+									1199,
+									498,
+									109,
+									498
+								]
+							}
+						],
+						"confidence": 0.482,
+						"spans": [
+							{
+								"offset": 127,
+								"length": 54
+							}
+						]
+					},
+					"b_sector": {
+						"type": "string",
+						"valueString": "업태 음식점업",
+						"content": "업태 음식점업",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									387,
+									526,
+									556,
+									526,
+									556,
+									554,
+									387,
+									554
+								]
+							}
+						],
+						"confidence": 0.862,
+						"spans": [
+							{
+								"offset": 193,
+								"length": 7
+							}
+						]
+					},
+					"b_type": {
+						"type": "string",
+						"valueString": "종목 커피 전문점",
+						"content": "종목 커피 전문점",
+						"boundingRegions": [
+							{
+								"pageNumber": 1,
+								"polygon": [
+									770,
+									524,
+									979,
+									524,
+									979,
+									552,
+									770,
+									552
+								]
+							}
+						],
+						"confidence": 0.852,
+						"spans": [
+							{
+								"offset": 201,
+								"length": 9
+							}
+						]
+					},
+					"corp_no": {
+						"type": "string",
+						"confidence": 0.954
+					}
+				},
+				"confidence": 0.999,
+				"spans": [
+					{
+						"offset": 0,
+						"length": 421
+					}
+				]
+			}
+		],
+		"contentFormat": "text",
+		"sections": [
+			{
+				"spans": [
+					{
+						"offset": 0,
+						"length": 397
+					}
+				],
+				"elements": [
+					"/paragraphs/0",
+					"/paragraphs/1",
+					"/paragraphs/2",
+					"/paragraphs/3",
+					"/paragraphs/4",
+					"/paragraphs/5",
+					"/paragraphs/6",
+					"/paragraphs/7",
+					"/paragraphs/8",
+					"/paragraphs/9",
+					"/figures/0",
+					"/paragraphs/12",
+					"/paragraphs/13",
+					"/paragraphs/14",
+					"/paragraphs/15",
+					"/paragraphs/16",
+					"/paragraphs/17",
+					"/figures/1",
+					"/paragraphs/19",
+					"/paragraphs/20"
+				]
+			}
+		],
+		"figures": [
+			{
+				"id": "1.1",
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							378,
+							567,
+							921,
+							567,
+							921,
+							1071,
+							378,
+							1071
+						]
+					}
+				],
+				"spans": [
+					{
+						"offset": 233,
+						"length": 41
+					}
+				],
+				"elements": [
+					"/paragraphs/10",
+					"/paragraphs/11"
+				]
+			},
+			{
+				"id": "1.2",
+				"boundingRegions": [
+					{
+						"pageNumber": 1,
+						"polygon": [
+							111,
+							1591,
+							280,
+							1591,
+							280,
+							1642,
+							111,
+							1642
+						]
+					}
+				],
+				"spans": [
+					{
+						"offset": 369,
+						"length": 24
+					}
+				],
+				"elements": [
+					"/paragraphs/18"
+				]
+			}
+		]
+	}
+}
