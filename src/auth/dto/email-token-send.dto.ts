@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString } from 'class-validator';
 
-export class SendEmailToken {
+export class SendEmailTokenDTO {
   @ApiProperty({ example: 'example@test.com', description: '토큰 받을 이메일' })
   @IsEmail()
   email: string;

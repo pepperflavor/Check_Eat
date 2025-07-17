@@ -8,7 +8,8 @@ import { JwtAuthGuard } from './jwt.guard';
 import { CommonAccountService } from 'src/common-account/common-account.service';
 import { CheckEmailToken } from './dto/email-token-check.dto';
 import { EmailService } from 'src/email/email.service';
-import { SendEmailToken } from './dto/email-token-send.dto';
+import { SendEmailTokenDTO } from './dto/email-token-send.dto';
+import { EmailUniqueDto } from './dto/email-unique.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -24,7 +25,7 @@ export class AuthController {
     description: '개인 유저 회원가입',
   })
   @ApiBody({ type: CreateUserDTO })
-  async registerUser(@Body() body:CreateUserDTO) {
+  async registerUser(@Body() body: CreateUserDTO) {
     return await this.authService.signUpUser(body);
   }
 
@@ -48,8 +49,9 @@ export class AuthController {
     description: '회원가입시 - 이메일 중복확인',
   })
   @Post('check-email-unique')
-  async checkEmailUnique(@Body('email') email: string) {
-    return await this.commonService.isExistEmail(email);
+  async checkEmailUnique(@Body() body: EmailUniqueDto) {
+    console.log(body.email);
+    return await this.commonService.isExistEmail(body.email);
   }
 
   // 이메일로 토큰 발송
@@ -58,7 +60,7 @@ export class AuthController {
     summary: '이메일 본인인증 - 토큰발송',
     description: '이메일 본인인증 - 토큰발송',
   })
-  async sendEmailToken(@Body() body: SendEmailToken) {
+  async sendEmailToken(@Body() body: SendEmailTokenDTO) {
     return await this.authService.requestEmailVerification(
       body.email,
       body.language,

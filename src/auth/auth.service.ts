@@ -48,8 +48,6 @@ export class AuthService {
   // 사장 회원가입
   async signUpSajang() {}
 
-
-  
   // 로그인
   async login(inputId: string, inputPwd: string) {
     // 가입한 유저인지 확인
@@ -126,9 +124,8 @@ export class AuthService {
           user_nick: user.user.user_nick,
         };
       }
-      
-      return payload;
 
+      return payload;
     } else if (ld_usergrade == 1) {
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
@@ -168,7 +165,7 @@ export class AuthService {
 
   // 사용자 언어에 맞게 이메일 인증 코드 발송
   async requestEmailVerification(email: string, language: string) {
-    this.logger.log('이메일 인증 요청 시작');
+    this.logger.log('이메일 코드발송 시작');
 
     const trimEmail = email.trim().toLowerCase();
     const key = `token-${trimEmail}`;

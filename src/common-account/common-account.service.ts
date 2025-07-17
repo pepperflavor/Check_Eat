@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable } from '@nestjs/common';
+import { HttpStatus, Injectable, UnauthorizedException } from '@nestjs/common';
 import {
   SajangLoginToken,
   UserLoginToken,
@@ -161,5 +161,36 @@ export class CommonAccountService {
   // 이메일 본인 인증 관련
 
   // 이메일 토큰 검증
-  async verifyEmailToken(email: string, inputCode: string) {}
+  async verifyEmailToken(email: string, inputCode: string) {
+    const trimEmail = email.trim().toLowerCase();
+    const key = `token-${trimEmail}`.trim();
+    // const key = `token-${trimEmail}`;
+
+    try {
+      const savedCode = await this.cache.get(key);
+      console.log(`저장되어있던 코드 : ${savedCode}`);
+      console.log(`입력들어온 코드 : ${inputCode}`);
+
+      if (!savedCode) {
+        throw new UnauthorizedException(
+          '인증 코드가 만료되었거나 존재하지 않습니다.',
+        );
+      }
+
+      if (savedCode !== inputCode.trim()) {
+        throw new UnauthorizedException(
+          '인증 코드가 일치하지 않습니다. 다시 시도해주세요',
+        );
+      }
+
+      await this.cache.del(key);
+
+      return {
+        message: '이메일 본인 인증 성공',
+        status: 'success',
+      };
+    } catch (error) {
+      throw new Error('인증 코드 검증 중 문제가 발생했습니다.');
+    }
+  }
 }
