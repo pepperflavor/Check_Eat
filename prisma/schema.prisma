@@ -124,7 +124,7 @@ model Holiday{
 model CommonAl{
   coal_id Int @id @default(autoincrement())
   coal_name String // 알러지 원료이름
-  coal_img String // 알러지 원료 이미지 -> storage에 저장할 예정
+  // coal_img String // 알러지 원료 이미지 -> storage에 저장할 예정
 
   food Food[] @relation("CommonAlFood")
 
