@@ -48,6 +48,8 @@ export class AuthService {
   // 사장 회원가입
   async signUpSajang() {}
 
+
+  
   // 로그인
   async login(inputId: string, inputPwd: string) {
     // 가입한 유저인지 확인

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TranslateService } from 'src/translate/translate.service';
+import { CreateSajangDTO } from './sajang_dto/create-sajang.dto';
 
 @Injectable()
 export class SajangService {
@@ -13,7 +14,7 @@ export class SajangService {
     throw new Error('Method not implemented.');
   }
   // 사장 회원가입
-  async createSajang(data) {}
+  async createSajang(data: CreateSajangDTO) {}
 
   // OCR 관련
   // 음식 사진 찍으면 재료명 추출해주기
