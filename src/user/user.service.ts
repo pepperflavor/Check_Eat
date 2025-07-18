@@ -34,33 +34,67 @@ export class UserService {
       nickname = randomNickMaker(1, 'ko'); // 닉네임도 랜덤으로 돌리기
     }
 
-    const user = await this.prisma.user.create({
-      data: {
-        user_nick: nickname,
-        user_allergy: allergy,
-        user_vegan: vegan,
-        user_is_halal: isHalal,
-        user_allergy_common: commonAllergies.length // commonAllergies 받는 값 다시 프론트랑 확인하기
-          ? {
-              connect: commonAllergies.map((coalID) => ({ coal_id: coalID })),
-            }
-          : undefined,
-      },
+    if (!nickname || nickname == '') {
+      throw new Error('닉네임 생성중 오류가 발생했습니다.');
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      // 1. User 생성
+      const user = await tx.user.create({
+        data: {
+          user_nick: nickname,
+          user_allergy: allergy,
+          user_vegan:
+            vegan > 0
+              ? { connect: { veg_id: vegan } } // vegan 단계 연결
+              : 0,
+          user_is_halal: isHalal,
+          user_allergy_common: commonAllergies.length
+            ? {
+                connect: commonAllergies.map((coalID) => ({ coal_id: coalID })),
+              }
+            : undefined,
+        },
+      });
+
+      // 2. LoginData 생성 및 User와 연결
+      await tx.loginData.create({
+        data: {
+          ld_log_id: log_Id,
+          ld_pwd: hashedPWD,
+          ld_email: email,
+          ld_usergrade: 0, // 0: 일반 유저
+          ld_user_id: user.user_id, // 생성된 User와 관계 연결
+        },
+      });
     });
 
-    await this.prisma.loginData.create({
-      data: {
-        ld_log_id: log_Id,
-        ld_pwd: hashedPWD,
-        ld_email: email,
-        ld_usergrade: 0,
-        ld_user_id: user.user_id, // 유저 아이디 연결
-      },
-    });
+    // const user = await this.prisma.user.create({
+    //   data: {
+    //     user_nick: nickname,
+    //     user_allergy: allergy,
+    //     user_vegan: vegan ? { connect: { veg_id: vegan } } : 0,
+    //     user_is_halal: isHalal,
+    //     user_allergy_common: commonAllergies.length // commonAllergies 받는 값 다시 프론트랑 확인하기
+    //       ? {
+    //           connect: commonAllergies.map((coalID) => ({ coal_id: coalID })),
+    //         }
+    //       : undefined,
+    //   },
+    // });
+
+    // await this.prisma.loginData.create({
+    //   data: {
+    //     ld_log_id: log_Id,
+    //     ld_pwd: hashedPWD,
+    //     ld_email: email,
+    //     ld_usergrade: 0,
+    //     ld_user_id: user.user_id, // 유저 아이디 연결
+    //   },
+    // });
 
     return {
       message: '개인 유저 회원가입 성공',
-      userId: user.user_id,
       status: HttpStatus.CREATED,
     };
   }
