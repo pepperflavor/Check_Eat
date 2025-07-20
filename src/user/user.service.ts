@@ -48,11 +48,14 @@ export class UserService {
           user_allergy: allergy,
           user_vegan: vegan > 0 ? vegan : null,
           user_is_halal: isHalal,
-          user_allergy_common: commonAllergies.length
-            ? {
-                connect: commonAllergies.map((coalID) => ({ coal_id: coalID })),
-              }
-            : undefined,
+          user_allergy_common:
+            commonAllergies.length > 0
+              ? {
+                  connect: commonAllergies.map((coalID) => ({
+                    coal_id: coalID,
+                  })),
+                }
+              : undefined,
         },
       });
 

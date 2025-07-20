@@ -41,7 +41,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: '로그인', description: '로그인' })
   async signInCommon(@Body() body: CommonLoginDTO) {
-    await this.authService.login(body.ld_log_id, body.ld_pwd);
+    return await this.authService.login(body.ld_log_id, body.ld_pwd);
   }
 
   // 회원가입시 - 이메일 중복확인

@@ -78,6 +78,9 @@ export class AuthService {
       data.ld_email,
     );
 
+    console.log('로그인 함수 안 페이로드리턴 값 확인 : ');
+    console.log(tokenPayload);
+
     const accessToken = await this.jwtService.signAsync(tokenPayload, {
       secret: this.config.get<string>('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
@@ -91,6 +94,8 @@ export class AuthService {
       },
     );
 
+    console.log('액세스토큰 : ' + accessToken);
+    console.log('리프레시 토큰 : ' + refreshToken);
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
 
@@ -119,6 +124,7 @@ export class AuthService {
 
       // user 가 실제로 객체에 존재하는지 확인
       if (user && 'user' in user && user.user) {
+        console.log('유저 페이로드 설정 들어옴 ');
         payload = {
           ...payload,
           user_vegan: user.user.user_vegan,
@@ -131,6 +137,7 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
+      console.log('사장님 페이로드 설정 들어옴 ');
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,
@@ -171,12 +178,13 @@ export class AuthService {
   async requestEmailVerification(
     email: string,
     type: number,
-    language?: string,
+    language: string,
   ) {
     // # MEMO
     // type : 0 == 회원가입시 이메일인증
     // type : 1 == 아이디찾기
     // type : 2  == 비밀번호 찾기
+
     this.logger.log('이메일 코드발송 시작');
     const trimEmail = email.trim().toLowerCase();
 
@@ -188,17 +196,43 @@ export class AuthService {
         const code = Math.random().toString(36).substring(2, 8).toUpperCase();
         this.logger.log(`이메일 인증 코드 ${code}`);
 
+        await this.cacheService.set(key, code, 300);
         const savedCode = await this.cacheService.get(key);
         this.logger.log(`저장된 코드: ${savedCode}`);
 
-        await this.cacheService.set(key, code, 300);
-
-        await this.emailService.sendVerificationCode(email, code, language!);
+        await this.emailService.sendVerificationCode(email, code, language, 0);
       } catch (error) {
         this.logger.error('이메일 인증 코드 생성 실패', error);
         throw new Error('인증코드 생성중 오류가 발생했습니다.');
       }
     } else if (type == 1) {
+      // 아이디 찾기 일때 이메일 발송
+      const key = `find-id-${trimEmail}`;
+
+      try {
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+        await this.cacheService.set(key, code, 300);
+        const savedCode = await this.cacheService.get(key);
+        this.logger.log(`저장된 코드: type 1  ===  ${savedCode}`);
+
+        await this.emailService.sendVerificationCode(email, code, language, 1);
+      } catch (error) {
+        throw new Error('인증코드 발송중 오류가 발생했습니다.');
+      }
+    } else if (type == 2) {
+      const key = `find-pwd-${trimEmail}`;
+
+      try {
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        await this.cacheService.set(key, code, 300);
+        const savedCode = await this.cacheService.get(key);
+        this.logger.log(`저장된 코드: type 2  ===  ${savedCode}`);
+
+        await this.emailService.sendVerificationCode(email, code, language, 2);
+      } catch (error) {
+        throw new Error('인증코드 발송중 오류가 발생했습니다.');
+      }
     }
   }
 
