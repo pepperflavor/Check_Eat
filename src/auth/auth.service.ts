@@ -33,7 +33,10 @@ export class AuthService {
     const isId = await this.commonService.isExistID(data.log_Id);
     const isEmail = await this.commonService.isExistEmail(data.email);
 
-    if (isId && isEmail) {
+    console.log(isId.status);
+    console.log(isEmail.status);
+
+    if (isId.status !== 200 && isEmail.status !== 200) {
       throw new UnauthorizedException(
         '이미 존재하는 아이디 또는 이메일입니다.',
       );
@@ -42,6 +45,7 @@ export class AuthService {
     const result = await this.userService.createUser(data);
 
     console.log(result);
+    console.log('authSERVICE 안임');
     return result;
   }
 
@@ -164,34 +168,48 @@ export class AuthService {
   }
 
   // 사용자 언어에 맞게 이메일 인증 코드 발송
-  async requestEmailVerification(email: string, language: string) {
+  async requestEmailVerification(
+    email: string,
+    type: number,
+    language?: string,
+  ) {
+    // # MEMO
+    // type : 0 == 회원가입시 이메일인증
+    // type : 1 == 아이디찾기
+    // type : 2  == 비밀번호 찾기
     this.logger.log('이메일 코드발송 시작');
-
     const trimEmail = email.trim().toLowerCase();
-    const key = `token-${trimEmail}`;
 
-    try {
-      const code = Math.random().toString(36).substring(2, 8).toUpperCase();
-      this.logger.log(`이메일 인증 코드 ${code}`);
+    // 레디스 키값 설정
+    if (type == 0) {
+      const key = `token-${trimEmail}`;
 
-      const savedCode = await this.cacheService.get(key);
-      this.logger.log(`저장된 코드: ${savedCode}`);
+      try {
+        const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+        this.logger.log(`이메일 인증 코드 ${code}`);
 
-      await this.cacheService.set(key, code, 300);
+        const savedCode = await this.cacheService.get(key);
+        this.logger.log(`저장된 코드: ${savedCode}`);
 
-      await this.emailService.sendVerificationCode(email, code, language);
-    } catch (error) {
-      this.logger.error('이메일 인증 코드 생성 실패', error);
-      throw new Error('인증코드 생성중 오류가 발생했습니다.');
+        await this.cacheService.set(key, code, 300);
+
+        await this.emailService.sendVerificationCode(email, code, language!);
+      } catch (error) {
+        this.logger.error('이메일 인증 코드 생성 실패', error);
+        throw new Error('인증코드 생성중 오류가 발생했습니다.');
+      }
+    } else if (type == 1) {
     }
   }
+
+  // 비밀번호, 아이디 찾기 부분
 
   // LocalStrategy에서 사용할 사용자 검증 메서드
   async validateUser(username: string, password: string): Promise<any> {
     const data = await this.commonService.findById(username);
 
-    if (!data) {
-      return null;
+    if (!data || data == null) {
+      throw new Error('유저가 존재하지 않습니다');
     }
 
     const isMatch = await this.commonService.comparePassword(

@@ -14,7 +14,9 @@ export class UserService {
   ) {}
 
   async createUser(createDTO: CreateUserDTO) {
-    const SALT = this.config.get('BCRYPT_SALT_ROUNDS');
+    const SALT = Number(await this.config.get('BCRYPT_SALT_ROUNDS'));
+
+    console.log(SALT);
 
     let {
       log_Id,
@@ -44,10 +46,7 @@ export class UserService {
         data: {
           user_nick: nickname,
           user_allergy: allergy,
-          user_vegan:
-            vegan > 0
-              ? { connect: { veg_id: vegan } } // vegan 단계 연결
-              : 0,
+          user_vegan: vegan > 0 ? vegan : null,
           user_is_halal: isHalal,
           user_allergy_common: commonAllergies.length
             ? {
@@ -68,30 +67,6 @@ export class UserService {
         },
       });
     });
-
-    // const user = await this.prisma.user.create({
-    //   data: {
-    //     user_nick: nickname,
-    //     user_allergy: allergy,
-    //     user_vegan: vegan ? { connect: { veg_id: vegan } } : 0,
-    //     user_is_halal: isHalal,
-    //     user_allergy_common: commonAllergies.length // commonAllergies 받는 값 다시 프론트랑 확인하기
-    //       ? {
-    //           connect: commonAllergies.map((coalID) => ({ coal_id: coalID })),
-    //         }
-    //       : undefined,
-    //   },
-    // });
-
-    // await this.prisma.loginData.create({
-    //   data: {
-    //     ld_log_id: log_Id,
-    //     ld_pwd: hashedPWD,
-    //     ld_email: email,
-    //     ld_usergrade: 0,
-    //     ld_user_id: user.user_id, // 유저 아이디 연결
-    //   },
-    // });
 
     return {
       message: '개인 유저 회원가입 성공',

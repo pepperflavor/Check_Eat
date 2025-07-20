@@ -155,6 +155,9 @@ export class CommonAccountService {
   }
 
   async comparePassword(plainPWD: string, hashedPWD: string): Promise<boolean> {
+    if (!hashedPWD || !hashedPWD.startsWith('$2')) {
+      throw new Error('저장된 비밀번호 형식이 잘못되었습니다.');
+    }
     return bcrypt.compare(plainPWD, hashedPWD);
   }
 

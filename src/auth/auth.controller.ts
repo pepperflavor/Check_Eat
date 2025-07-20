@@ -10,6 +10,7 @@ import { CheckEmailToken } from './dto/email-token-check.dto';
 import { EmailService } from 'src/email/email.service';
 import { SendEmailTokenDTO } from './dto/email-token-send.dto';
 import { EmailUniqueDto } from './dto/email-unique.dto';
+import { FindIDDto } from './dto/find-id.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -63,6 +64,7 @@ export class AuthController {
   async sendEmailToken(@Body() body: SendEmailTokenDTO) {
     return await this.authService.requestEmailVerification(
       body.email,
+      0,
       body.language,
     );
   }
@@ -107,14 +109,16 @@ export class AuthController {
   @Post('withdraw')
   async deleteUser() {}
 
-  ///////  아이디 비번 까먹었을 때
+  ///////  아이디 비번 까먹었을 때, 로그인하지 않은 상태에서
   // 아이디 찾기
   @Post('find-id')
   @ApiOperation({ summary: '아이디 찾기', description: '아이디 찾기' })
-  async findIDWithEmail(@Body() body) {
-    // await this.authService.identityEmail()
+  async findIDWithEmail(@Body() body: FindIDDto) {
+    // await this.authService.findIdByEmail(body.email, body.token);
   }
 
   // 비밀번호 찾기이자 변경
+  @ApiOperation({ summary: '비밀번호 찾기', description: '비밀번호 찾기' })
+  @Post('find-pwd')
   async findPWDWithEmail() {}
 }

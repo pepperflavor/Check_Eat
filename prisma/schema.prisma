@@ -19,7 +19,7 @@ model User{
   user_is_halal Int @default(0) // 0: 할랄아님, 1: 할랄인 회원
   user_apple Int?  @default(0) // 0: 일반 회원, 1: 애플로그인
 
-  user_vegan Int? @default(0) // 0: 비건아님, 이외에는 비건 단계
+  user_vegan Int? // 0: 비건아님, 이외에는 비건 단계
   vegan Vegan? @relation(fields: [user_vegan], references: [veg_id])
 
   // 다대다
