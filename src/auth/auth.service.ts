@@ -175,6 +175,7 @@ export class AuthService {
   }
 
   // 사용자 언어에 맞게 이메일 인증 코드 발송
+  // 아이디, 비밀번호 찾기도 여기에서 분기해서 이메일 발송해줌
   async requestEmailVerification(
     email: string,
     type: number,
@@ -236,7 +237,12 @@ export class AuthService {
     }
   }
 
-  // 비밀번호, 아이디 찾기 부분
+  // 탈퇴 - 상태 변경
+  async deleteAccount(ld_id: string) {
+    // 숫자로 가공은 들고 들어가서함
+    const result = await this.commonService.editState(ld_id, 2);
+    return result;
+  }
 
   // LocalStrategy에서 사용할 사용자 검증 메서드
   async validateUser(username: string, password: string): Promise<any> {

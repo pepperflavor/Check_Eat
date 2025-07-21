@@ -161,13 +161,39 @@ export class CommonAccountService {
     return bcrypt.compare(plainPWD, hashedPWD);
   }
 
-  // 이메일 본인 인증 관련
+  // ===== 회원 상태 수정
+  async editState(ld_id: string, updateState: number) {
+    const id = Number(ld_id);
+    const result = await this.prisma.loginData.update({
+      where: {
+        ld_id: id,
+      },
+      data: {
+        ld_status: updateState,
+      },
+    });
+    return result;
+  }
+
+  //=========== 이메일 본인 인증 관련
 
   // 이메일 토큰 검증
-  async verifyEmailToken(email: string, inputCode: string) {
+  // type: 0 회원가입, 1: 아이디찾기, 2: 비밀번호 찾기
+  async verifyEmailToken(email: string, inputCode: string, type: number) {
     const trimEmail = email.trim().toLowerCase();
-    const key = `token-${trimEmail}`.trim();
-    // const key = `token-${trimEmail}`;
+    let key = '';
+
+    if (type == 0) {
+      key = `token-${trimEmail}`.trim();
+    } else if (type == 1) {
+      key = `find-id-${trimEmail}`;
+    } else if (type == 2) {
+      key = `find-pwd-${trimEmail}`;
+    }
+
+    if (key == '' || key == undefined || key == null) {
+      throw new Error('레디트 키값을 설정하는 도중 오류가 발생했습니다.');
+    }
 
     try {
       const savedCode = await this.cache.get(key);

@@ -30,6 +30,30 @@ export class SajangService {
 
   // 음식 등록 -> 등록하면 이때 번역도 해서 db에 저장
   async registFood() {}
+
+  // 가게 상태 변경
+
+  async editStoreState(sa_id: number, updateState: number) {
+    // 1. 사장 ID로 첫 번째 Store의 sto_id를 찾기
+    // 일단 지금은 가게 하나만있다는 걸로 치자고
+    const firstStore = await this.prisma.store.findFirst({
+      where: { sto_sa_id: sa_id },
+      orderBy: { sto_id: 'asc' },
+      select: { sto_id: true },
+    });
+
+    if (!firstStore) {
+      throw new Error('해당 사장님이 등록한 가게가 없습니다.');
+    }
+
+    // 2. 해당 Store의 sto_status 업데이트
+    const updatedStore = await this.prisma.store.update({
+      where: { sto_id: firstStore.sto_id },
+      data: { sto_status: updateState },
+    });
+
+    return updatedStore;
+  }
 }
 
 /*

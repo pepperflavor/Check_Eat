@@ -1,5 +1,7 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { SajangService } from './sajang.service';
+import { ApiOperation } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
 
 @Controller('sajang')
 export class SajangController {
@@ -34,5 +36,11 @@ export class SajangController {
   @Post('check-business-registration')
   async checkBusinessRegistration() {}
 
-
+  @Post('delete-store')
+  @ApiOperation({ summary: '아이디 찾기', description: '아이디 찾기' })
+  // @UseGuards(JwtAuthGuard)
+  async deleteStore(@Req() req) {
+    const sa_id = req.user.sa_id;
+    const result = await this.sajangService.editStoreState(sa_id, 2);
+  }
 }

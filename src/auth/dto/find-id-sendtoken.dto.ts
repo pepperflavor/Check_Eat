@@ -1,18 +1,18 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString } from 'class-validator';
 
-export class FindAccountTokenVerifyDto {
+export class FindIDSendTokenDto {
   @ApiProperty({
     example: 'test.example.com',
-    description: '인증토큰 받은 이메일',
+    description: '인증토큰 받을 이메일',
   })
   @IsEmail()
   email: string;
 
   @ApiProperty({
-    example: 'test.example.com',
-    description: '이메일로 받은 토큰',
+    example: 'ko',
+    description: '유저가 사용하는 언어'
   })
   @IsString()
-  token: string;
+  language:string
 }

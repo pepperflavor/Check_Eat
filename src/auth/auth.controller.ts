@@ -1,4 +1,4 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { CreateUserDTO } from 'src/user/user_dto/create-user.dto';
@@ -7,10 +7,11 @@ import { CommonLoginDTO } from './dto/common-login.dto';
 import { JwtAuthGuard } from './jwt.guard';
 import { CommonAccountService } from 'src/common-account/common-account.service';
 import { CheckEmailToken } from './dto/email-token-check.dto';
-import { EmailService } from 'src/email/email.service';
 import { SendEmailTokenDTO } from './dto/email-token-send.dto';
 import { EmailUniqueDto } from './dto/email-unique.dto';
-import { FindIDDto } from './dto/find-id.dto';
+import { FindAccountTokenVerifyDto } from './dto/find-id.dto';
+import { CurrentUser } from './decorator/current-user.decorator';
+import { FindIDSendTokenDto } from './dto/find-id-sendtoken.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -72,11 +73,11 @@ export class AuthController {
   // 이메일 본인인증 - 토큰검증하기
   @Post('check-email-token')
   @ApiOperation({
-    summary: '이메일 본인인증 - 토큰 검증',
-    description: '이메일 본인인증 - 토큰 검증',
+    summary: '회원가입시 이메일 본인인증 - 토큰 검증',
+    description: '회원가입시 이메일 본인인증 - 토큰 검증',
   })
   async checkEmailToken(@Body() body: CheckEmailToken) {
-    return await this.commonService.verifyEmailToken(body.email, body.token);
+    return await this.commonService.verifyEmailToken(body.email, body.token, 0);
   }
 
   // 회원가입 페이지 - 아이디 중복확인
@@ -103,22 +104,60 @@ export class AuthController {
   @Post('logout')
   async logout() {}
 
-  // 탈퇴
+  // 회원 탈퇴
   @ApiOperation({ summary: '회원 탈퇴', description: '회원 탈퇴' })
   @UseGuards(JwtAuthGuard)
-  @Post('withdraw')
-  async deleteUser() {}
+  @Post('delete-account')
+  async deleteUser(@CurrentUser() user: any) {
+    const accountId = user.sub;
+    return await this.authService.deleteAccount(accountId);
+  }
 
   ///////  아이디 비번 까먹었을 때, 로그인하지 않은 상태에서
   // 아이디 찾기
-  @Post('find-id')
-  @ApiOperation({ summary: '아이디 찾기', description: '아이디 찾기' })
-  async findIDWithEmail(@Body() body: FindIDDto) {
-    // await this.authService.findIdByEmail(body.email, body.token);
+  @Post('find-id-sendtoken')
+  @ApiOperation({
+    summary: '이메일주소, 유저가 설정한 언어 같이 보내줘야함',
+    description: '아이디 찾기- 토큰발송',
+  })
+  async findIDWithEmail(@Body() body: FindIDSendTokenDto) {
+    await this.authService.requestEmailVerification(
+      body.email,
+      1,
+      body.language,
+    );
+  }
+
+  @Post('find-id-verify-token')
+  @ApiOperation({
+    summary: '토큰 받은 이메일, 이메일로 받은 검증 코드 보내주면 됌',
+    description: '아이디 찾기로 발송한 토큰 검증',
+  })
+  async findIDVerifyToken(@Body() body: FindAccountTokenVerifyDto) {
+    return await this.commonService.verifyEmailToken(body.email, body.token, 1);
   }
 
   // 비밀번호 찾기이자 변경
-  @ApiOperation({ summary: '비밀번호 찾기', description: '비밀번호 찾기' })
+  // 이메일 토큰 발송
   @Post('find-pwd')
-  async findPWDWithEmail() {}
+  @ApiOperation({
+    summary: '이메일 비밀번호 찾기',
+    description: '비밀번호 찾기를 위한 이메일 토큰발송',
+  })
+  async findPWDWithEmail(@Body() body: FindIDSendTokenDto) {
+    await this.authService.requestEmailVerification(
+      body.email,
+      2,
+      body.language,
+    );
+  }
+
+  @ApiOperation({
+    summary: '비밀번호 찾기로 발송한 토큰 검증, 이메일, 인증코드 보내줘',
+    description: '비밀번호 찾기를 위한 이메일 토큰검증',
+  })
+  @Post('find-pwd-verify-token')
+  async findPWDVerifyToken(@Body() body: FindAccountTokenVerifyDto) {
+    return await this.commonService.verifyEmailToken(body.email, body.token, 2);
+  }
 }
