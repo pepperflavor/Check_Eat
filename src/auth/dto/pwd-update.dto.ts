@@ -8,5 +8,5 @@ export class UpdatePWDDto {
     description: '새 비밀번호',
   })
   @IsString()
-  pwd: string;
+  newPwd: string;
 }
