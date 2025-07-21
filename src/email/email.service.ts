@@ -62,7 +62,7 @@ export class EmailService implements OnModuleInit {
         sendHtml = `<p> الرجاء إدخال رمز المصادقة أدناه في حقل المصادقة. </p><h2>${code}</h2>`;
         break;
       case 'ko_2':
-        sendSubject = 'CHECK EAT! 비밀번호 찾기 인증코드';
+        sendSubject = 'CHECK EAT! 비밀번호 인증코드';
         sendHtml = `<p> 아래 인증 코드를 인증 칸에 입력해주세요 : </p><h2>${code}</h2>`;
         break;
       case 'en_02':

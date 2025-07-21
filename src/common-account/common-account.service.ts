@@ -162,6 +162,8 @@ export class CommonAccountService {
   }
 
   // ===== 회원 상태 수정
+
+  // 탈퇴
   async editState(ld_id: string, updateState: number) {
     const id = Number(ld_id);
     const result = await this.prisma.loginData.update({
@@ -173,6 +175,11 @@ export class CommonAccountService {
       },
     });
     return result;
+  }
+
+  // 비번 업데이트
+  async updatePwdCommon(inputpwd: string) {
+    // return await this.prisma.logdata
   }
 
   //=========== 이메일 본인 인증 관련

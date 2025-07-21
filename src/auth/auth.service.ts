@@ -237,6 +237,11 @@ export class AuthService {
     }
   }
 
+  // 로그인 한상태에서 비번변경
+  async updatePwd(inputpwd: string) {
+    const result = await this.commonService.updatePwdCommon(inputpwd);
+  }
+
   // 탈퇴 - 상태 변경
   async deleteAccount(ld_id: string) {
     // 숫자로 가공은 들고 들어가서함

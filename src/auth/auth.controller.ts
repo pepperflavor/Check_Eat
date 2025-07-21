@@ -12,6 +12,7 @@ import { EmailUniqueDto } from './dto/email-unique.dto';
 import { FindAccountTokenVerifyDto } from './dto/find-id.dto';
 import { CurrentUser } from './decorator/current-user.decorator';
 import { FindIDSendTokenDto } from './dto/find-id-sendtoken.dto';
+import { UpdatePWDDto } from './dto/pwd-update.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -113,7 +114,13 @@ export class AuthController {
     return await this.authService.deleteAccount(accountId);
   }
 
-  ///////  아이디 비번 까먹었을 때, 로그인하지 않은 상태에서
+  // 마이 페이지에서 비밀번호 바꾸기
+  @Post('change-pwd')
+  async changePWDCommon(@Body() body: UpdatePWDDto) {
+    return await this.authService.updatePwd(body.pwd);
+  }
+
+  ///////======= 로그인하지 않은 상태
   // 아이디 찾기
   @Post('find-id-sendtoken')
   @ApiOperation({
@@ -139,9 +146,9 @@ export class AuthController {
 
   // 비밀번호 찾기이자 변경
   // 이메일 토큰 발송
-  @Post('find-pwd')
+  @Post('change-pwd')
   @ApiOperation({
-    summary: '이메일 비밀번호 찾기',
+    summary: '비밀번호 찾기이자 변경을 위한 이메일 발송',
     description: '비밀번호 찾기를 위한 이메일 토큰발송',
   })
   async findPWDWithEmail(@Body() body: FindIDSendTokenDto) {
