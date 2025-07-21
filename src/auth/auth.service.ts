@@ -238,8 +238,9 @@ export class AuthService {
   }
 
   // 로그인 한상태에서 비번변경
-  async updatePwd(inputpwd: string) {
-    const result = await this.commonService.updatePwdCommon(inputpwd);
+  async updatePwd(ld_id: string,inputpwd: string) {
+    const result = await this.commonService.updatePwdCommon(ld_id, inputpwd);
+    return result
   }
 
   // 탈퇴 - 상태 변경

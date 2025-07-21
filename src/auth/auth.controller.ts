@@ -115,9 +115,12 @@ export class AuthController {
   }
 
   // 마이 페이지에서 비밀번호 바꾸기
+  // 일단 애니로ㅎㅎㅎ
+  @UseGuards(JwtAuthGuard)
   @Post('change-pwd')
-  async changePWDCommon(@Body() body: UpdatePWDDto) {
-    return await this.authService.updatePwd(body.pwd);
+  async changePWDCommon(@CurrentUser() user: any, @Body() body: UpdatePWDDto) {
+    const accountID = user.sub
+    return await this.authService.updatePwd(accountID, body.pwd);
   }
 
   ///////======= 로그인하지 않은 상태

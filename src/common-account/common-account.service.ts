@@ -6,12 +6,14 @@ import {
 import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CacheService } from 'src/cache/cache.service';
+import { ConfigService } from '@nestjs/config';
 
 // 로그인, 회원가입시 공통 기능 부분 분리
 @Injectable()
 export class CommonAccountService {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly config: ConfigService,
     private cache: CacheService,
   ) {}
 
@@ -177,9 +179,29 @@ export class CommonAccountService {
     return result;
   }
 
-  // 비번 업데이트
-  async updatePwdCommon(inputpwd: string) {
-    // return await this.prisma.logdata
+  // 비번 업데이트, 재설정
+  async updatePwdCommon(ld_id: string, inputpwd: string) {
+    const ID = Number(ld_id);
+    const SALT = await this.config.get('BCRYPT_SALT_ROUNDS');
+    const hashedPWD = await bcrypt.hash(inputpwd, SALT); // 비번 해시화
+
+    const result = await this.prisma.loginData.update({
+      where: {
+        ld_id: ID,
+      },
+      data: {
+        ld_pwd: hashedPWD,
+      },
+    });
+
+    if (result == null || result == undefined) {
+      throw new Error('비밀번호 재설정중 오류가 발생했습니다.');
+    }
+
+    return {
+      message: '비밀번호 재설정 완료',
+      status: 'success',
+    };
   }
 
   //=========== 이메일 본인 인증 관련
