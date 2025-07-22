@@ -1,10 +1,11 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import restaurantData from './gangnam_restaurants.json'; // JSON 파일 import
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // 🌱 Vegan 데이터 삽입
+  // ✅ Vegan 데이터 삽입
   const veganCount = await prisma.vegan.count();
   if (veganCount === 0) {
     console.log('🌱 Vegan 데이터 삽입 중...');
@@ -18,9 +19,11 @@ async function main() {
         '비건 베지테리언',
       ].map((veg_name) => ({ veg_name })),
     });
+  } else {
+    console.log('✅ Vegan 데이터 이미 존재');
   }
 
-  // 🌱 CommonAl 데이터 삽입
+  // ✅ CommonAl 데이터 삽입
   const allergyCount = await prisma.commonAl.count();
   if (allergyCount === 0) {
     console.log('🌱 CommonAl 데이터 삽입 중...');
@@ -47,124 +50,89 @@ async function main() {
         { coal_id: 19, coal_name: '잣' },
       ],
     });
+  } else {
+    console.log('✅ CommonAl 데이터 이미 존재');
   }
 
-  // ✅ 비밀번호 해시 함수
-  const hashPassword = async (plainPassword: string) => {
-    const saltRounds = 10; // salt cost factor
-    return bcrypt.hash(plainPassword, saltRounds);
-  };
+  // ✅ 사장님 10명 생성
+  for (let i = 1; i <= 10; i++) {
+    const logId = `owner${i}_id`;
+    const existingLogin = await prisma.loginData.findUnique({
+      where: { ld_log_id: logId },
+    });
 
-  // 🌱 User용 LoginData 생성
-  const loginUser1 = await prisma.loginData.create({
-    data: {
-      ld_usergrade: 0,
-      ld_log_id: 'user1_id',
-      ld_email: 'user1@example.com',
-      ld_pwd: await hashPassword('password1'),
-      ld_status: 0,
-    },
-  });
-  const loginUser2 = await prisma.loginData.create({
-    data: {
-      ld_usergrade: 0,
-      ld_log_id: 'user2_id',
-      ld_email: 'user2@example.com',
-      ld_pwd: await hashPassword('password2'),
-      ld_status: 0,
-    },
-  });
-  const loginUser3 = await prisma.loginData.create({
-    data: {
-      ld_usergrade: 0,
-      ld_log_id: 'user3_id',
-      ld_email: 'user3@example.com',
-      ld_pwd: await hashPassword('password3'),
-      ld_status: 0,
-    },
-  });
+    if (!existingLogin) {
+      // 사장 생성
+      const sajang = await prisma.sajang.create({
+        data: {
+          sa_img: null, // 프로필 이미지 null
+          sa_certification: 0,
+          sa_certi_status: i % 2, // 짝수: 인증 완료(1), 홀수: 대기(0)
+        },
+      });
 
-  // 🌱 User 생성 후 LoginData와 연결
-  const user1 = await prisma.user.create({
-    data: {
-      user_nick: 'User1',
-      user_pro_img: '0',
-      user_is_halal: 0,
-      user_apple: 0,
-      user_allergy_common: { connect: [{ coal_id: 1 }, { coal_id: 2 }] },
-    },
-  });
-  await prisma.loginData.update({
-    where: { ld_id: loginUser1.ld_id },
-    data: { ld_user_id: user1.user_id },
-  });
+      // 업주용 LoginData 생성 및 Sajang 연결
+      const hashedPwd = await bcrypt.hash(`passwordOwner${i}`, 10);
+      const login = await prisma.loginData.create({
+        data: {
+          ld_usergrade: 1,
+          ld_log_id: logId,
+          ld_email: `owner${i}@example.com`,
+          ld_pwd: hashedPwd,
+          ld_status: 0,
+          ld_sajang_id: sajang.sa_id,
+        },
+      });
 
-  const user2 = await prisma.user.create({
-    data: {
-      user_nick: 'User2',
-      user_pro_img: '0',
-      user_is_halal: 0,
-      user_apple: 0,
-      user_allergy_common: { connect: [{ coal_id: 3 }, { coal_id: 4 }] },
-    },
-  });
-  await prisma.loginData.update({
-    where: { ld_id: loginUser2.ld_id },
-    data: { ld_user_id: user2.user_id },
-  });
+      console.log(`✅ 사장님 및 LoginData 생성 완료: ${logId}`);
+    } else {
+      console.log(`⚠️ 사장님 및 LoginData 이미 존재: ${logId}`);
+    }
+  }
 
-  const user3 = await prisma.user.create({
-    data: {
-      user_nick: 'User3',
-      user_pro_img: '0',
-      user_is_halal: 0,
-      user_apple: 0,
-      user_allergy_common: { connect: [{ coal_id: 5 }, { coal_id: 6 }] },
-    },
-  });
-  await prisma.loginData.update({
-    where: { ld_id: loginUser3.ld_id },
-    data: { ld_user_id: user3.user_id },
-  });
+  // ✅ 각 사장님에 Store 2개씩 배정 (순서대로)
+  const selectedStores = restaurantData.slice(0, 20); // JSON 상위 20개 사용
+  for (let i = 0; i < 10; i++) {
+    const halalFlag = i < 5 ? 0 : 1; // 1~5번 사장: 할랄=0 / 6~10번 사장: 할랄=1
 
-  // 🌱 Sajang용 LoginData 생성
-  const loginOwner1 = await prisma.loginData.create({
-    data: {
-      ld_usergrade: 1,
-      ld_log_id: 'owner1_id',
-      ld_email: 'owner1@example.com',
-      ld_pwd: await hashPassword('passwordOwner1'),
-      ld_status: 0,
-    },
-  });
-  const loginOwner2 = await prisma.loginData.create({
-    data: {
-      ld_usergrade: 1,
-      ld_log_id: 'owner2_id',
-      ld_email: 'owner2@example.com',
-      ld_pwd: await hashPassword('passwordOwner2'),
-      ld_status: 0,
-    },
-  });
+    // 사장님 찾기
+    const logId = `owner${i + 1}_id`;
+    const login = await prisma.loginData.findUnique({
+      where: { ld_log_id: logId },
+      include: { sajang: true },
+    });
 
-  // 🌱 Sajang 생성 후 LoginData와 연결
-  const sajang1 = await prisma.sajang.create({
-    data: { sa_img: null, sa_certification: 0, sa_certi_status: 1 },
-  });
-  await prisma.loginData.update({
-    where: { ld_id: loginOwner1.ld_id },
-    data: { ld_sajang_id: sajang1.sa_id },
-  });
+    if (login?.sajang) {
+      for (let j = 0; j < 2; j++) {
+        const storeData = selectedStores[i * 2 + j];
+        const existingStore = await prisma.store.findFirst({
+          where: { sto_name: storeData.RSTRNT_NM },
+        });
 
-  const sajang2 = await prisma.sajang.create({
-    data: { sa_img: null, sa_certification: 1, sa_certi_status: 0 },
-  });
-  await prisma.loginData.update({
-    where: { ld_id: loginOwner2.ld_id },
-    data: { ld_sajang_id: sajang2.sa_id },
-  });
+        if (!existingStore) {
+          await prisma.store.create({
+            data: {
+              sto_name: storeData.RSTRNT_NM,
+              sto_address: storeData.RSTRNT_ROAD_NM_ADDR,
+              sto_phone: storeData.RSTRNT_TEL_NO ?? null,
+              sto_latitude: parseFloat(storeData.RSTRNT_LA),
+              sto_longitude: parseFloat(storeData.RSTRNT_LO),
+              sto_halal: halalFlag,
+              sto_type: storeData.RSTRNT_CTGRY_NM,
+              sto_img: null,
+              sto_status: 0,
+              sajang: { connect: { sa_id: login.sajang.sa_id } },
+            },
+          });
+          console.log(`✅ Store 생성 완료: ${storeData.RSTRNT_NM}`);
+        } else {
+          console.log(`⚠️ Store 이미 존재: ${storeData.RSTRNT_NM}`);
+        }
+      }
+    }
+  }
 
-  console.log('✅ User, Sajang, LoginData 초기 데이터 삽입 완료!');
+  console.log('🌱 시드 데이터 삽입 완료');
 }
 
 main()
