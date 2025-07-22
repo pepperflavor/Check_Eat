@@ -243,9 +243,26 @@ export class CommonAccountService {
 
       await this.cache.del(key);
 
+      // 유저 아이디 찾아서 보내줘야함
+      const ID = await this.prisma.loginData.findUnique({
+        where: {
+          ld_email: email,
+        },
+        select: {
+          ld_log_id: true,
+        },
+      });
+
+      if (ID == null || ID == undefined) {
+        throw new UnauthorizedException(
+          '해당 이메일로 가입한 아이디가 없습니다.',
+        );
+      }
+
       return {
         message: '이메일 본인 인증 성공',
         status: 'success',
+        log_id: ID,
       };
     } catch (error) {
       throw new Error('인증 코드 검증 중 문제가 발생했습니다.');

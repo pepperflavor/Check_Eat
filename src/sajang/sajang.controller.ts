@@ -37,7 +37,7 @@ export class SajangController {
   async checkBusinessRegistration() {}
 
   @Post('delete-store')
-  @ApiOperation({ summary: '아이디 찾기', description: '아이디 찾기' })
+  @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
   // @UseGuards(JwtAuthGuard)
   async deleteStore(@Req() req) {
     const sa_id = req.user.sa_id;

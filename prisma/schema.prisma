@@ -177,7 +177,7 @@ model Store{
   sto_phone String? // 가게 전화번호
   sto_status Int @default(0) // 0: 정상영업, 1: 임시 휴업/휴가, 2: 가게접음
   sto_halal Int @default(0)// 0: 할랄 인증 x, 1: 할랄 인증 받은 가게
-  sto_type String? // 업종, 0: 음식점, 1: 카페 => string으로 받을까...?
+  sto_type String? // 업종 지금은 일단, 음식점 / 카페
   sto_latitude Float // 위도
   sto_longitude Float // 경도 -> 프론트에서 처리해서 줄거임~
 

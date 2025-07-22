@@ -1,4 +1,11 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { CreateUserDTO } from 'src/user/user_dto/create-user.dto';
@@ -116,7 +123,6 @@ export class AuthController {
 
   // 마이 페이지에서 비밀번호 바꾸기
   // 일단 애니로ㅎㅎㅎ
-
   @Post('change-pwd')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
@@ -129,7 +135,7 @@ export class AuthController {
   }
 
   ///////======= 로그인하지 않은 상태
-  // 아이디 찾기
+  // 아이디 찾기 시작
   @Post('find-id-sendtoken')
   @ApiOperation({
     summary: '이메일주소, 유저가 설정한 언어 같이 보내줘야함',
@@ -160,6 +166,14 @@ export class AuthController {
     description: '비밀번호 찾기를 위한 이메일 토큰발송',
   })
   async findPWDWithEmail(@Body() body: FindIDSendTokenDto) {
+    // 가입한 아이디가 맞는지 먼저 확인해주기
+    const result = await this.commonService.isExistID(body.log_id);
+    if (result.status == HttpStatus.OK) {
+      return {
+        message: '해당 아이디로 가입한 이력이 없습니다.',
+        status: false,
+      };
+    }
     await this.authService.requestEmailVerification(
       body.email,
       2,
@@ -168,7 +182,7 @@ export class AuthController {
   }
 
   @ApiOperation({
-    summary: '비밀번호 찾기로 발송한 토큰 검증, 이메일, 인증코드 보내줘',
+    summary: '비밀번호 찾기로 발송한 토큰 검증, 이메일, 인증코드 보내줘야함',
     description: '비밀번호 찾기를 위한 이메일 토큰검증',
   })
   @Post('find-pwd-verify-token')
