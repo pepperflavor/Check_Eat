@@ -168,12 +168,14 @@ export class AuthController {
   async findPWDWithEmail(@Body() body: FindIDSendTokenDto) {
     // 가입한 아이디가 맞는지 먼저 확인해주기
     const result = await this.commonService.isExistID(body.log_id);
+
     if (result.status == HttpStatus.OK) {
       return {
         message: '해당 아이디로 가입한 이력이 없습니다.',
         status: false,
       };
     }
+
     await this.authService.requestEmailVerification(
       body.email,
       2,
