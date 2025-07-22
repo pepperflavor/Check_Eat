@@ -1,9 +1,10 @@
 import { PrismaClient } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Vegan, CommonAl 초기 데이터 삽입
+  // 🌱 Vegan 데이터 삽입
   const veganCount = await prisma.vegan.count();
   if (veganCount === 0) {
     console.log('🌱 Vegan 데이터 삽입 중...');
@@ -19,6 +20,7 @@ async function main() {
     });
   }
 
+  // 🌱 CommonAl 데이터 삽입
   const allergyCount = await prisma.commonAl.count();
   if (allergyCount === 0) {
     console.log('🌱 CommonAl 데이터 삽입 중...');
@@ -47,13 +49,19 @@ async function main() {
     });
   }
 
-  // User용 LoginData 먼저 생성
+  // ✅ 비밀번호 해시 함수
+  const hashPassword = async (plainPassword: string) => {
+    const saltRounds = 10; // salt cost factor
+    return bcrypt.hash(plainPassword, saltRounds);
+  };
+
+  // 🌱 User용 LoginData 생성
   const loginUser1 = await prisma.loginData.create({
     data: {
       ld_usergrade: 0,
       ld_log_id: 'user1_id',
       ld_email: 'user1@example.com',
-      ld_pwd: 'password1',
+      ld_pwd: await hashPassword('password1'),
       ld_status: 0,
     },
   });
@@ -62,7 +70,7 @@ async function main() {
       ld_usergrade: 0,
       ld_log_id: 'user2_id',
       ld_email: 'user2@example.com',
-      ld_pwd: 'password2',
+      ld_pwd: await hashPassword('password2'),
       ld_status: 0,
     },
   });
@@ -71,12 +79,12 @@ async function main() {
       ld_usergrade: 0,
       ld_log_id: 'user3_id',
       ld_email: 'user3@example.com',
-      ld_pwd: 'password3',
+      ld_pwd: await hashPassword('password3'),
       ld_status: 0,
     },
   });
 
-  // User 생성 후 LoginData와 연결
+  // 🌱 User 생성 후 LoginData와 연결
   const user1 = await prisma.user.create({
     data: {
       user_nick: 'User1',
@@ -119,13 +127,13 @@ async function main() {
     data: { ld_user_id: user3.user_id },
   });
 
-  // Sajang용 LoginData 먼저 생성
+  // 🌱 Sajang용 LoginData 생성
   const loginOwner1 = await prisma.loginData.create({
     data: {
       ld_usergrade: 1,
       ld_log_id: 'owner1_id',
       ld_email: 'owner1@example.com',
-      ld_pwd: 'passwordOwner1',
+      ld_pwd: await hashPassword('passwordOwner1'),
       ld_status: 0,
     },
   });
@@ -134,12 +142,12 @@ async function main() {
       ld_usergrade: 1,
       ld_log_id: 'owner2_id',
       ld_email: 'owner2@example.com',
-      ld_pwd: 'passwordOwner2',
+      ld_pwd: await hashPassword('passwordOwner2'),
       ld_status: 0,
     },
   });
 
-  // Sajang 생성 후 LoginData와 연결
+  // 🌱 Sajang 생성 후 LoginData와 연결
   const sajang1 = await prisma.sajang.create({
     data: { sa_img: null, sa_certification: 0, sa_certi_status: 1 },
   });
