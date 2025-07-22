@@ -139,7 +139,7 @@ model CommonAl{
 
 model Vegan{
   veg_id Int @id @default(autoincrement())
-  veg_name String // 비건 단계 이름
+  veg_name String @unique// 비건 단계 이름
   // veg_img String? // 비건 단계 이미지는 내장으로 함
 
   food Food[] // 음식과 다대다 관계
