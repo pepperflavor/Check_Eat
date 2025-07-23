@@ -5,6 +5,8 @@ import * as bcrypt from 'bcrypt';
 import { CreateUserDTO } from './user_dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { randomNickMaker } from './randomNick';
+import Decimal from 'decimal.js';
+import { throwError } from 'rxjs';
 
 @Injectable()
 export class UserService {
@@ -97,6 +99,52 @@ export class UserService {
     return user;
   }
 
+  //======  메인 페이지 기능 시작
+  // 메인 지도화면 좌표 리턴
+  async mainPageStoresData(user_la: string, user_long: string, radius: number) {
+    // 현재 위도 경도 소수로 수정
+    const LA = new Decimal(user_la);
+    const LONG = new Decimal(user_long);
+
+    const stores = await this.prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT
+      sto_id, 
+        sto_name, 
+        sto_latitude, 
+        sto_longitude,
+        ST_Distance(
+          geography(ST_MakePoint(sto_longitude, sto_latitude)),
+          geography(ST_MakePoint($1, $2))
+        ) AS distance
+      FROM "Store"
+      WHERE ST_DWithin(
+        geography(ST_MakePoint(sto_longitude, sto_latitude)),
+        geography(ST_MakePoint($1, $2)),
+        $3
+      )
+      ORDER BY distance ASC;
+    `,
+      LONG,
+      LA,
+      radius,
+    );
+
+    if (stores.length == 0) {
+      return {
+        message: `반경 ${radius}km 내의 위치한 가게가 없습니다`,
+        status: 'success',
+      };
+    } else if (stores.length > 0) {
+      return stores;
+    } else if (stores == null || stores == undefined) {
+      throw new Error(
+        '유저 위치 기반 주변 가게를 찾는 도중 에러가 발생했습니다.',
+      );
+    }
+  }
+
+  //===== 유저 마이페이지 관련 시작
   // 닉네임 변경
 
   // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장
