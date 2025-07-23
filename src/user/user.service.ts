@@ -99,7 +99,7 @@ export class UserService {
     return user;
   }
 
-  //======  메인 페이지 기능 시작
+  //======  메인 기능 시작
   // 메인 지도화면 좌표 리턴
   async mainPageStoresData(user_la: string, user_long: string, radius: number) {
     // 현재 위도 경도 소수로 수정
@@ -143,6 +143,9 @@ export class UserService {
       );
     }
   }
+
+  // 가게 이름으로 음식점 검색하기
+  async getStoreByName(inputName:string) {}
 
   //===== 유저 마이페이지 관련 시작
   // 닉네임 변경

@@ -16,7 +16,7 @@ export class SajangService {
   // 사장 회원가입
   async createSajang(data: CreateSajangDTO) {}
 
-  // OCR 관련
+  //===== OCR 관련
   // 음식 사진 찍으면 재료명 추출해주기
   async recommendMeterials() {}
 
@@ -31,8 +31,9 @@ export class SajangService {
   // 음식 등록 -> 등록하면 이때 번역도 해서 db에 저장
   async registFood() {}
 
-  // 가게 상태 변경
 
+
+  // 가게 상태 변경
   async editStoreState(sa_id: number, updateState: number) {
     // 1. 사장 ID로 첫 번째 Store의 sto_id를 찾기
     // 일단 지금은 가게 하나만있다는 걸로 치자고
@@ -54,6 +55,8 @@ export class SajangService {
 
     return updatedStore;
   }
+
+  
 }
 
 /*

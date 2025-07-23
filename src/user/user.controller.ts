@@ -32,4 +32,11 @@ export class UserController {
     );
     return result;
   }
+
+  @ApiOperation({ summary: '가게 이름으로 검색하기', description : '가게이름 입력하면 관련 정보 찾아줌' })
+  @Post('search-store-nm')
+  async searchStore(@Body() body) {
+    const result = await this.userService.getStoreByName(body.store_name);
+    return result;
+  }
 }

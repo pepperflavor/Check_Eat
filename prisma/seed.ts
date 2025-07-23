@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import restaurantData from './gangnam_restaurants.json'; // JSON 파일 import
+import seedFoods from './seedFoods';
 
 const prisma = new PrismaClient();
 
@@ -133,6 +134,8 @@ async function main() {
   }
 
   console.log('🌱 시드 데이터 삽입 완료');
+  console.log('음식 시드 데이터 삽입시작');
+  await seedFoods();
 }
 
 main()

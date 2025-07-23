@@ -66,7 +66,7 @@ model Sajang{
 model Food {
   foo_id Int @id @default(autoincrement())
   foo_name String // 음식이름
-  foo_material String? // 재료, 할랄은 할랄테이블에서 받아옴
+  foo_material String? // 재료
   foo_price Int // 가격
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
   foo_status Int @default(0) // 0: 정상판매중, 1: 사장 요청으로 판매 일시중지, 2: 삭제된 음식
@@ -128,7 +128,7 @@ model Holiday{
 // 이건 순서 고정으로 갈 예정
 model CommonAl{
   coal_id Int @id @default(autoincrement())
-  coal_name String // 알러지 원료이름
+  coal_name String @unique// 알러지 원료이름
   // coal_img String // 알러지 원료 이미지 -> storage에 저장할 예정
 
   food Food[] @relation("CommonAlFood")

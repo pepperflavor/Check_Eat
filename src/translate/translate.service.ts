@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class TranslateService {
   constructor(private readonly config: ConfigService) {}
 
+  // 단어 번역
   async translateOneWord(inputText: string, to: string, from: string) {
     const URL = `${this.config.get('TRANSLATE_ENDPOINT')}/translate`;
 
