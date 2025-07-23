@@ -16,7 +16,7 @@ export class UserController {
 
   // 유저 메인 화면 처음 접속했을 때
   // 본인 좌표 받고, 좌표 기준으로 반경 1km 내에 있는 음식점 좌표 리턴해줌
-  @Post('user-main')
+  @Post('main')
   // @UseGuards(JwtAuthGuard) // 일단 주석걸어둠
   @ApiProperty({})
   async userMain(@Body() body: UserLocationDto) {
