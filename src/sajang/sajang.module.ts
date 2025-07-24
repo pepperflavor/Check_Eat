@@ -5,11 +5,20 @@ import { PrismaService } from 'src/prisma.service';
 import { CacheConfigModule } from 'src/cache/cache.module';
 import { EmailModule } from 'src/email/email.module';
 import { TranslateModule } from 'src/translate/translate.module';
+import { BullModule } from '@nestjs/bull';
+import { CheckBusinessProcessor } from './processor/check-business.processor';
 
 @Module({
-  imports: [CacheConfigModule, EmailModule, TranslateModule],
+  imports: [
+    CacheConfigModule,
+    EmailModule,
+    TranslateModule,
+    BullModule.registerQueue({
+      name: 'check-business',
+    }),
+  ],
   controllers: [SajangController],
-  providers: [SajangService, PrismaService],
+  providers: [SajangService, PrismaService, CheckBusinessProcessor],
   exports: [SajangService],
 })
 export class SajangModule {}

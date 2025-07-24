@@ -27,17 +27,16 @@ export class SajangController {
   @Post('regist-halal')
   async registHalal() {}
 
-  // 사업자 등록증 등록
+  // 회원가입시 사업자 등록증 등록
   @Post('regist-certification')
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님이 정보 수정후 취합해서 요청보내기',
     description: '사업자 등록 진위여부 - 국세청으로 요청보내는 곳',
   })
-  async registCertification(@Req() req, @Body() body:BusinessRegistrationDTO) {
+  async registCertification(@Body() body: BusinessRegistrationDTO) {
     // 사장님은 토큰에 사장 아이디 들어있음
-    const sajangID = req.user.sa_id;
-    const result = await this.sajangService.checkBusinessRegistration(sajangID, body);
+    const result = await this.sajangService.checkBusinessRegistration(body);
     return result;
   }
 

@@ -18,14 +18,9 @@ export class SajangService {
   ) {}
 
   // 사업자 등록진위여부, 재시도
-  async checkBusinessRegistration(
-    sa_id: string,
-    data: BusinessRegistrationDTO,
-  ) {
-    const ID = Number(sa_id); // 아이디 형변환
-
+  async checkBusinessRegistration(data: BusinessRegistrationDTO) {
     try {
-      const result = await this.callAPI(sa_id, data);
+      const result = await this.callAPI(data);
 
       return {
         message: '사업자 진위여부 확인 성공',
@@ -38,8 +33,17 @@ export class SajangService {
       // 10 초후 재시도
       await this.checkQueue.add(
         'retry-check',
-        { sa_id, data },
-        { delay: 10_000 },
+        { data },
+        {
+          delay: 10_000, // 10초 후 재시도
+          attempts: 5, // 최대 5번 시도
+          backoff: {
+            type: 'fixed',
+            delay: 10_000, // 10초 간격으로 고정 재시도
+          },
+          removeOnComplete: true,
+          removeOnFail: false, // 실패 로그 남기고 싶으면 false
+        },
       );
       // sa_certifiaction 1 로
 
@@ -51,26 +55,31 @@ export class SajangService {
   }
 
   // 사업자등록증 진위여부 API 호출부분
-  private async callAPI(sa_id: string, data: BusinessRegistrationDTO) {
-    const ID = Number(sa_id); // 아이디 형변환
+  private async callAPI(data: BusinessRegistrationDTO) {
     const IRS_URL = this.config.get<string>('IRS_URL'); // 국세청 앤드포인트
     const SERVICE_KEY = this.config.get<string>('IRS_SERVICE_KEY');
 
     const payload = {
-      business: [
+      businesses: [
         {
           b_no: data.b_no.replace(/-/g, ''), // 하이픈 제거
           start_dt: data.start_dt.replace(/[^0-9]/g, ''), // YYYYMMDD
           p_nm: data.p_nm,
-          p_nm2: '',
-          b_nm: data.b_nm ?? '',
-          corp_no: data.corp_no?.replace(/-/g, '') ?? '',
-          b_sector: data.b_sector?.replace(/^업태\s*/, '') ?? '',
-          b_type: data.b_type?.replace(/^종목\s*/, '') ?? '',
-          b_adr: data.b_adr ?? '',
+          // p_nm2: '',
+          // b_nm: data.b_nm ?? '',
+          // corp_no: data.corp_no?.replace(/-/g, '') ?? '',
+          // b_sector: data.b_sector?.replace(/^업태\s*/, '') ?? '',
+          // b_type: data.b_type?.replace(/^종목\s*/, '') ?? '',
+          // b_adr: data.b_adr ?? '',
         },
       ],
     };
+
+    console.log(
+      '요청 URL:',
+      `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
+    );
+    console.log('요청 Payload:', JSON.stringify(payload, null, 2));
 
     const { data: response } = await axios.post(
       `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
@@ -90,8 +99,6 @@ export class SajangService {
         result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
       );
     }
-
-    // 성공하면 사장님 테이블에 상태 변경
 
     return {
       message: '진위여부 확인 완료',

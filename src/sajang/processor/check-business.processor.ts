@@ -9,13 +9,10 @@ export class CheckBusinessProcessor {
   constructor(private readonly sajangService: SajangService) {}
 
   @Process('retry-check')
-  async retryCheck(job: Job<{ sa_id: string; data: BusinessRegistrationDTO }>) {
+  async retryCheck(job: Job<{ data: BusinessRegistrationDTO }>) {
     try {
       console.log('🔁 재시도 중...');
-      await this.sajangService.checkBusinessRegistration(
-        job.data.sa_id,
-        job.data.data,
-      );
+      await this.sajangService.checkBusinessRegistration(job.data.data);
       // TODO: 성공 시 DB 업데이트
     } catch (err) {
       console.error('⛔ 재시도 실패:', err.message);

@@ -1,7 +1,7 @@
 // 사업자 등록증 데이터 DTO
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class BusinessRegistrationDTO {
   @ApiProperty({
@@ -27,6 +27,7 @@ export class BusinessRegistrationDTO {
     description: '외국인일 경우, 한글이름 (선택사항)',
   })
   @IsString()
+  @IsOptional()
   p_nm2?: string;
 
   @ApiProperty({
@@ -41,14 +42,17 @@ export class BusinessRegistrationDTO {
     description: '법인등록번호 (선택사항 이지만 회원가입시 입력받음)',
   })
   @IsString()
-  b_nm: string; // 상호명
+  @IsOptional()
+  b_nm?: string; // 상호명
 
   @IsString()
   b_sector: string; // 주 업태명
 
   // 종목 -일반 음식점 ||  음식업 / 커피전문점
   // 카페 사업자 참고 - https://moneypin.biz/bizno/detail/6393100480/
-  b_type: string; // 주 업태명
+  @IsOptional()
+  @IsString()
+  b_type?: string; // 주 업태명
 
   @ApiProperty({ example: '', description: '사업장 주소 (선택사항)' })
   @IsString()
