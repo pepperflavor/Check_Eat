@@ -45,6 +45,7 @@ export class SajangService {
 
     if (!firstStore) {
       throw new Error('해당 사장님이 등록한 가게가 없습니다.');
+
     }
 
     // 2. 해당 Store의 sto_status 업데이트

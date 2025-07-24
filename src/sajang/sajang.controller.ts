@@ -38,9 +38,10 @@ export class SajangController {
 
   @Post('delete-store')
   @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async deleteStore(@Req() req) {
     const sa_id = req.user.sa_id;
     const result = await this.sajangService.editStoreState(sa_id, 2);
+    return result;
   }
 }
