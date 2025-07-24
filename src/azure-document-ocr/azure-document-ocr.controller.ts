@@ -17,9 +17,12 @@ export class AzureDocumentOcrController {
     private readonly ocrStorage: OcrStorageService,
   ) {}
 
-  // 📸 사진찍어서 OCR 분석 요청
+  // 사진찍어서 OCR 분석 요청
   @Post('business-analyze')
-  @ApiOperation({summary: 'postman 테스트시 form-data에서 file로 보내야함', description: '사업자 등록증 ORC'})
+  @ApiOperation({
+    summary: 'postman 테스트시 form-data에서 file로 보내야함',
+    description: '사업자 등록증 ORC',
+  })
   @UseInterceptors(FileInterceptor('file'))
   async analyzeDocument(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
@@ -31,7 +34,6 @@ export class AzureDocumentOcrController {
 
     // ✅ Azure Document Intelligence 분석 요청
     const result = await this.ocrService.analyzeImageUrl(url);
-
     return result;
   }
 }

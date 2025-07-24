@@ -18,12 +18,23 @@ export class BusinessRegistrationDTO {
   @IsString()
   start_dt: string; // 개업일자
 
+  @ApiProperty({ example: '홍길동', description: '대표자 성명' })
+  @IsString()
+  p_nm: string;
+
   @ApiProperty({
     example: '2023-01-01',
     description: '외국인일 경우, 한글이름 (선택사항)',
   })
   @IsString()
   p_nm2?: string;
+
+  @ApiProperty({
+    example: '1234567890123',
+    description: '법인등록번호 (선택사항)',
+  })
+  @IsString()
+  corp_no?: string;
 
   @ApiProperty({
     example: '상호명, (주)테스트',

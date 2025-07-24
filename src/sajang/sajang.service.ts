@@ -1,18 +1,81 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TranslateService } from 'src/translate/translate.service';
 import { CreateSajangDTO } from './sajang_dto/create-sajang.dto';
+import { BusinessRegistrationDTO } from './sajang_dto/business_registration.dto';
+import { ConfigService } from '@nestjs/config';
+import axios from 'axios';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class SajangService {
   constructor(
     private readonly prisma: PrismaService,
     private transServcice: TranslateService,
+    private readonly config: ConfigService,
+    @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
 
-  async checkBusinessRegistration() {
-    throw new Error('Method not implemented.');
+  // 사업자등록증 진위여부 확인
+  async checkBusinessRegistration(
+    sa_id: string,
+    data: BusinessRegistrationDTO,
+  ) {
+    const ID = Number(sa_id); // 아이디 형변환
+    const IRS_URL = this.config.get<string>('IRS_URL'); // 국세청 앤드포인트
+    const SERVICE_KEY = this.config.get<string>('IRS_SERVICE_KEY');
+
+    const payload = {
+      business: [
+        {
+          b_no: data.b_no.replace(/-/g, ''), // 하이픈 제거
+          start_dt: data.start_dt.replace(/[^0-9]/g, ''), // YYYYMMDD
+          p_nm: data.p_nm,
+          p_nm2: '',
+          b_nm: data.b_nm ?? '',
+          corp_no: data.corp_no?.replace(/-/g, '') ?? '',
+          b_sector: data.b_sector?.replace(/^업태\s*/, '') ?? '',
+          b_type: data.b_type?.replace(/^종목\s*/, '') ?? '',
+          b_adr: data.b_adr ?? '',
+        },
+      ],
+    };
+
+    try {
+      const { data: response } = await axios.post(
+        `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
+        payload,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        },
+      );
+
+      const result = response?.data?.[0];
+
+      if (!result || result.valid !== '01') {
+        throw new BadRequestException(
+          result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
+        );
+      }
+
+      // 성공하면 사장님 테이블에 상태 변경
+
+      return {
+        message: '진위여부 확인 완료',
+        status: 'success',
+      };
+    } catch (error) {
+      throw new BadRequestException(
+        '사업자 진위확인 API 호출 실패: ' + error?.response?.data?.message ||
+          error.message,
+      );
+    }
   }
+
   // 사장 회원가입
   async createSajang(data: CreateSajangDTO) {}
 
@@ -31,8 +94,6 @@ export class SajangService {
   // 음식 등록 -> 등록하면 이때 번역도 해서 db에 저장
   async registFood() {}
 
-
-
   // 가게 상태 변경
   async editStoreState(sa_id: number, updateState: number) {
     // 1. 사장 ID로 첫 번째 Store의 sto_id를 찾기
@@ -45,7 +106,6 @@ export class SajangService {
 
     if (!firstStore) {
       throw new Error('해당 사장님이 등록한 가게가 없습니다.');
-
     }
 
     // 2. 해당 Store의 sto_status 업데이트
@@ -56,8 +116,6 @@ export class SajangService {
 
     return updatedStore;
   }
-
-  
 }
 
 /*

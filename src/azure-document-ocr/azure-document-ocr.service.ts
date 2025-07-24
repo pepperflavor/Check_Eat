@@ -72,10 +72,14 @@ export class AzureDocumentOcrService {
 
     for (const key of keysToExtract) {
       const field = fields[key];
-      if (field?.valueString) {
-        result[key] = field.valueString;
+      const raw = field?.valueString;
+      if (raw) {
+        // ' : ' 또는 ':' 기준으로 나눠서 오른쪽 값만 사용
+        const parts = raw.split(':');
+        result[key] =
+          parts.length > 1 ? parts.slice(1).join(':').trim() : raw.trim();
       } else {
-        result[key] = ''; 
+        result[key] = '';
       }
     }
 
