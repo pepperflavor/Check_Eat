@@ -17,11 +17,41 @@ export class SajangService {
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
 
-  // 사업자등록증 진위여부 확인
+  // 사업자 등록진위여부, 재시도
   async checkBusinessRegistration(
     sa_id: string,
     data: BusinessRegistrationDTO,
   ) {
+    const ID = Number(sa_id); // 아이디 형변환
+
+    try {
+      const result = await this.callAPI(sa_id, data);
+
+      return {
+        message: '사업자 진위여부 확인 성공',
+        status: 'success',
+        result,
+      };
+    } catch (error) {
+      console.log('IRS 서버 오류', error.message);
+
+      // 10 초후 재시도
+      await this.checkQueue.add(
+        'retry-check',
+        { sa_id, data },
+        { delay: 10_000 },
+      );
+      // sa_certifiaction 1 로
+
+      return {
+        message: 'IRS 서버오류로 인한 실패, 10초후 재시도',
+        status: 'false',
+      };
+    }
+  }
+
+  // 사업자등록증 진위여부 API 호출부분
+  private async callAPI(sa_id: string, data: BusinessRegistrationDTO) {
     const ID = Number(sa_id); // 아이디 형변환
     const IRS_URL = this.config.get<string>('IRS_URL'); // 국세청 앤드포인트
     const SERVICE_KEY = this.config.get<string>('IRS_SERVICE_KEY');
@@ -42,38 +72,31 @@ export class SajangService {
       ],
     };
 
-    try {
-      const { data: response } = await axios.post(
-        `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
+    const { data: response } = await axios.post(
+      `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
-      );
+      },
+    );
 
-      const result = response?.data?.[0];
+    const result = response?.data?.[0];
 
-      if (!result || result.valid !== '01') {
-        throw new BadRequestException(
-          result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
-        );
-      }
-
-      // 성공하면 사장님 테이블에 상태 변경
-
-      return {
-        message: '진위여부 확인 완료',
-        status: 'success',
-      };
-    } catch (error) {
+    if (!result || result.valid !== '01') {
       throw new BadRequestException(
-        '사업자 진위확인 API 호출 실패: ' + error?.response?.data?.message ||
-          error.message,
+        result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
       );
     }
+
+    // 성공하면 사장님 테이블에 상태 변경
+
+    return {
+      message: '진위여부 확인 완료',
+      status: 'success',
+    };
   }
 
   // 사장 회원가입
