@@ -29,6 +29,9 @@ model User{
 
 // 즐겨찾기 추가, 유저랑 1 :1
   favorites          Favorites?  
+
+  // 리뷰 관계 추가
+  reviews Review[] // 1: 다
 }
 
 // 로그인용 데이터 따로 관리 한다면?
@@ -60,6 +63,7 @@ model Sajang{
   loginData LoginData[] // Opposite relation field for LoginData model
 
   Store Store[] @relation("SajangStore") // 사장이 가게 여러개 가질 수 있다고 함 수정필요
+
 }
 
 // 다른 언어는 테이블을 나누는게 맞다고하심
@@ -158,7 +162,13 @@ model Review{
 
   foods Food[] @relation("ReviewFoods") // 음식과 다대다 관계
 
-  Store Store[]
+  // N:1 - 하나의 유저가 여러 리뷰
+  user_id        Int
+  user           User      @relation(fields: [user_id], references: [user_id])
+
+  // N:1 - 하나의 가게에 여러 리뷰
+  store_id       Int
+  store          Store     @relation(fields: [store_id], references: [sto_id])
 }
 
 // 리뷰 번역은 테이블을 따로 나누는게 낫다고 하심
@@ -187,11 +197,13 @@ model Store{
   sto_sa_id Int
   sajang Sajang @relation("SajangStore", fields: [sto_sa_id], references: [sa_id])
 
-  holiday Holiday[] // Opposite relation field for Holiday model
-  review Review[] // Opposite relation field for Review model
+  holiday Holiday[] 
 
   Food Food[]
   favorites      Favorites[]  @relation("FavoritesStores") 
+
+// 리뷰 관계
+  review Review[] // 1:n 가게 리뷰
 }
 
 model Favorites{

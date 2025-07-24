@@ -14,6 +14,7 @@ import { SajangModule } from './sajang/sajang.module';
 import { CommonAccountModule } from './common-account/common-account.module';
 import { TranslateModule } from './translate/translate.module';
 import { AzureDocumentOcrModule } from './azure-document-ocr/azure-document-ocr.module';
+import { ReviewModule } from './review/review.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AzureDocumentOcrModule } from './azure-document-ocr/azure-document-ocr.
     CommonAccountModule,
     TranslateModule,
     AzureDocumentOcrModule,
+    ReviewModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
