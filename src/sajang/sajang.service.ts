@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TranslateService } from 'src/translate/translate.service';
 import { CreateSajangDTO } from './sajang_dto/create-sajang.dto';
@@ -7,6 +12,7 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class SajangService {
@@ -45,7 +51,6 @@ export class SajangService {
           removeOnFail: false, // 실패 로그 남기고 싶으면 false
         },
       );
-      // sa_certifiaction 1 로
 
       return {
         message: 'IRS 서버오류로 인한 실패, 10초후 재시도',
@@ -59,13 +64,14 @@ export class SajangService {
     const IRS_URL = this.config.get<string>('IRS_URL'); // 국세청 앤드포인트
     const SERVICE_KEY = this.config.get<string>('IRS_SERVICE_KEY');
 
+    // 필수 필드 : b_no, p_nm, start_dt
     const payload = {
       businesses: [
         {
-          b_no: data.b_no.replace(/-/g, ''), // 하이픈 제거
-          start_dt: data.start_dt.replace(/[^0-9]/g, ''), // YYYYMMDD
-          p_nm: data.p_nm,
-          // p_nm2: '',
+          b_no: data.b_no.replace(/-/g, ''), // 하이픈 제거, 사업자 등록번호
+          start_dt: data.start_dt.replace(/[^0-9]/g, ''), // 시작일
+          p_nm: data.p_nm, // 대표명
+          p_nm2: '', // 외국인일경우 대표이름
           // b_nm: data.b_nm ?? '',
           // corp_no: data.corp_no?.replace(/-/g, '') ?? '',
           // b_sector: data.b_sector?.replace(/^업태\s*/, '') ?? '',
@@ -107,7 +113,57 @@ export class SajangService {
   }
 
   // 사장 회원가입
-  async createSajang(data: CreateSajangDTO) {}
+  // sa_id 리턴해주기
+  async createSajang(data: CreateSajangDTO) {
+    const SALT = Number(await this.config.get('BCRYPT_SALT_ROUNDS'));
+
+    let { log_id, log_pwd, email } = data;
+    const hashedPWD = await bcrypt.hash(log_pwd, SALT);
+
+    // 가입한 이력이 있는지 확인
+    const existing = await this.prisma.loginData.findFirst({
+      where: {
+        OR: [{ ld_log_id: log_id }, { ld_email: email }],
+      },
+    });
+
+    if (existing) {
+      throw new ConflictException(
+        '이미 사용 중인 로그인 아이디 또는 이메일입니다.',
+      );
+    }
+
+    try {
+      const result = await this.prisma.$transaction(async (tx) => {
+        const sajang = await tx.sajang.create({
+          data: {
+            sa_certi_status: 0,
+            sa_certification: 0,
+          },
+        });
+
+        await tx.loginData.create({
+          data: {
+            ld_log_id: log_id,
+            ld_pwd: hashedPWD,
+            ld_email: email,
+            ld_usergrade: 1,
+            ld_sajang_id: sajang.sa_id,
+          },
+        });
+
+        return sajang.sa_id;
+      });
+
+      return {
+        message: '사장님 가입 성공',
+        status: 'success',
+        sa_id: result,
+      };
+    } catch (error) {
+      throw new InternalServerErrorException('사장 생성중 오류 발생', error);
+    }
+  }
 
   //===== OCR 관련
   // 음식 사진 찍으면 재료명 추출해주기

@@ -45,7 +45,9 @@ export class AuthController {
   @Post('signup/sajang')
   @ApiOperation({ summary: '사장님 회원가입', description: '사장님 회원가입' })
   @ApiBody({ type: CreateSajangDTO })
-  async registerSajang() {}
+  async registerSajang(@Body() body: CreateSajangDTO) {
+    return await this.authService.signUpSajang(body);
+  }
 
   // 로그인
   @Post('login')

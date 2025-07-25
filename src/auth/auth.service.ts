@@ -50,7 +50,11 @@ export class AuthService {
   }
 
   // 사장 회원가입
-  async signUpSajang() {}
+  async signUpSajang(data: CreateSajangDTO) {
+    const result = await this.sajangService.createSajang(data);
+
+    return result;
+  }
 
   // 로그인
   async login(inputId: string, inputPwd: string) {
@@ -238,9 +242,9 @@ export class AuthService {
   }
 
   // 로그인 한상태에서 비번변경
-  async updatePwd(ld_id: string,inputpwd: string) {
+  async updatePwd(ld_id: string, inputpwd: string) {
     const result = await this.commonService.updatePwdCommon(ld_id, inputpwd);
-    return result
+    return result;
   }
 
   // 탈퇴 - 상태 변경

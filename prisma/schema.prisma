@@ -56,7 +56,7 @@ model Sajang{
   sa_id Int @id @default(autoincrement())
 
   sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
-  sa_certification Int? // 0: 인증 대기 중, 1: 사업자 인증 받음, 2: 인증 반려됌
+  sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
   sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
 
   foods Food[] // 1:N 관계

@@ -31,13 +31,6 @@ export class BusinessRegistrationDTO {
   p_nm2?: string;
 
   @ApiProperty({
-    example: '1234567890123',
-    description: '법인등록번호 (선택사항)',
-  })
-  @IsString()
-  corp_no?: string;
-
-  @ApiProperty({
     example: '상호명, (주)테스트',
     description: '법인등록번호 (선택사항 이지만 회원가입시 입력받음)',
   })
@@ -52,11 +45,15 @@ export class BusinessRegistrationDTO {
   // 카페 사업자 참고 - https://moneypin.biz/bizno/detail/6393100480/
   @IsOptional()
   @IsString()
-  b_type?: string; // 주 업태명
+  b_type?: string; // 주 종목
 
   @ApiProperty({ example: '', description: '사업장 주소 (선택사항)' })
   @IsString()
   b_adr: string; // 사업장 주소
+
+  // 전화번호
+
+  // 상호명
 }
 
 /*

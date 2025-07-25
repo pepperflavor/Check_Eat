@@ -29,13 +29,12 @@ export class SajangController {
 
   // 회원가입시 사업자 등록증 등록
   @Post('regist-certification')
-  // @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님이 정보 수정후 취합해서 요청보내기',
     description: '사업자 등록 진위여부 - 국세청으로 요청보내는 곳',
   })
   async registCertification(@Body() body: BusinessRegistrationDTO) {
-    // 사장님은 토큰에 사장 아이디 들어있음
+    // 사장님아이디 토큰말고, body에 같이 받음
     const result = await this.sajangService.checkBusinessRegistration(body);
     return result;
   }
@@ -44,6 +43,7 @@ export class SajangController {
   @Post('check-business-registration')
   async checkBusinessRegistration() {}
 
+  // 가게 영업 종료 수정
   @Post('delete-store')
   @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
   @UseGuards(JwtAuthGuard)
