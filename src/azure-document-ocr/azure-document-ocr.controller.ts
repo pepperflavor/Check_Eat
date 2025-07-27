@@ -2,13 +2,17 @@ import {
   BadRequestException,
   Controller,
   Post,
+  Req,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AzureDocumentOcrService } from './azure-document-ocr.service';
 import { OcrStorageService } from 'src/azure-storage/ocr-storage.service';
-import { ApiOperation } from '@nestjs/swagger';
+import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { AnalyzeReceiptResponseDto } from './types/receipt-type';
 
 @Controller('azure-document-ocr')
 export class AzureDocumentOcrController {
@@ -35,5 +39,22 @@ export class AzureDocumentOcrController {
     // ✅ Azure Document Intelligence 분석 요청
     const result = await this.ocrService.analyzeImageUrl(url);
     return result;
+  }
+
+  @Post('receipt')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({
+    summary: '영수증 분석 OCR',
+    description: '영수증 분석 OCR-사진 한장만 보내야함',
+  })
+  @ApiOkResponse({
+    description: '리턴 형식',
+    type: AnalyzeReceiptResponseDto
+  })
+  async analyzeReceipt(@UploadedFile() file: Express.Multer.File) {
+    return await this.ocrService.analyzeReceiptFromBuffer(
+      file.buffer,
+      file.mimetype,
+    );
   }
 }

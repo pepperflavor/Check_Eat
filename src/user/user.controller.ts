@@ -1,8 +1,9 @@
-import { Body, Controller, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { UserLocationDto } from './user_dto/user-location.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { UpdateNickDto } from './user_dto/update-nick.dto';
 
 @Controller('user')
 export class UserController {
@@ -12,7 +13,13 @@ export class UserController {
 
   // 닉네임 변경
   @Post('nick-change')
-  async changeNickName() {}
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '닉네입 변경하기', description: '닉네임 변경하기' })
+  async changeNickName(@Req() req, @Body() body:UpdateNickDto) {
+    const log_id = Number(req.user.sub)
+
+    return await this.userService.updateNick(log_id, body.nickname);
+  }
 
   // 유저 메인 화면 처음 접속했을 때
   // 본인 좌표 받고, 좌표 기준으로 반경 1km 내에 있는 음식점 좌표 리턴해줌
@@ -33,7 +40,10 @@ export class UserController {
     return result;
   }
 
-  @ApiOperation({ summary: '가게 이름으로 검색하기', description : '가게이름 입력하면 관련 정보 찾아줌' })
+  @ApiOperation({
+    summary: '가게 이름으로 검색하기',
+    description: '가게이름 입력하면 관련 정보 찾아줌',
+  })
   @Post('search-store-nm')
   async searchStore(@Body() body) {
     const result = await this.userService.getStoreByName(body.store_name);

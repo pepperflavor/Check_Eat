@@ -145,11 +145,51 @@ export class UserService {
   }
 
   // 가게 이름으로 음식점 검색하기
-  async getStoreByName(inputName:string) {}
+  async getStoreByName(inputName: string) {
+    
+  }
 
   //===== 유저 마이페이지 관련 시작
   // 닉네임 변경
 
   // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장
   async updateUserMypage() {}
+
+  // 닉네임 변경
+  async updateNick(ld_id: number, newNick: string) {
+    // ld_id : lodindata 테이블의 아이디
+    const userID = await this.prisma.loginData.findUnique({
+      where: {
+        ld_id: ld_id,
+      },
+      select: {
+        ld_user_id: true,
+      },
+    });
+
+    if (
+      !userID?.ld_user_id ||
+      userID.ld_user_id == null ||
+      userID.ld_user_id == undefined
+    ) {
+      throw new Error('[updateNick] 해당하는 유저를 찾을 수 없습니다.');
+    }
+
+    const result = await this.prisma.user.update({
+      where: {
+        user_id: userID.ld_user_id,
+      },
+      data: {
+        user_nick: newNick,
+      },
+    });
+
+    if(!result){
+      throw new Error('[updateNick] 닉네임 변경 중 오류가 발생했습니다.')
+    }
+
+    return {
+      message: ''
+    }
+  }
 }

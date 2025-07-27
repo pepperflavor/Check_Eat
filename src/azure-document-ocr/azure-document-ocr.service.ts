@@ -4,6 +4,10 @@ import DocumentIntelligence, {
   getLongRunningPoller,
   isUnexpected,
 } from '@azure-rest/ai-document-intelligence';
+import {
+  AzureKeyCredential,
+  DocumentAnalysisClient,
+} from '@azure/ai-form-recognizer';
 
 @Injectable()
 export class AzureDocumentOcrService {
@@ -11,10 +15,22 @@ export class AzureDocumentOcrService {
   private readonly endpoint: string;
   private readonly modelId: string;
 
+  // 영수증 관련
+  private readonly client: DocumentAnalysisClient;
+  private readonly re_endpoint: string;
+  private readonly re_key: string;
+
   constructor(private readonly config: ConfigService) {
     this.key = this.config.get<string>('OCR_KEY_SECOND') ?? '';
     this.endpoint = this.config.get<string>('OCR_ENDPOINT') ?? '';
     this.modelId = this.config.get<string>('CUSTOM_MODEL_ID_2') ?? '';
+    this.re_endpoint = this.config.get<string>('RECEIPT_OCR_ENDPOINT') ?? '';
+    this.re_key = this.config.get<string>('RECEIPT_OCR_KEY') ?? '';
+
+    this.client = new DocumentAnalysisClient(
+      this.re_endpoint,
+      new AzureKeyCredential(this.re_key),
+    );
   }
 
   async analyzeImageUrl(imageUrl: string) {
@@ -84,5 +100,77 @@ export class AzureDocumentOcrService {
     }
 
     return result;
+  }
+
+  //======== 영수증 OCR 시작
+
+  async analyzeReceiptFromBuffer(buffer: Buffer, mimetype: string) {
+    try {
+      const poller = await this.client.beginAnalyzeDocument(
+        'prebuilt-receipt',
+        buffer,
+      );
+      const result = await poller.pollUntilDone();
+      const doc = result.documents?.[0];
+      if (!doc) {
+        throw new Error('영수증 분석 결과가 없습니다.');
+      }
+
+      const fields = doc.fields ?? {};
+
+      // 가게 이름
+      const merchantName =
+        fields.MerchantName?.kind === 'string' ? fields.MerchantName.value : '';
+
+      // 총합계
+      const total =
+        fields.Total?.kind === 'number' ? fields.Total.value : undefined;
+
+      // 메뉴들
+      const items: { name: string; price?: number; quantity?: number }[] = [];
+
+      if (fields.Items?.kind === 'array') {
+        for (const itemField of fields.Items.values) {
+          if (itemField?.kind === 'object') {
+            const properties = itemField.properties ?? {};
+
+            // Description 또는 Name 필드 우선 순위로 추출
+            const name =
+              properties.Description?.kind === 'string'
+                ? properties.Description.value
+                : properties.Name?.kind === 'string'
+                  ? properties.Name.value
+                  : undefined;
+
+            const price =
+              properties.TotalPrice?.kind === 'number'
+                ? properties.TotalPrice.value
+                : undefined;
+
+            // const quantity =
+            //   properties.Quantity?.kind === 'number'
+            //     ? properties.Quantity.value
+            //     : undefined;
+
+            if (name) {
+              items.push({
+                name,
+                price,
+                // quantity,
+              });
+            }
+          }
+        }
+      }
+
+      return {
+        store: merchantName,
+        menus: items,
+        total,
+      };
+    } catch (error) {
+      console.error('[Azure Receipt OCR] 실패:', error);
+      throw new InternalServerErrorException('영수증 분석에 실패했습니다.');
+    }
   }
 }
