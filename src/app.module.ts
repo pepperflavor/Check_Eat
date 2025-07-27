@@ -15,6 +15,8 @@ import { CommonAccountModule } from './common-account/common-account.module';
 import { TranslateModule } from './translate/translate.module';
 import { AzureDocumentOcrModule } from './azure-document-ocr/azure-document-ocr.module';
 import { ReviewModule } from './review/review.module';
+import { FoodSeedModule } from './food-seed/food-seed.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -33,6 +35,8 @@ import { ReviewModule } from './review/review.module';
     TranslateModule,
     AzureDocumentOcrModule,
     ReviewModule,
+    FoodSeedModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -212,3 +212,9 @@ model Favorites{
   user_id Int   @unique
   stores  Store[] @relation("FavoritesStores")
 }
+
+model FoodMeterialSeed{
+  foo_seed_id          Int      @id @default(autoincrement())
+  foo_seed_name        String   // 음식 이름 (RCP_NM)
+  foo_seed_ingredients String[] // 재료 목록 (RCP_PARTS_DTLS 분리 후 저장)
+}
