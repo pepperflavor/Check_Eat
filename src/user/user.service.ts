@@ -145,14 +145,11 @@ export class UserService {
   }
 
   // 가게 이름으로 음식점 검색하기
-  async getStoreByName(inputName: string) {
-    
-  }
+  async getStoreByName(inputName: string) {}
 
   //===== 유저 마이페이지 관련 시작
-  // 닉네임 변경
 
-  // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장
+  // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장, 토큰도 새로 발급해줘야함
   async updateUserMypage() {}
 
   // 닉네임 변경
@@ -184,12 +181,29 @@ export class UserService {
       },
     });
 
-    if(!result){
-      throw new Error('[updateNick] 닉네임 변경 중 오류가 발생했습니다.')
+    if (!result) {
+      throw new Error('[updateNick] 닉네임 변경 중 오류가 발생했습니다.');
     }
 
     return {
-      message: ''
-    }
+      message: '닉네임 변경 성공',
+      status: 'success',
+    };
+  }
+
+  // 내가 쓴 리뷰들 목록
+  async myAllReviews(log_id) {
+    // 유저 아이디
+    const userID = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: log_id,
+      },
+    });
+
+    // const reviews = await this.prisma.review.findMany({
+    //   where:{
+    //     user_id : userID
+    //   }
+    // })
   }
 }

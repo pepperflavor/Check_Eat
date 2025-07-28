@@ -22,6 +22,7 @@ export class SajangController {
 
   // 음식 삭제
   @Post('delete-food')
+  async deleteFood() {}
 
   // 할랄 업장 인증
   @Post('regist-halal')
@@ -39,9 +40,9 @@ export class SajangController {
     return result;
   }
 
-  // 사업자 등록증 진위 여부 확인, post 로만 제공
-  @Post('check-business-registration')
-  async checkBusinessRegistration() {}
+  // // 사업자 등록증 수정시, post 로만 제공
+  // @Post('check-business-registration')
+  // async checkBusinessRegistration() {}
 
   // 가게 영업 종료 수정
   @Post('delete-store')

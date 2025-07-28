@@ -9,19 +9,27 @@ import { UpdateNickDto } from './user_dto/update-nick.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // 유저 마이페이지
+  //==== 유저 마이페이지
 
   // 닉네임 변경
   @Post('nick-change')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '닉네입 변경하기', description: '닉네임 변경하기' })
-  async changeNickName(@Req() req, @Body() body:UpdateNickDto) {
-    const log_id = Number(req.user.sub)
-
+  async changeNickName(@Req() req, @Body() body: UpdateNickDto) {
+    const log_id = Number(req.user.sub);
     return await this.userService.updateNick(log_id, body.nickname);
   }
 
-  // 유저 메인 화면 처음 접속했을 때
+  // 내가쓴 리뷰 리스트
+  @Post('my-reviews')
+  @UseGuards(JwtAuthGuard)
+  async getMyReviews(@Req() req) {
+    const log_id = Number(req.user.sub);
+    return await this.userService.myAllReviews(log_id)
+  }
+
+  //====== 유저 메인 화면관련
+  // 처음 접속했을 때
   // 본인 좌표 받고, 좌표 기준으로 반경 1km 내에 있는 음식점 좌표 리턴해줌
   @Post('main')
   // @UseGuards(JwtAuthGuard) // 일단 주석걸어둠

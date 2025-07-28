@@ -44,6 +44,7 @@ model LoginData{
   ld_pwd String // 비밀번호
   ld_refresh_token String? // 리프레시 토큰
   ld_status Int @default(0) // 0: 활성화 되어있음, 1: 탈퇴 대기, 2: 회원 탈퇴함
+  ld_lang String @default("ko") // 유저가 사용하는 언어 - 소문자, ko / en / ar
 
   ld_user_id Int? // 유저 테이블에 저장되어있는 id 인덱스
   user User? @relation(fields: [ld_user_id], references: [user_id])
@@ -158,6 +159,7 @@ model Review{
   revi_img String? // 음식사진
   revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수
   revi_content String? // 추천/ 추천안했을 때 텍스트 옵셔널
+  revi_status Int @default(0) // 0 : 리뷰 썼음, 1: 나중에 쓰려고 보류 중
   revi_create DateTime @default(now())
 
   foods Food[] @relation("ReviewFoods") // 음식과 다대다 관계
@@ -173,12 +175,16 @@ model Review{
 
 // 리뷰 번역은 테이블을 따로 나누는게 낫다고 하심
 model ReviewTranslateEN{
-  rt_id Int @id @default(autoincrement())
+  rt_en_id Int @id @default(autoincrement())
   // rt_content_en String? // 리뷰 내용 영어
   // rt_content_ab String? // 리뷰 내용 아랍어
 
   // revi_id Int // 리뷰 아이디
   // Review Review @relation(fields: [revi_id], references: [revi_id])
+}
+
+model ReviewTranslateAR{
+  rt_ar_id Int @id @default(autoincrement())
 }
 
 model Store{

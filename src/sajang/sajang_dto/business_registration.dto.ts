@@ -1,7 +1,7 @@
 // 사업자 등록증 데이터 DTO
 
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class BusinessRegistrationDTO {
   @ApiProperty({
@@ -20,7 +20,16 @@ export class BusinessRegistrationDTO {
 
   @ApiProperty({ example: '홍길동', description: '대표자 성명' })
   @IsString()
-  p_nm: string;
+  p_nm: string; // 대표이름
+
+  @ApiProperty({
+    example: '1',
+    description: '이전 페이지에서 회원가입 버튼 누르고 받은 sa_id',
+  })
+  @IsNumber()
+  sa_id: number;
+
+  //===== 여기까지 필수 데이터
 
   @ApiProperty({
     example: '2023-01-01',
@@ -28,7 +37,7 @@ export class BusinessRegistrationDTO {
   })
   @IsString()
   @IsOptional()
-  p_nm2?: string;
+  p_nm2?: string; // 대표가 외국인이면 이것도 입력되어야 함
 
   @ApiProperty({
     example: '상호명, (주)테스트',
@@ -38,8 +47,9 @@ export class BusinessRegistrationDTO {
   @IsOptional()
   b_nm?: string; // 상호명
 
+  @ApiProperty({})
   @IsString()
-  b_sector: string; // 주 업태명
+  b_sector?: string; // 주 업태명
 
   // 종목 -일반 음식점 ||  음식업 / 커피전문점
   // 카페 사업자 참고 - https://moneypin.biz/bizno/detail/6393100480/
@@ -49,11 +59,17 @@ export class BusinessRegistrationDTO {
 
   @ApiProperty({ example: '', description: '사업장 주소 (선택사항)' })
   @IsString()
-  b_adr: string; // 사업장 주소
+  b_adr?: string; // 사업장 주소
 
   // 전화번호
+  @ApiProperty({ example: '010-1234-5678', description: '연락처' })
+  @IsString()
+  sto_phone?: String;
 
-  // 상호명
+  // 표시해줄 가게명
+  @ApiProperty({ example: 'BHC치킨', description: '가게 정보에 표기해줄 이름' })
+  @IsString()
+  sto_name?: string;
 }
 
 /*

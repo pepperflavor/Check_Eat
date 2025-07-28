@@ -145,11 +145,20 @@ export class AuthController {
     description: '아이디 찾기- 토큰발송',
   })
   async findIDWithEmail(@Body() body: FindIDSendTokenDto) {
-    await this.authService.requestEmailVerification(
-      body.email,
-      1,
-      body.language,
-    );
+    // 이메일 가입한 이력이 있는 이메일인지 확인
+    const isExistEmail = await this.commonService.isExistEmail(body.email);
+    if (isExistEmail.status == HttpStatus.CONFLICT) {
+      await this.authService.requestEmailVerification(
+        body.email,
+        1,
+        body.language,
+      );
+    } else {
+      return {
+        message: '가입한 이력이 없는 이메일입니다.',
+        status: 'false',
+      };
+    }
   }
 
   @Post('find-id-verify-token')

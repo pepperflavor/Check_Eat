@@ -80,6 +80,7 @@ export class AuthService {
       data.ld_log_id,
       data.ld_usergrade,
       data.ld_email,
+      data.ld_lang
     );
 
     console.log('로그인 함수 안 페이로드리턴 값 확인 : ');
@@ -110,11 +111,12 @@ export class AuthService {
   }
 
   // 로그인시 유저 유형별 토큰 발급 리프레시는 db 저장
-  async generateToken(ld_id: string, ld_usergrade: number, ld_email: string) {
+  async generateToken(ld_id: string, ld_usergrade: number, ld_email: string, ld_lang: string) {
     let payload: any = {
       sub: ld_id,
       role: ld_usergrade,
       email: ld_email,
+      lang: ld_lang
     };
 
     if (ld_usergrade == 0) {
@@ -251,7 +253,17 @@ export class AuthService {
   async deleteAccount(ld_id: string) {
     // 숫자로 가공은 들고 들어가서함
     const result = await this.commonService.editState(ld_id, 2);
-    return result;
+
+    if (!result || result == null || result == undefined) {
+      return {
+        message: '회원 탈퇴 실패',
+        status: 'false',
+      };
+    }
+    return {
+      message: '회원 탈퇴 처리 완료',
+      status: 'success',
+    };
   }
 
   // LocalStrategy에서 사용할 사용자 검증 메서드

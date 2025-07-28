@@ -13,5 +13,6 @@ export class ReviewService {
   // 유저 리뷰 등록
   async userRegistReview(userId: number, reviData: RegistFoodDto) {
     // 메뉴 이름들, 추천 여부, 사진, 텍스트
+    // 당장 리뷰 등록 안할거면 저장되도록 해야함
   }
 }

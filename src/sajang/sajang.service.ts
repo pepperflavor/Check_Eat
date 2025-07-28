@@ -23,10 +23,42 @@ export class SajangService {
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
 
-  // 사업자 등록진위여부, 재시도
+  // 사업자 등록진위여부, 재시도 포함
   async checkBusinessRegistration(data: BusinessRegistrationDTO) {
     try {
       const result = await this.callAPI(data);
+      const saID = Number(data.sa_id);
+      /*
+    sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
+    sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
+      */
+
+      // 사업자 등록증 확인했는지 여부
+      if (!result || result == null) {
+        await this.prisma.sajang.update({
+          where: {
+            sa_id: saID,
+          },
+          data: {
+            sa_certi_status: 2,
+            sa_certification: 2,
+          },
+        });
+        return {
+          message: '사업자 등록증 재인증 필요',
+          status: 'false',
+        };
+      }
+
+      await this.prisma.sajang.update({
+        where: {
+          sa_id: saID,
+        },
+        data: {
+          sa_certi_status: 1,
+          sa_certification: 1,
+        },
+      });
 
       return {
         message: '사업자 진위여부 확인 성공',
@@ -35,6 +67,7 @@ export class SajangService {
       };
     } catch (error) {
       console.log('IRS 서버 오류', error.message);
+      const saID = data.sa_id;
 
       // 10 초후 재시도
       await this.checkQueue.add(
@@ -51,6 +84,16 @@ export class SajangService {
           removeOnFail: false, // 실패 로그 남기고 싶으면 false
         },
       );
+
+      await this.prisma.sajang.update({
+        where: {
+          sa_id: saID,
+        },
+        data: {
+          sa_certification: 2, // 인증 재시도 필요
+          sa_certi_status: 3, // 서버오류
+        },
+      });
 
       return {
         message: 'IRS 서버오류로 인한 실패, 10초후 재시도',
@@ -71,7 +114,7 @@ export class SajangService {
           b_no: data.b_no.replace(/-/g, ''), // 하이픈 제거, 사업자 등록번호
           start_dt: data.start_dt.replace(/[^0-9]/g, ''), // 시작일
           p_nm: data.p_nm, // 대표명
-          p_nm2: '', // 외국인일경우 대표이름
+          p_nm2: data?.p_nm2, // 외국인일경우 대표이름
           // b_nm: data.b_nm ?? '',
           // corp_no: data.corp_no?.replace(/-/g, '') ?? '',
           // b_sector: data.b_sector?.replace(/^업태\s*/, '') ?? '',
@@ -114,6 +157,7 @@ export class SajangService {
 
   // 사장 회원가입
   // sa_id 리턴해주기
+  // 여기에서 가게도 일단 등록해주기
   async createSajang(data: CreateSajangDTO) {
     const SALT = Number(await this.config.get('BCRYPT_SALT_ROUNDS'));
 
@@ -151,6 +195,13 @@ export class SajangService {
             ld_sajang_id: sajang.sa_id,
           },
         });
+
+        // await tx.store.create({
+        //   data:{
+        //     sto_name,
+
+        //   }
+        // })
 
         return sajang.sa_id;
       });

@@ -17,6 +17,7 @@ import { AzureDocumentOcrModule } from './azure-document-ocr/azure-document-ocr.
 import { ReviewModule } from './review/review.module';
 import { FoodSeedModule } from './food-seed/food-seed.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { AzureClassifyModule } from './azure-classify/azure-classify.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     ReviewModule,
     FoodSeedModule,
     ScheduleModule.forRoot(),
+    AzureClassifyModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

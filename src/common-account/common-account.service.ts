@@ -194,7 +194,7 @@ export class CommonAccountService {
       },
     });
 
-    if (result == null || result == undefined) {
+    if (!result || result == null || result == undefined) {
       throw new Error('비밀번호 재설정중 오류가 발생했습니다.');
     }
 

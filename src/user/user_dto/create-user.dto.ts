@@ -30,6 +30,10 @@ export class CreateUserDTO {
   @IsEmail()
   email: string;
 
+  @ApiProperty({ example: 'ko', description: '유저가 사용하는 언어' })
+  @IsString()
+  ld_lang: string;
+
   @ApiProperty({
     example: '납작복숭아, 송충이털',
     description: '19가지 보편적인 원료 외 개인적으로 알러지 갖고있는 것',
