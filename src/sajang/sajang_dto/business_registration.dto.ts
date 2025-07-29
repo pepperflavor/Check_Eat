@@ -5,7 +5,7 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class BusinessRegistrationDTO {
   @ApiProperty({
-    example: '1234567890, -  -빼고 입력',
+    example: '1234567890, - 이 기호 넣은채로 줘도 ㄱㅊ',
     description: '사업자 등록번호',
   })
   @IsString()
@@ -70,6 +70,18 @@ export class BusinessRegistrationDTO {
   @ApiProperty({ example: 'BHC치킨', description: '가게 정보에 표기해줄 이름' })
   @IsString()
   sto_name?: string;
+
+  @IsString()
+  @ApiProperty({
+    description: '사업자 등록증에 적혀있는 주소의 위도,string으로 보내주세요 ',
+  })
+  sto_latitude: string;
+
+  @IsString()
+  @ApiProperty({
+    description: '사업자 등록증에 적혀있는 주소의 경도, string으로 보내주세요 ',
+  })
+  sto_longitude: string;
 }
 
 /*

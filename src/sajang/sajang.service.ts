@@ -13,6 +13,7 @@ import axios from 'axios';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as bcrypt from 'bcrypt';
+import Decimal from 'decimal.js';
 
 @Injectable()
 export class SajangService {
@@ -60,14 +61,47 @@ export class SajangService {
         },
       });
 
+      // 여기에서 가게 데이터 생성
+      const storeData = {
+        sa_id: data.sa_id,
+        sto_name:
+          data.sto_name && data.sto_name.length > 0 ? data.sto_name : data.b_nm,
+        sto_address: data.b_adr,
+        sto_phone: data.sto_phone,
+        sto_latitude: new Decimal(data.sto_latitude),
+        sto_longitude: new Decimal(data.sto_longitude),
+      };
+
+      await this.prisma.store.create({
+        data: {
+          sto_name: storeData.sto_name ?? '',
+          sto_address: storeData.sto_address ?? '',
+          sto_phone: storeData.sto_phone ? String(storeData.sto_phone) : null,
+          sto_latitude: parseFloat(storeData.sto_latitude.toFixed(6)),
+          sto_longitude: parseFloat(storeData.sto_longitude.toFixed(6)),
+          sto_sa_id: storeData.sa_id,
+        },
+      });
+
       return {
-        message: '사업자 진위여부 확인 성공',
+        message: '사업자 진위여부 확인 성공, store 데이터 생성',
         status: 'success',
         result,
       };
     } catch (error) {
       console.log('IRS 서버 오류', error.message);
+      console.log('사업자 등록증 인증 시도를 등록합니다.');
       const saID = data.sa_id;
+
+      await this.prisma.sajang.update({
+        where: {
+          sa_id: saID,
+        },
+        data: {
+          sa_certification: 2, // 인증 재시도 필요
+          sa_certi_status: 3, // 서버오류
+        },
+      });
 
       // 10 초후 재시도
       await this.checkQueue.add(
@@ -85,21 +119,37 @@ export class SajangService {
         },
       );
 
-      await this.prisma.sajang.update({
-        where: {
-          sa_id: saID,
-        },
-        data: {
-          sa_certification: 2, // 인증 재시도 필요
-          sa_certi_status: 3, // 서버오류
-        },
-      });
-
       return {
-        message: 'IRS 서버오류로 인한 실패, 10초후 재시도',
+        message: 'IRS 서버오류로 인한 실패',
         status: 'false',
       };
     }
+  }
+
+  // 사업자 등록 내부실행 후 실패시 db 변경함수
+  async finalFalure(sa_id: number) {
+    await this.prisma.sajang.update({
+      where: {
+        sa_id: sa_id,
+      },
+      data: {
+        sa_certi_status: 3,
+        sa_certification: 2,
+      },
+    });
+  }
+
+  //  사업자 등록 내부실행 후 성공시 db 변경함수
+  async finalSuccess(sa_id: number) {
+    await this.prisma.sajang.update({
+      where: {
+        sa_id: sa_id,
+      },
+      data: {
+        sa_certi_status: 1,
+        sa_certification: 1,
+      },
+    });
   }
 
   // 사업자등록증 진위여부 API 호출부분
@@ -195,13 +245,6 @@ export class SajangService {
             ld_sajang_id: sajang.sa_id,
           },
         });
-
-        // await tx.store.create({
-        //   data:{
-        //     sto_name,
-
-        //   }
-        // })
 
         return sajang.sa_id;
       });
