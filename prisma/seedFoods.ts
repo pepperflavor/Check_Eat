@@ -66,17 +66,17 @@ export default async function seedFoods() {
         continue;
       }
 
-      // ✅ FoodTranslate 생성
-      const foodTranslate = await prisma.foodTranslate.create({
-        data: {
-          ft_name_en: translateToEnglish(menu),
-          ft_name_ar: translateToArabic(menu),
-          ft_mt_en: null,
-          ft_mt_ar: null,
-          ft_price_en: `${priceBase} KRW`,
-          ft_price_ar: `${priceBase} 원`,
-        },
-      });
+      // // ✅ FoodTranslate 생성
+      // const foodTranslate = await prisma.foodTranslate.create({
+      //   data: {
+      //     ft_name_en: translateToEnglish(menu),
+      //     ft_name_ar: translateToArabic(menu),
+      //     ft_mt_en: null,
+      //     ft_mt_ar: null,
+      //     ft_price_en: `${priceBase} KRW`,
+      //     ft_price_ar: `${priceBase} 원`,
+      //   },
+      // });
 
       // ✅ 비건 단계 분석
       let veganId: number | null = null;
@@ -116,7 +116,7 @@ export default async function seedFoods() {
           foo_status: 0,
           foo_sa_id: store.sto_sa_id,
           foo_vegan: veganId,
-          ft_id: foodTranslate.ft_id,
+          // ft_id: foodTranslate.ft_id,
         },
       });
 
