@@ -4,6 +4,7 @@ import { ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { UserLocationDto } from './user_dto/user-location.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { UpdateNickDto } from './user_dto/update-nick.dto';
+import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
 
 @Controller('user')
 export class UserController {
@@ -54,18 +55,21 @@ export class UserController {
   })
   @Post('search-store-nm')
   async searchStoreByName(@Req() req, @Body() body) {
-
     // 유저가 쓰는 언어 추출
-    const lang = req.user.lang
+    const lang = req.user.lang;
     // store 아이디랑 이름 같이 보내줘야할듯
     const result = await this.userService.getStoreByName(lang, body);
     return result;
   }
 
-
   // 비건 단계로 가게 찾기
+  @ApiOperation({
+    summary: '',
+    description: '비건 단계로 가게 검색하기, 반경 2KM 이내',
+  })
+  @UseGuards(JwtAuthGuard)
   @Post('search-store-vegan')
-  async searchStoreByVegan(@Body () body) {
-    const result = await this.userService.getStoreByVegan()
+  async searchStoreByVegan(@Body() body: SearchStoreByVeganDto) {
+    const result = await this.userService.getStoreByVegan(body);
   }
 }

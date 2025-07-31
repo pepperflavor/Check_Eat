@@ -6,7 +6,9 @@ import { CreateUserDTO } from './user_dto/create-user.dto';
 import { ConfigService } from '@nestjs/config';
 import { randomNickMaker } from './randomNick';
 import Decimal from 'decimal.js';
-import { throwError } from 'rxjs';
+
+import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
+import dayjs from 'dayjs';
 
 @Injectable()
 export class UserService {
@@ -145,30 +147,140 @@ export class UserService {
   }
 
   // 가게 이름으로 음식점 검색하기
-  async getStoreByName(lang: string, inputName: string) {
-    const response = {};
-    // const result = await this.prisma.store.findUnique({
-    //   where: {
-    //     sto_name: inputName,
-    //   },
-    //   select: {
-    //     sto_name: true,
-    //     sto_img: true,
-    //     sto_address: true,
-    //     sto_halal: true,
-    //     sto_latitude: true,
-    //     sto_longitude: true
-    //   },
-    // });
+  // 나중에 언어 별로 리턴해주게 수정해야함
+  // 반경 2km 추가
+  async getStoreByName(lang: string, data) {
+    const { sto_name } = data;
+
+    const result = await this.prisma.store.findMany({
+      where: {
+        sto_name: {
+          contains: sto_name,
+          mode: 'insensitive', // 대소문자 구분 없이
+        },
+        sto_status: {
+          not: 2, // sto_status == 2이면 폐업한 곳임
+        },
+      },
+      select: {
+        sto_name: true,
+        sto_img: true,
+        sto_address: true,
+        sto_halal: true,
+        sto_latitude: true,
+        sto_longitude: true,
+        sto_phone: true,
+        sto_type: true,
+        holiday: {
+          // 휴일정보 추가...?
+        },
+      },
+    });
+
+    if (!result || result == null || result == undefined) {
+      return {
+        message: '해당 검색어에 대한 데이터가 없습니다.',
+        status: 'false',
+      };
+    }
+
+    return result;
   }
 
   // 비건 단계 필터로 가게 찾기
-  async getStoreByVegan() {
-    // const result = await this.prisma.store.findMany({
-    //   where: {
-    //     Food,
-    //   },
-    // });
+  async getStoreByVegan(data: SearchStoreByVeganDto) {
+    const { vegan_level, user_la, user_long } = data;
+
+    const LA = new Decimal(user_la);
+    const LONG = new Decimal(user_long);
+    const radius = 2000;
+    const today = dayjs().day(); // 0 일요일
+
+    const stores = await this.prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT
+        s.sto_id,
+        s.sto_name,
+        s.sto_latitude,
+        s.sto_longitude,
+        s.sto_sa_id,
+        ST_Distance(
+          geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
+          geography(ST_MakePoint($1, $2))
+        ) AS distance
+      FROM "Store" s
+      WHERE ST_DWithin(
+        geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
+        geography(ST_MakePoint($1, $2)),
+        $3
+      )
+      AND EXISTS (
+        SELECT 1
+        FROM "Food" f
+        WHERE f.foo_sa_id = s.sto_sa_id
+        AND f.foo_vegan = $4
+      )
+      ORDER BY distance ASC
+      `,
+      LONG,
+      LA,
+      radius,
+      vegan_level,
+    );
+
+    if (!stores || stores.length === 0) {
+      return { message: '조건에 맞는 가게가 없습니다', status: 'success' };
+    }
+
+    const storeIds = stores.map((s) => s.sto_id);
+
+    // 가게별 Holiday 정보 가져오기
+    const holidays = await this.prisma.holiday.findMany({
+      where: {
+        Store: {
+          some: {
+            sto_id: {
+              in: storeIds,
+            },
+          },
+        },
+      },
+      include: {
+        Store: true,
+      },
+    });
+
+    // 요일별 영업시간 키
+    const runtimeKeyMap = {
+      0: 'holi_runtime_sun',
+      1: 'holi_runtime_mon',
+      2: 'holi_runtime_tue',
+      3: 'holi_runtime_wed',
+      4: 'holi_runtime_thu',
+      5: 'holi_runtime_fri',
+      6: 'holi_runtime_sat',
+    };
+
+    // 가게별 Holiday 정보 병합
+    const result = stores.map((store) => {
+      const holiday = holidays.find((h) =>
+        h.Store.some((s) => s.sto_id === store.sto_id),
+      );
+
+      const runtimeKey = runtimeKeyMap[today];
+      const todayRuntime = holiday?.[runtimeKey] ?? null;
+
+      return {
+        ...store,
+        holi_weekday: today,
+        today_runtime: todayRuntime,
+        holi_regular: holiday?.holi_regular ?? null,
+        holi_public: holiday?.holi_public ?? null,
+        holi_break: holiday?.holi_break ?? null,
+      };
+    });
+
+    return result;
   }
 
   //===== 유저 마이페이지 관련 시작
