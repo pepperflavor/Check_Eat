@@ -8,7 +8,7 @@ import { BusinessRegistrationDTO } from './sajang_dto/business_registration.dto'
 export class SajangController {
   constructor(private readonly sajangService: SajangService) {}
 
-  // 음식 사진 찍으면 재료명 추출해 주기
+  //==== 음식 사진 찍으면 재료명 추출해 주기
   @Post('recommend-meterials')
   async recommendMeterials() {
     return await this.sajangService.recommendMeterials();
@@ -40,11 +40,12 @@ export class SajangController {
     return result;
   }
 
-  // // 사업자 등록증 수정시, post 로만 제공
+  // 마이페이지에서 사업자등록증 재 인증
   // @Post('check-business-registration')
   // async checkBusinessRegistration() {}
 
   // 가게 영업 종료 수정
+  // 업체 삭제
   @Post('delete-store')
   @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
   @UseGuards(JwtAuthGuard)

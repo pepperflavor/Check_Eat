@@ -103,7 +103,6 @@ export class AzureDocumentOcrService {
   }
 
   //======== 영수증 OCR 시작
-
   async analyzeReceiptFromBuffer(buffer: Buffer, mimetype: string) {
     try {
       const poller = await this.client.beginAnalyzeDocument(
@@ -126,6 +125,11 @@ export class AzureDocumentOcrService {
       const total =
         fields.Total?.kind === 'number' ? fields.Total.value : undefined;
 
+      const address =
+        fields.MerchantAddress?.kind === 'address'
+          ? (fields.MerchantAddress?.value?.streetAddress ?? '')
+          : '';
+
       // 메뉴들
       const items: { name: string; price?: number; quantity?: number }[] = [];
 
@@ -147,27 +151,29 @@ export class AzureDocumentOcrService {
                 ? properties.TotalPrice.value
                 : undefined;
 
-            // const quantity =
-            //   properties.Quantity?.kind === 'number'
-            //     ? properties.Quantity.value
-            //     : undefined;
-
             if (name) {
               items.push({
                 name,
                 price,
-                // quantity,
               });
             }
           }
         }
       }
 
-      return {
+      const response: any = {
         store: merchantName,
         menus: items,
         total,
       };
+
+      if (address) {
+        response.address = address;
+      } else {
+        response.address = '영수증에 주소가 표기되어있지 않습니다.';
+      }
+
+      return response;
     } catch (error) {
       console.error('[Azure Receipt OCR] 실패:', error);
       throw new InternalServerErrorException('영수증 분석에 실패했습니다.');

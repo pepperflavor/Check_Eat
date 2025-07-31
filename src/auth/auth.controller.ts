@@ -119,8 +119,8 @@ export class AuthController {
   @ApiOperation({ summary: '회원 탈퇴', description: '회원 탈퇴' })
   @UseGuards(JwtAuthGuard)
   @Post('delete-account')
-  async deleteUser(@CurrentUser() user: any) {
-    const accountId = user.sub;
+  async deleteUser(@Req() req) {
+    const accountId = req.user.sub;
     return await this.authService.deleteAccount(accountId);
   }
 
@@ -130,7 +130,7 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '헤더에 토큰, body에 바꿀 비밀번호 보내주면 됩니다.',
-    description: '마이페이지에서 이메일 인증 후 비밀번호 바꾸기',
+    description: '마이페이지에서 비밀번호 바꾸기',
   })
   async changePWDCommon(@CurrentUser() user: any, @Body() body: UpdatePWDDto) {
     const accountID = user.sub;
@@ -142,8 +142,9 @@ export class AuthController {
   @Post('find-id-sendtoken')
   @ApiOperation({
     summary: '이메일주소, 유저가 설정한 언어 같이 보내줘야함',
-    description: '아이디 찾기- 토큰발송',
+    description: '로그인 하지 않은 상태에서 아이디 찾기 - 토큰발송',
   })
+  // 토큰에서 사용하는 언어 추출해서 변경해주기
   async findIDWithEmail(@Body() body: FindIDSendTokenDto) {
     // 이메일 가입한 이력이 있는 이메일인지 확인
     const isExistEmail = await this.commonService.isExistEmail(body.email);

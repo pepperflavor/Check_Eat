@@ -8,10 +8,12 @@ export class AzureClassifyService {
   private readonly logger = new Logger(AzureClassifyService.name);
   private readonly predictionUrl;
   private readonly predictionKey;
+  private readonly predictionKey2;
 
   constructor(private readonly config: ConfigService) {
-    this.predictionUrl = this.config.get('');
-    this.predictionKey = this.config.get('');
+    this.predictionUrl = this.config.get('PREDICT_FOOD_NAME_ENDPOINT');
+    this.predictionKey = this.config.get('PREDICT_FOOD_NAME_KEY1');
+    this.predictionKey2 = this.config.get('PREDICT_FOOD_NAME_KEY2');
   }
 
   async classifyImageFromBuffer(buffer: Buffer): Promise<string> {
@@ -19,7 +21,7 @@ export class AzureClassifyService {
       const { data } = await axios.post(this.predictionUrl, buffer, {
         headers: {
           'Content-Type': 'application/octet-stream',
-          'Prediction-Key': this.predictionKey,
+          'Prediction-Key': this.predictionKey ?? this.predictionKey2,
         },
       });
 
@@ -36,4 +38,6 @@ export class AzureClassifyService {
       throw error;
     }
   }
+
+  // async analyzeHugging
 }

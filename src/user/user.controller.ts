@@ -25,7 +25,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   async getMyReviews(@Req() req) {
     const log_id = Number(req.user.sub);
-    return await this.userService.myAllReviews(log_id)
+    return await this.userService.myAllReviews(log_id);
   }
 
   //====== 유저 메인 화면관련
@@ -53,8 +53,19 @@ export class UserController {
     description: '가게이름 입력하면 관련 정보 찾아줌',
   })
   @Post('search-store-nm')
-  async searchStore(@Body() body) {
-    const result = await this.userService.getStoreByName(body.store_name);
+  async searchStoreByName(@Req() req, @Body() body) {
+
+    // 유저가 쓰는 언어 추출
+    const lang = req.user.lang
+    // store 아이디랑 이름 같이 보내줘야할듯
+    const result = await this.userService.getStoreByName(lang, body);
     return result;
+  }
+
+
+  // 비건 단계로 가게 찾기
+  @Post('search-store-vegan')
+  async searchStoreByVegan(@Body () body) {
+    const result = await this.userService.getStoreByVegan()
   }
 }

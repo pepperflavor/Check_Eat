@@ -92,20 +92,28 @@ model Food {
   review Review[] @relation("ReviewFoods") 
 
   // 음식 번역
-  ft_id Int // 다국어 
-  FoodTranslate FoodTranslate @relation(fields: [ft_id], references: [ft_id])
+  food_translate_en FoodTranslateEN?
+  food_translate_ar FoodTranslateAR?
 }
 
-model FoodTranslate{
+model FoodTranslateEN{
   ft_id Int @id @default(autoincrement())
-  ft_name_en String? // 음식 이름 영어
-  ft_name_ar String? // 음식 이름 아랍어
-  ft_mt_en String? // 재료 영어
-  ft_mt_ar String? // 재료 아랍어
-  ft_price_en String? // 가격 영어
-  ft_price_ar String? // 가격 아랍어
-  
-  Food Food[]
+  ft_en_name String? // 음식 이름 영어
+  ft_en_mt String? // 재료 영어
+  ft_en_price String? // 가격 영어
+
+  food_id Int @unique
+  food Food @relation(fields: [food_id], references: [foo_id])
+
+}
+
+model FoodTranslateAR{
+  ft_ar_id Int @id @default(autoincrement())
+  ft_ar_mt String? // 재료 아랍어
+  ft_ar_price String? // 가격 아랍어
+
+  food_id Int   @unique
+  food    Food  @relation(fields: [food_id], references: [foo_id])
 }
 
 model Holiday{
@@ -171,20 +179,26 @@ model Review{
   // N:1 - 하나의 가게에 여러 리뷰
   store_id       Int
   store          Store     @relation(fields: [store_id], references: [sto_id])
+
+  review_translate_en ReviewTranslateEN?
+  review_translate_ar ReviewTranslateAR?
 }
 
 // 리뷰 번역은 테이블을 따로 나누는게 낫다고 하심
 model ReviewTranslateEN{
   rt_en_id Int @id @default(autoincrement())
-  // rt_content_en String? // 리뷰 내용 영어
-  // rt_content_ab String? // 리뷰 내용 아랍어
+  rt_content_en String // 리뷰 내용 영어
 
-  // revi_id Int // 리뷰 아이디
-  // Review Review @relation(fields: [revi_id], references: [revi_id])
+  revi_id Int   @unique
+  review  Review @relation(fields: [revi_id], references: [revi_id])
 }
 
 model ReviewTranslateAR{
   rt_ar_id Int @id @default(autoincrement())
+  rt_ar_content String // 아랍어로 번역한 리뷰
+
+    revi_id Int   @unique
+  review  Review @relation(fields: [revi_id], references: [revi_id])
 }
 
 model Store{

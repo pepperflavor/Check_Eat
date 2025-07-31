@@ -145,7 +145,31 @@ export class UserService {
   }
 
   // 가게 이름으로 음식점 검색하기
-  async getStoreByName(inputName: string) {}
+  async getStoreByName(lang: string, inputName: string) {
+    const response = {};
+    // const result = await this.prisma.store.findUnique({
+    //   where: {
+    //     sto_name: inputName,
+    //   },
+    //   select: {
+    //     sto_name: true,
+    //     sto_img: true,
+    //     sto_address: true,
+    //     sto_halal: true,
+    //     sto_latitude: true,
+    //     sto_longitude: true
+    //   },
+    // });
+  }
+
+  // 비건 단계 필터로 가게 찾기
+  async getStoreByVegan() {
+    // const result = await this.prisma.store.findMany({
+    //   where: {
+    //     Food,
+    //   },
+    // });
+  }
 
   //===== 유저 마이페이지 관련 시작
 

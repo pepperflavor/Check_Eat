@@ -294,7 +294,10 @@ export class SajangService {
       data: { sto_status: updateState },
     });
 
-    return updatedStore;
+    return {
+      message: '업체 삭제 성공',
+      status: 'success',
+    };
   }
 }
 
