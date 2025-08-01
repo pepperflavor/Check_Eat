@@ -5,6 +5,9 @@ import { UserLocationDto } from './user_dto/user-location.dto';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { UpdateNickDto } from './user_dto/update-nick.dto';
 import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
+import { DetailStoreDto } from './user_dto/detail-store.dto';
+import { OptionalUser } from 'src/auth/decorator/user.decorator';
+import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
 
 @Controller('user')
 export class UserController {
@@ -41,6 +44,7 @@ export class UserController {
   async userMain(@Body() body: UserLocationDto) {
     // 혹시 몰라서 반경은 변수로 두기
     const radius = 2000;
+    const lang = '';
     const result = await this.userService.mainPageStoresData(
       body.user_la,
       body.user_long,
@@ -73,9 +77,20 @@ export class UserController {
     const result = await this.userService.getStoreByVegan(body);
   }
 
+  // 가게 디테일 페이지
+  // 로그인한 유저인지 아닌지에 따라서 언어 추출하는 곳 달라짐
   @Post('detail-store')
-  
-  async getStoreDetail(){
-    const result = await this.userService.detailStoreData()
+  @UseGuards(OptionalJwtAuthGuard)
+  @ApiOperation({
+    summary: '가게 디테일 페이지 데이터',
+    description: '가게 하나 선택했을때 디테일 페이지 데이터 요청',
+  })
+  async getStoreDetail(
+    @OptionalUser() user: any,
+    @Body() body: DetailStoreDto,
+  ) {
+    const lang = user?.lang || body.user_lang || 'ko'; // 언어 전달안되면 ko로 함
+    const result = await this.userService.detailStoreData(body.sto_id, lang);
+    return result;
   }
 }

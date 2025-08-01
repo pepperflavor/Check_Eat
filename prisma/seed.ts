@@ -114,6 +114,7 @@ async function main() {
           await prisma.store.create({
             data: {
               sto_name: storeData.RSTRNT_NM,
+              sto_name_en: 'TEMP_STORE_NAME',
               sto_address: storeData.RSTRNT_ROAD_NM_ADDR,
               sto_phone: storeData.RSTRNT_TEL_NO ?? null,
               sto_latitude: parseFloat(storeData.RSTRNT_LA),

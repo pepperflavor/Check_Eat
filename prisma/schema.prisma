@@ -104,11 +104,11 @@ model FoodTranslateEN{
 
   food_id Int @unique
   food Food @relation(fields: [food_id], references: [foo_id])
-
 }
 
 model FoodTranslateAR{
   ft_ar_id Int @id @default(autoincrement())
+  ft_ar_name String? // 아랍어 이름
   ft_ar_mt String? // 재료 아랍어
   ft_ar_price String? // 가격 아랍어
 
@@ -196,8 +196,9 @@ model ReviewTranslateEN{
 model ReviewTranslateAR{
   rt_ar_id Int @id @default(autoincrement())
   rt_ar_content String // 아랍어로 번역한 리뷰
+  
 
-    revi_id Int   @unique
+  revi_id Int   @unique
   review  Review @relation(fields: [revi_id], references: [revi_id])
 }
 

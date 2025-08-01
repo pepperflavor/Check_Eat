@@ -274,7 +274,56 @@ export class UserService {
   }
 
   //========== 가게 상세 페이지
-  async detailStoreData() {}
+  async detailStoreData(sto_id: number, lang: string) {
+    const store = await this.prisma.store.findFirst({
+      where: {
+        sto_id,
+        sto_status: { in: [0, 1] },
+      },
+      select: {
+        sto_name_en: true,
+        sto_img: true,
+        sto_address: true,
+        sto_type: true,
+        sto_halal: true,
+        sto_latitude: true,
+        sto_longitude: true,
+        Food: {
+          where: {
+            foo_status: { not: 2 },
+          },
+          select: {
+            foo_img: true,
+            foo_status: true,
+            foo_allergy_common: true,
+            ...(lang === 'ko' && {
+              foo_name: true,
+              foo_material: true,
+              foo_price: true,
+            }),
+            ...(lang === 'en' && {
+              food_translate_en: {
+                select: {
+                  ft_en_name: true,
+                  ft_en_mt: true,
+                  ft_en_price: true,
+                },
+              },
+            }),
+            ...(lang === 'ar' && {
+              food_translate_ar: {
+                select: {
+                  ft_ar_mt: true,
+                  ft_ar_price: true,
+                
+                },
+              },
+            }),
+          },
+        },
+      },
+    });
+  }
 
   //========================= 유저 마이페이지 관련 시작
 
