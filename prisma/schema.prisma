@@ -127,7 +127,7 @@ model Holiday{
   holi_runtime_thu String? // 목요일 영업시간
   holi_runtime_fri String? // 금요일 영업시간
   holi_runtime_sat String? // 토요일 영업시간
-
+  
   holi_regular String? // 정기 휴일
   holi_public String? // 한국 공휴일들 중에 쉬는날
 

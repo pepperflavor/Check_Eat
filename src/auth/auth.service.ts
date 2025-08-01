@@ -60,11 +60,18 @@ export class AuthService {
   async login(inputId: string, inputPwd: string) {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
-
     if (!data) {
       throw new UnauthorizedException('로그인 정보가 존재하지 않습니다.');
     }
 
+    const isWithdraw = await this.commonService.isWithdraw(inputId);
+
+    if (isWithdraw == 2 || isWithdraw == undefined) {
+      return {
+        message: '탈퇴한 회원입니다.',
+        status: 'false',
+      };
+    }
     // 비밀번호 확인
     const isMatch = await this.commonService.comparePassword(
       inputPwd,
@@ -80,7 +87,7 @@ export class AuthService {
       data.ld_log_id,
       data.ld_usergrade,
       data.ld_email,
-      data.ld_lang
+      data.ld_lang,
     );
 
     console.log('로그인 함수 안 페이로드리턴 값 확인 : ');
@@ -111,12 +118,17 @@ export class AuthService {
   }
 
   // 로그인시 유저 유형별 토큰 발급 리프레시는 db 저장
-  async generateToken(ld_id: string, ld_usergrade: number, ld_email: string, ld_lang: string) {
+  async generateToken(
+    ld_id: string,
+    ld_usergrade: number,
+    ld_email: string,
+    ld_lang: string,
+  ) {
     let payload: any = {
       sub: ld_id,
       role: ld_usergrade,
       email: ld_email,
-      lang: ld_lang
+      lang: ld_lang,
     };
 
     if (ld_usergrade == 0) {

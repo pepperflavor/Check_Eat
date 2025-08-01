@@ -50,6 +50,7 @@ export class AuthController {
   }
 
   // 로그인
+  // status 2 이면
   @Post('login')
   @ApiOperation({ summary: '로그인', description: '로그인' })
   async signInCommon(@Body() body: CommonLoginDTO) {

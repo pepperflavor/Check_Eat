@@ -8,6 +8,7 @@ import { CacheConfigModule } from 'src/cache/cache.module';
 import { EmailModule } from 'src/email/email.module';
 import { CommonAccountModule } from 'src/common-account/common-account.module';
 import { SajangModule } from 'src/sajang/sajang.module';
+import { JwtStrategy } from './jwt.strategy';
 
 @Module({
   imports: [
@@ -28,7 +29,7 @@ import { SajangModule } from 'src/sajang/sajang.module';
     SajangModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthModule],
 })
 export class AuthModule {}

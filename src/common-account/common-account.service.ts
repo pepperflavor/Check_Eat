@@ -163,14 +163,27 @@ export class CommonAccountService {
     return bcrypt.compare(plainPWD, hashedPWD);
   }
 
+  // 탈퇴한 회원인지 확인
+  async isWithdraw(inputId: string) {
+    const result = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: inputId,
+      },
+      select: {
+        ld_status: true,
+      },
+    });
+
+    return result?.ld_status
+  }
+
   // ===== 회원 상태 수정
 
   // 탈퇴
   async editState(ld_id: string, updateState: number) {
-    const id = Number(ld_id);
     const result = await this.prisma.loginData.update({
       where: {
-        ld_id: id,
+        ld_log_id: ld_id,
       },
       data: {
         ld_status: updateState,
