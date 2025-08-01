@@ -37,8 +37,8 @@ export class UserService {
     const hashedPWD = await bcrypt.hash(log_pwd, SALT);
 
     // 여기서 닉네임 랜덤인거 수정해주기
-    if (nickname == '' || nickname == undefined) {
-      nickname = randomNickMaker(1, 'ko'); // 닉네임도 랜덤으로 돌리기
+    if (nickname == '' || nickname == undefined || !nickname) {
+      nickname = randomNickMaker(ld_lang); // 닉네임도 랜덤으로 돌리기
     }
 
     if (!nickname || nickname == '') {
