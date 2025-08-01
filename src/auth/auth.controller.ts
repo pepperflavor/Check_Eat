@@ -50,7 +50,7 @@ export class AuthController {
   }
 
   // 로그인
-  // status 2 이면
+  // status 2 이면 로그인 안됨, 탈퇴한 회원
   @Post('login')
   @ApiOperation({ summary: '로그인', description: '로그인' })
   async signInCommon(@Body() body: CommonLoginDTO) {

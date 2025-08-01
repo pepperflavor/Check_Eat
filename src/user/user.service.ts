@@ -31,6 +31,7 @@ export class UserService {
       commonAllergies = [],
       vegan = 0,
       isHalal = 0,
+      ld_lang,
     } = createDTO;
 
     const hashedPWD = await bcrypt.hash(log_pwd, SALT);
@@ -71,6 +72,7 @@ export class UserService {
           ld_email: email,
           ld_usergrade: 0, // 0: 일반 유저
           ld_user_id: user.user_id, // 생성된 User와 관계 연결
+          ld_lang: ld_lang,
         },
       });
     });
@@ -101,20 +103,65 @@ export class UserService {
     return user;
   }
 
-  //======  메인 기능 시작
-  // 메인 지도화면 좌표 리턴
-  async mainPageStoresData(user_la: string, user_long: string, radius: number) {
-    // 현재 위도 경도 소수로 수정
+  //==================================  메인 기능 시작
+  //============== 지도관련 기능 시작
+
+  // 공용 함수 - 조회하는 요일에 일치하는 영업시간, 휴무일 리턴
+  private async mergeStoresWithHoliday(stores: any[]): Promise<any[]> {
+    const today = dayjs().day();
+
+    const runtimeKeyMap = {
+      0: 'holi_runtime_sun',
+      1: 'holi_runtime_mon',
+      2: 'holi_runtime_tue',
+      3: 'holi_runtime_wed',
+      4: 'holi_runtime_thu',
+      5: 'holi_runtime_fri',
+      6: 'holi_runtime_sat',
+    };
+    const runtimeKey = runtimeKeyMap[today];
+
+    const storeIds = stores.map((s) => s.sto_id);
+    const holidays = await this.prisma.holiday.findMany({
+      where: {
+        Store: {
+          some: {
+            sto_id: { in: storeIds },
+          },
+        },
+      },
+      include: {
+        Store: true,
+      },
+    });
+
+    return stores.map((store) => {
+      const holiday = holidays.find((h) =>
+        h.Store.some((s) => s.sto_id === store.sto_id),
+      );
+
+      return {
+        ...store,
+        holi_weekday: today,
+        today_runtime: holiday?.[runtimeKey] ?? null,
+        holi_break: holiday?.holi_break ?? null,
+        holi_regular: holiday?.holi_regular ?? null,
+        holi_public: holiday?.holi_public ?? null,
+      };
+    });
+  }
+
+  // 유저 메인화면
+  // // 첫 로딩시 자기 위치 기준 반경 2km 가게
+  async mainPageStoresData(user_la: string, user_long: string, radius = 2000) {
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
 
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
-      sto_id, 
-        sto_name, 
-        sto_latitude, 
-        sto_longitude,
+        sto_id, sto_name, sto_latitude, sto_longitude,
+        sto_type, sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
           geography(ST_MakePoint(sto_longitude, sto_latitude)),
           geography(ST_MakePoint($1, $2))
@@ -125,85 +172,78 @@ export class UserService {
         geography(ST_MakePoint($1, $2)),
         $3
       )
+      AND sto_status != 2
       ORDER BY distance ASC;
-    `,
+      `,
       LONG,
       LA,
       radius,
     );
 
-    if (stores.length == 0) {
+    if (!stores || stores.length === 0) {
       return {
-        message: `반경 ${radius}km 내의 위치한 가게가 없습니다`,
+        message: `반경 ${radius}m 내의 위치한 가게가 없습니다`,
         status: 'success',
       };
-    } else if (stores.length > 0) {
-      return stores;
-    } else if (stores == null || stores == undefined) {
-      throw new Error(
-        '유저 위치 기반 주변 가게를 찾는 도중 에러가 발생했습니다.',
-      );
     }
+
+    return await this.mergeStoresWithHoliday(stores);
   }
 
-  // 가게 이름으로 음식점 검색하기
-  // 나중에 언어 별로 리턴해주게 수정해야함
-  // 반경 2km 추가
+  // 이름으로 가게 검색
   async getStoreByName(lang: string, data) {
-    const { sto_name } = data;
+    const { sto_name, user_latitude, user_longitude } = data;
+    const LA = new Decimal(user_latitude);
+    const LONG = new Decimal(user_longitude);
+    const radius = 2000;
 
-    const result = await this.prisma.store.findMany({
-      where: {
-        sto_name: {
-          contains: sto_name,
-          mode: 'insensitive', // 대소문자 구분 없이
-        },
-        sto_status: {
-          not: 2, // sto_status == 2이면 폐업한 곳임
-        },
-      },
-      select: {
-        sto_name: true,
-        sto_img: true,
-        sto_address: true,
-        sto_halal: true,
-        sto_latitude: true,
-        sto_longitude: true,
-        sto_phone: true,
-        sto_type: true,
-        holiday: {
-          // 휴일정보 추가...?
-        },
-      },
-    });
+    const stores = await this.prisma.$queryRawUnsafe<any[]>(
+      `
+      SELECT
+        sto_id, sto_name, sto_latitude, sto_longitude,
+        sto_type, sto_address, sto_halal, sto_status, sto_img,
+        ST_Distance(
+          geography(ST_MakePoint(sto_longitude, sto_latitude)),
+          geography(ST_MakePoint($1, $2))
+        ) AS distance
+      FROM "Store"
+      WHERE sto_status != 2
+        AND sto_name ILIKE '%' || $3 || '%'
+        AND ST_DWithin(
+          geography(ST_MakePoint(sto_longitude, sto_latitude)),
+          geography(ST_MakePoint($1, $2)),
+          $4
+        )
+      ORDER BY distance ASC;
+      `,
+      LONG,
+      LA,
+      sto_name,
+      radius,
+    );
 
-    if (!result || result == null || result == undefined) {
+    if (!stores || stores.length === 0) {
       return {
         message: '해당 검색어에 대한 데이터가 없습니다.',
         status: 'false',
       };
     }
 
-    return result;
+    return await this.mergeStoresWithHoliday(stores);
   }
 
-  // 비건 단계 필터로 가게 찾기
+  // 비건 단계별 검색
   async getStoreByVegan(data: SearchStoreByVeganDto) {
     const { vegan_level, user_la, user_long } = data;
-
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
     const radius = 2000;
-    const today = dayjs().day(); // 0 일요일
 
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
-        s.sto_id,
-        s.sto_name,
-        s.sto_latitude,
-        s.sto_longitude,
-        s.sto_sa_id,
+        s.sto_id, s.sto_name, s.sto_latitude, s.sto_longitude,
+        s.sto_type, s.sto_img, s.sto_address, s.sto_halal,
         ST_Distance(
           geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
           geography(ST_MakePoint($1, $2))
@@ -215,12 +255,10 @@ export class UserService {
         $3
       )
       AND EXISTS (
-        SELECT 1
-        FROM "Food" f
-        WHERE f.foo_sa_id = s.sto_sa_id
-        AND f.foo_vegan = $4
+        SELECT 1 FROM "Food" f
+        WHERE f.foo_sa_id = s.sto_sa_id AND f.foo_vegan = $4
       )
-      ORDER BY distance ASC
+      ORDER BY distance ASC;
       `,
       LONG,
       LA,
@@ -232,58 +270,13 @@ export class UserService {
       return { message: '조건에 맞는 가게가 없습니다', status: 'success' };
     }
 
-    const storeIds = stores.map((s) => s.sto_id);
-
-    // 가게별 Holiday 정보 가져오기
-    const holidays = await this.prisma.holiday.findMany({
-      where: {
-        Store: {
-          some: {
-            sto_id: {
-              in: storeIds,
-            },
-          },
-        },
-      },
-      include: {
-        Store: true,
-      },
-    });
-
-    // 요일별 영업시간 키
-    const runtimeKeyMap = {
-      0: 'holi_runtime_sun',
-      1: 'holi_runtime_mon',
-      2: 'holi_runtime_tue',
-      3: 'holi_runtime_wed',
-      4: 'holi_runtime_thu',
-      5: 'holi_runtime_fri',
-      6: 'holi_runtime_sat',
-    };
-
-    // 가게별 Holiday 정보 병합
-    const result = stores.map((store) => {
-      const holiday = holidays.find((h) =>
-        h.Store.some((s) => s.sto_id === store.sto_id),
-      );
-
-      const runtimeKey = runtimeKeyMap[today];
-      const todayRuntime = holiday?.[runtimeKey] ?? null;
-
-      return {
-        ...store,
-        holi_weekday: today,
-        today_runtime: todayRuntime,
-        holi_regular: holiday?.holi_regular ?? null,
-        holi_public: holiday?.holi_public ?? null,
-        holi_break: holiday?.holi_break ?? null,
-      };
-    });
-
-    return result;
+    return await this.mergeStoresWithHoliday(stores);
   }
 
-  //===== 유저 마이페이지 관련 시작
+  //========== 가게 상세 페이지
+  async detailStoreData() {}
+
+  //========================= 유저 마이페이지 관련 시작
 
   // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장, 토큰도 새로 발급해줘야함
   async updateUserMypage() {}

@@ -66,6 +66,7 @@ export class SajangService {
         sa_id: data.sa_id,
         sto_name:
           data.sto_name && data.sto_name.length > 0 ? data.sto_name : data.b_nm,
+        // sto_name_en: data.sto_name_en,
         sto_address: data.b_adr,
         sto_phone: data.sto_phone,
         sto_latitude: new Decimal(data.sto_latitude),
@@ -75,6 +76,7 @@ export class SajangService {
       await this.prisma.store.create({
         data: {
           sto_name: storeData.sto_name ?? '',
+          // sto_name_en: storeData.sto_name_en,
           sto_address: storeData.sto_address ?? '',
           sto_phone: storeData.sto_phone ? String(storeData.sto_phone) : null,
           sto_latitude: parseFloat(storeData.sto_latitude.toFixed(6)),

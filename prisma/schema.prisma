@@ -204,7 +204,7 @@ model ReviewTranslateAR{
 model Store{
   sto_id Int @id @default(autoincrement())
   sto_name String // 가게 이름
-  sto_name_en String? // 가게이름 사장이 선택적으로 영어명으로 입력가능
+  sto_name_en String // 가게이름 사장이 선택적으로 영어명으로 입력, 이제 필수값
   sto_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sto_address String // 가게 주소
   sto_phone String? // 가게 전화번호

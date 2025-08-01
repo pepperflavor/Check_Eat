@@ -32,7 +32,7 @@ export class SajangController {
   @Post('regist-certification')
   @ApiOperation({
     summary: '사장님이 정보 수정후 취합해서 요청보내기',
-    description: '사업자 등록 진위여부 - 국세청으로 요청보내는 곳',
+    description: '사업자 등록 진위여부 - 국세청으로 요청보내는 곳/ ocr인식, 정보 수정 후 보내는곳',
   })
   async registCertification(@Body() body: BusinessRegistrationDTO) {
     // 사장님아이디 토큰말고, body에 같이 받음

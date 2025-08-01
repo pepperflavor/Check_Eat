@@ -67,9 +67,15 @@ export class UserController {
     summary: '',
     description: '비건 단계로 가게 검색하기, 반경 2KM 이내',
   })
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Post('search-store-vegan')
   async searchStoreByVegan(@Body() body: SearchStoreByVeganDto) {
     const result = await this.userService.getStoreByVegan(body);
+  }
+
+  @Post('detail-store')
+  
+  async getStoreDetail(){
+    const result = await this.userService.detailStoreData()
   }
 }
