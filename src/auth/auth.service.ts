@@ -250,6 +250,8 @@ export class AuthService {
 
         await this.emailService.sendVerificationCode(email, code, language, 2);
       } catch (error) {
+        this.logger.error('비밀번호 찾기 인증코드 발송 실패 ', error);
+        this.logger.error(` type : ${type}`);
         throw new Error('인증코드 발송중 오류가 발생했습니다.');
       }
     }

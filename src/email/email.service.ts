@@ -8,8 +8,12 @@ export class EmailService implements OnModuleInit {
   onModuleInit() {
     const apiKEY = this.config.get<string>('SEND_GRID_MAILER_API_KEY');
     if (apiKEY) {
+      console.log('샌드 그리드 키 값 : ');
+      console.log(apiKEY);
       sgMail.setApiKey(apiKEY);
     } else {
+      console.log('샌드 그리드 키 값 : ');
+      console.log(apiKEY);
       throw new Error('SEND_GRID_MAILER_API_KEY is not defined');
     }
   }
@@ -65,11 +69,11 @@ export class EmailService implements OnModuleInit {
         sendSubject = 'CHECK EAT! 비밀번호 인증코드';
         sendHtml = `<p> 아래 인증 코드를 인증 칸에 입력해주세요 : </p><h2>${code}</h2>`;
         break;
-      case 'en_02':
+      case 'en_2':
         sendSubject = 'CHECK EAT! Password  Authentication Code';
         sendHtml = `<p> Please enter the authentication code below into the authentication field : </p><h2>${code}</h2>`;
         break;
-      case 'ar_02':
+      case 'ar_2':
         sendSubject = 'رمز مصادقة كلمة المرور CHECK EAT';
         sendHtml = `<p> الرجاء إدخال رمز المصادقة أدناه في حقل المصادقة. </p><h2>${code}</h2>`;
         break;
