@@ -332,15 +332,15 @@ export class UserService {
         },
       },
     });
-  
+
     if (!store) return null;
-  
+
     const transformedFoods = store.Food.map((food) => {
       // 언어별 필드 분기
       let foo_name: string | undefined;
       let foo_material: string | undefined;
       let foo_price: string | undefined;
-  
+
       if (lang === 'ko') {
         foo_name = (food as any).foo_name;
         foo_material = (food as any).foo_material;
@@ -354,23 +354,23 @@ export class UserService {
         foo_material = food.food_translate_ar?.ft_ar_mt ?? undefined;
         foo_price = food.food_translate_ar?.ft_ar_price ?? undefined;
       }
-  
+
       // 알러지 필터링
       let foo_warning: string | undefined = undefined;
       let foo_warning_coal: number[] = [];
-  
+
       if (
         userData.user_allergy &&
         foo_material?.includes(userData.user_allergy)
       ) {
         foo_warning = userData.user_allergy;
       }
-  
+
       const coalIds = food.CommonAl?.map((coal) => coal.coal_id) || [];
       foo_warning_coal = coalIds.filter((id) =>
         userData.user_allergy_common?.includes(id),
       );
-  
+
       return {
         foo_name,
         foo_material,
@@ -381,7 +381,7 @@ export class UserService {
         ...(foo_warning_coal.length > 0 && { foo_warning_coal }),
       };
     });
-  
+
     return {
       sto_name_en: store.sto_name_en,
       sto_img: store.sto_img,
@@ -400,11 +400,11 @@ export class UserService {
   async updateUserMypage() {}
 
   // 닉네임 변경
-  async updateNick(ld_id: number, newNick: string) {
+  async updateNick(ld_id: string, newNick: string) {
     // ld_id : lodindata 테이블의 아이디
     const userID = await this.prisma.loginData.findUnique({
       where: {
-        ld_id: ld_id,
+        ld_log_id: ld_id,
       },
       select: {
         ld_user_id: true,

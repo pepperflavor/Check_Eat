@@ -78,12 +78,12 @@ export class CommonAccountService {
 
   // 로그인 시 데이터 조회, 토큰 생성 데이터
   async isExistLoginData(
-    ld_id: string,
+    ld_log_id: string,
     ld_usergrade: number,
   ): Promise<UserLoginToken | SajangLoginToken> {
     if (ld_usergrade == 0) {
       const data = await this.prisma.loginData.findUnique({
-        where: { ld_log_id: ld_id },
+        where: { ld_log_id: ld_log_id },
         include: {
           user: {
             select: {
@@ -106,7 +106,7 @@ export class CommonAccountService {
     } else if (ld_usergrade == 1) {
       const data = await this.prisma.loginData.findUnique({
         where: {
-          ld_log_id: ld_id,
+          ld_log_id: ld_log_id,
         },
         include: {
           sajang: {
@@ -197,6 +197,8 @@ export class CommonAccountService {
     const ID = Number(ld_id);
     const SALT = await this.config.get('BCRYPT_SALT_ROUNDS');
     const hashedPWD = await bcrypt.hash(inputpwd, SALT); // 비번 해시화
+
+    console.log(hashedPWD);
 
     const result = await this.prisma.loginData.update({
       where: {
