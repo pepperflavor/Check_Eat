@@ -121,11 +121,7 @@ export class ReviewService {
     
     // 이미지가 있으면 Azure에 업로드
     if (files && files.length > 0) {
-      const uploadResults = await this.reviewStorageService.uploadMultiple(
-        files, 
-        'review-images'
-      );
-      imageUrls = uploadResults.map(result => result.url);
+      imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
     
     // DB에 리뷰 저장
@@ -134,7 +130,6 @@ export class ReviewService {
         revi_reco_step: reviData.revi_reco_step,
         revi_content: reviData.revi_content || null,
         revi_status: reviData.revi_status || 0,
-        // revi_img: imageUrls.length > 0 ? imageUrls.join(',') : null, // 콤마로 구분된 URL들
         user_id: userId,
         store_id: reviData.store_id,
         foods: {
@@ -147,6 +142,18 @@ export class ReviewService {
         store: true
       }
     });
+
+    // 이미지 URL들을 ReviewImage 테이블에 저장
+    if (imageUrls.length > 0) {
+      const reviewImages = imageUrls.map(url => ({
+        revi_img_url: url,
+        review_id: review.revi_id
+      }));
+      
+      await this.prisma.reviewImage.createMany({
+        data: reviewImages
+      });
+    }
     
     return {
       message: '리뷰가 성공적으로 등록되었습니다.',
