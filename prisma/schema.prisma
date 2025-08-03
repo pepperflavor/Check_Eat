@@ -76,8 +76,6 @@ model Food {
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
   foo_status Int @default(0) // 0: 정상판매중, 1: 사장 요청으로 판매 일시중지, 2: 삭제된 음식
   
-  foo_allergy_common Int? // 19가지 보편적인 알러지중에서 포함된거
-
   foo_sa_id Int // 업주 사장아이디
   Sajang Sajang @relation(fields: [foo_sa_id], references: [sa_id])
   
@@ -164,7 +162,7 @@ model Vegan{
 // 사장님 마이 페이지에 최신 리뷰 하나 꺼내줘야함
 model Review{
   revi_id Int @id @default(autoincrement())
-  revi_img String? // 음식사진
+  // revi_img String? // 음식사진
   revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수
   revi_content String? // 추천/ 추천안했을 때 텍스트 옵셔널
   revi_status Int @default(0) // 0 : 리뷰 썼음, 1: 나중에 쓰려고 보류 중
@@ -182,6 +180,15 @@ model Review{
 
   review_translate_en ReviewTranslateEN?
   review_translate_ar ReviewTranslateAR?
+
+  ReviewImage ReviewImage[]
+}
+
+model ReviewImage {
+  revi_img_id Int @id @default(autoincrement())
+  revi_img_url String
+  review_id Int
+  review Review @relation(fields: [review_id], references: [revi_id])
 }
 
 // 리뷰 번역은 테이블을 따로 나누는게 낫다고 하심

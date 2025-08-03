@@ -278,6 +278,10 @@ export class AuthService {
     };
   }
 
+  async noLoginChangePwd(email: string, pwd: string) {
+    return await this.commonService.newPwdCommon(email, pwd);
+  }
+
   // LocalStrategy에서 사용할 사용자 검증 메서드
   async validateUser(username: string, password: string): Promise<any> {
     const data = await this.commonService.findById(username);

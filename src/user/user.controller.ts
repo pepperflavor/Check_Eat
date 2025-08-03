@@ -90,7 +90,10 @@ export class UserController {
     @Body() body: DetailStoreDto,
   ) {
     const lang = user?.lang || body.user_lang || 'ko'; // 언어 전달안되면 ko로 함
-    const result = await this.userService.detailStoreData(body.sto_id, lang);
+    const result = await this.userService.detailStoreData(body.sto_id, lang, {
+      user_allergy: user?.user_allergy,
+      user_allergy_common: user?.user_allergy_common || [],
+    });
     return result;
   }
 }

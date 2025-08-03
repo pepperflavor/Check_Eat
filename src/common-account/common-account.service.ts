@@ -174,7 +174,7 @@ export class CommonAccountService {
       },
     });
 
-    return result?.ld_status
+    return result?.ld_status;
   }
 
   // ===== 회원 상태 수정
@@ -213,6 +213,45 @@ export class CommonAccountService {
 
     return {
       message: '비밀번호 재설정 완료',
+      status: 'success',
+    };
+  }
+
+  async newPwdCommon(email: string, newPwd: string) {
+    const isExistEmail = await this.prisma.loginData.findUnique({
+      where: {
+        ld_email: email,
+      },
+    });
+
+    if (!isExistEmail || isExistEmail == null || isExistEmail == undefined) {
+      return {
+        message: '존재하지 않는 이메일입니다.',
+        status: 'false',
+      };
+    }
+
+    const SALT = await this.config.get('BCRYPT_SALT_ROUNDS');
+    const newHashPwd = await bcrypt.hash(newPwd, SALT);
+
+    const result = await this.prisma.loginData.update({
+      where: {
+        ld_email: email,
+      },
+      data: {
+        ld_pwd: newHashPwd,
+      },
+    });
+
+    if (!result || result == null || result == undefined) {
+      return {
+        message: '비밀번호 변경 실패',
+        status: 'false',
+      };
+    }
+
+    return {
+      message: '비밀번호 변경 성공',
       status: 'success',
     };
   }

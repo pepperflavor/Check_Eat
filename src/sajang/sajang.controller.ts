@@ -22,7 +22,10 @@ export class SajangController {
 
   // 음식 삭제
   @Post('delete-food')
-  async deleteFood() {}
+  @UseGuards(JwtAuthGuard)
+  async deleteFood(@Req () req) {
+    const ID = req.user.sub // 사장 아이디 추출, 본인 업장인지 확인후 데이터 처리
+  }
 
   // 할랄 업장 인증
   @Post('regist-halal')

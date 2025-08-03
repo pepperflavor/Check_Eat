@@ -274,7 +274,14 @@ export class UserService {
   }
 
   //========== 가게 상세 페이지
-  async detailStoreData(sto_id: number, lang: string) {
+  async detailStoreData(
+    sto_id: number,
+    lang: string,
+    userData: {
+      user_allergy?: string | null;
+      user_allergy_common?: number[]; // CommonAl ID 목록
+    },
+  ) {
     const store = await this.prisma.store.findFirst({
       where: {
         sto_id,
@@ -295,10 +302,12 @@ export class UserService {
           select: {
             foo_img: true,
             foo_status: true,
-            foo_allergy_common: true,
+            foo_material: true,
+            CommonAl: {
+              select: { coal_id: true },
+            },
             ...(lang === 'ko' && {
               foo_name: true,
-              foo_material: true,
               foo_price: true,
             }),
             ...(lang === 'en' && {
@@ -313,9 +322,9 @@ export class UserService {
             ...(lang === 'ar' && {
               food_translate_ar: {
                 select: {
+                  ft_ar_name: true,
                   ft_ar_mt: true,
                   ft_ar_price: true,
-                
                 },
               },
             }),
@@ -323,6 +332,66 @@ export class UserService {
         },
       },
     });
+  
+    if (!store) return null;
+  
+    const transformedFoods = store.Food.map((food) => {
+      // 언어별 필드 분기
+      let foo_name: string | undefined;
+      let foo_material: string | undefined;
+      let foo_price: string | undefined;
+  
+      if (lang === 'ko') {
+        foo_name = (food as any).foo_name;
+        foo_material = (food as any).foo_material;
+        foo_price = (food as any).foo_price?.toString();
+      } else if (lang === 'en') {
+        foo_name = food.food_translate_en?.ft_en_name ?? undefined;
+        foo_material = food.food_translate_en?.ft_en_mt ?? undefined;
+        foo_price = food.food_translate_en?.ft_en_price ?? undefined;
+      } else if (lang === 'ar') {
+        foo_name = food.food_translate_ar?.ft_ar_name ?? undefined;
+        foo_material = food.food_translate_ar?.ft_ar_mt ?? undefined;
+        foo_price = food.food_translate_ar?.ft_ar_price ?? undefined;
+      }
+  
+      // 알러지 필터링
+      let foo_warning: string | undefined = undefined;
+      let foo_warning_coal: number[] = [];
+  
+      if (
+        userData.user_allergy &&
+        foo_material?.includes(userData.user_allergy)
+      ) {
+        foo_warning = userData.user_allergy;
+      }
+  
+      const coalIds = food.CommonAl?.map((coal) => coal.coal_id) || [];
+      foo_warning_coal = coalIds.filter((id) =>
+        userData.user_allergy_common?.includes(id),
+      );
+  
+      return {
+        foo_name,
+        foo_material,
+        foo_price,
+        foo_img: food.foo_img,
+        foo_status: food.foo_status,
+        ...(foo_warning && { foo_warning }),
+        ...(foo_warning_coal.length > 0 && { foo_warning_coal }),
+      };
+    });
+  
+    return {
+      sto_name_en: store.sto_name_en,
+      sto_img: store.sto_img,
+      sto_address: store.sto_address,
+      sto_type: store.sto_type,
+      sto_halal: store.sto_halal,
+      sto_latitude: store.sto_latitude,
+      sto_longitude: store.sto_longitude,
+      food_list: transformedFoods,
+    };
   }
 
   //========================= 유저 마이페이지 관련 시작

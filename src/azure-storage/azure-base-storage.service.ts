@@ -23,8 +23,9 @@ export abstract class BaseStorageService {
   async uploadFile(
     file: Express.Multer.File,
     containerName: string,
+    customFileName?: string
   ): Promise<{ url: string; fileName: string }> {
-    const blobName = `${Date.now()}-${file.originalname}`;
+    const blobName = customFileName ?? `${Date.now()}-${file.originalname}`;
     const containerClient = this.getContainerClient(containerName);
     const blockBlobClient = containerClient.getBlockBlobClient(blobName);
 
