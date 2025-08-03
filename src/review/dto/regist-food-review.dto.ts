@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsOptional, IsString, ArrayMaxSize } from 'class-validator';
+import {
+  IsArray,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ArrayMaxSize,
+} from 'class-validator';
 
 export class RegistFoodReviewDto {
   @ApiProperty({
@@ -26,8 +32,16 @@ export class RegistFoodReviewDto {
   revi_content?: string;
 
   @ApiProperty({
+    example: '3',
+    description: '이 음식을 추천하고 싶은 비건단계, 옵셔널',
+  })
+  @IsOptional()
+  revi_reco_vegan: number;
+
+  @ApiProperty({
     example: 0,
-    description: '추천 단계 - 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수',
+    description:
+      '추천 단계 - 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수',
   })
   @IsNumber()
   revi_reco_step: number;

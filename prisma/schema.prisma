@@ -163,9 +163,11 @@ model Vegan{
 model Review{
   revi_id Int @id @default(autoincrement())
 
-  revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수
+  revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수/ -1 :나중에 쓰기
+  revi_reco_vegan Int? // 추천하는 비건 단계
   revi_content String? // 추천/ 추천안했을 때 텍스트 옵셔널
   revi_status Int @default(0) // 0 : 리뷰 썼음, 1: 나중에 쓰려고 보류 중
+  revi_edit Int @default(0) // 리뷰 수정횟수
   revi_create DateTime @default(now())
 
   foods Food[] @relation("ReviewFoods") // 음식과 다대다 관계

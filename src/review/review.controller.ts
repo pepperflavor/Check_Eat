@@ -14,6 +14,9 @@ import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { RegistFoodReviewDto } from './dto/regist-food-review.dto';
 import { IsRegistStoreDto } from './dto/is-regist-store.dto';
 import { GetReviewFoodsPageDto } from './dto/get-review-foods-list.dto';
+import { GetReviewOneMenuDto } from './dto/get-reviews-one-menu.dto';
+import { RegistLaterReviewDto } from './dto/regist-later-review.dto';
+import { WriteLaterReviewDto } from './dto/write-later-review.dto';
 
 @Controller('review')
 export class ReviewController {
@@ -22,7 +25,6 @@ export class ReviewController {
   // 우리 어플에 등록된 가게인지 확인하기
   // 가게명이 일치하는지 확인
   // 외국어 지원해야 함 ... 어케하누ㅜㅜㅜㅜ
-
   @Post('can-write')
   @ApiOperation({
     summary: '우리 어플에 등록된 가게인지 확인',
@@ -37,6 +39,47 @@ export class ReviewController {
     );
   }
 
+  // 나중에 쓰기로 등록
+  @Post('regist-later')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '리뷰 나중에 쓰기 등록',
+    description: '다음에 등록 버튼 눌렀을 때, 나중에 쓸 리뷰로 저장',
+  })
+  async registLaterList(@Req() req, @Body() body: RegistLaterReviewDto) {
+    const ld_log_Id = req.user.sub;
+    return await this.reviewService.userRegistWriteLater(
+      ld_log_Id,
+      body.sto_id,
+    );
+  }
+
+  // 나중에 쓰기 등록해둔 리뷰 작성하기
+  @Post('write-later-review')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FilesInterceptor('images', 4))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: '리뷰 나중에 쓰기한 리뷰 작성',
+    description: '나중에 쓸 리뷰, 작성하기',
+  })
+  async writeLaterReview(
+    @Req() req,
+    @Body() body: WriteLaterReviewDto,
+    @UploadedFiles() files?: Express.Multer.File[],
+  ) {
+    const ld_log_Id = req.user.sub;
+    const lang = req.user.lang;
+
+    return await this.reviewService.writeLaterReview(
+      ld_log_Id,
+      lang,
+      body,
+      files,
+    );
+  }
+
+  // 리뷰 작성페이지 진입
   @Post('regist-page')
   @ApiOperation({
     summary: '리뷰 작성페이지에 진입할때 필요한 음식 데이터',
@@ -75,10 +118,38 @@ export class ReviewController {
 
   // 한 메뉴에 대한 리뷰 조회
   @Post('one-menu')
-  @ApiOperation({ summary: '', description: '한 메뉴에 대한 리뷰들 데이터' })
-  async getReviewBySotre() {}
+  @ApiOperation({
+    summary: '가게 상세에서 한메뉴에 대한 리뷰들',
+    description: '한 메뉴에 대한 리뷰들 데이터, 유저 언어값 보내주세요',
+  })
+  async getReviewBySotre(@Body() body: GetReviewOneMenuDto) {
+    const { sto_id, foo_id, lang, page = 1, limit = 10 } = body;
+    return await this.reviewService.oneMenuReviews(
+      sto_id,
+      foo_id,
+      lang,
+      page,
+      limit,
+    );
+  }
 
   // 유저 마이페이지에서 자기가쓴 쓴 리뷰들 조회
-  @Post('one-user')
-  async getReviewsByUserID() {}
+  @Post('one-user-write-list')
+  @UseGuards(JwtAuthGuard)
+  async getReviewsByUserID(@Req() req, @Body() body) {
+    const log_id = req.user.sub;
+    const lang = req.user.lang;
+    return await this.reviewService.oneUserReview(log_id, lang)
+  }
+
+
+  // 나중에 쓰기로 등록한 리뷰들 리스트 조회
+  @Post('one-user-later-list')
+  @UseGuards(JwtAuthGuard)
+  async getLaterReviewsByUserID(@Req() req, @Body() body) {
+    const log_id = req.user.sub;
+    const lang = req.user.lang;
+    return await this.reviewService.oneUserLaterReview(log_id);
+  }
+
 }

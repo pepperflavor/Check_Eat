@@ -5,6 +5,7 @@ import { RegistFoodReviewDto } from './dto/regist-food-review.dto';
 import { ReviewStorageService } from '../azure-storage/review-storage.service';
 import { stat } from 'fs';
 import { TranslateService } from 'src/translate/translate.service';
+import { WriteLaterReviewDto } from './dto/write-later-review.dto';
 
 @Injectable()
 export class ReviewService {
@@ -177,6 +178,7 @@ export class ReviewService {
     const review = await this.prisma.review.create({
       data: {
         revi_reco_step: reviData.revi_reco_step,
+        revi_reco_vegan: reviData.revi_reco_vegan ?? null,
         revi_content: reviData.revi_content || null,
         revi_status: reviData.revi_status || 0,
         user_id: userId.ld_user_id,
@@ -245,6 +247,331 @@ export class ReviewService {
     return {
       message: '리뷰가 성공적으로 등록되었습니다.',
       review_id: review.revi_id,
+      uploaded_images: imageUrls.length,
+    };
+  }
+
+  //===== 한 메뉴에 대한 리뷰 조회
+  async oneMenuReviews(
+    sto_id: number,
+    foo_id: number,
+    lang: string,
+    page = 1,
+    limit = 10,
+  ) {
+    const skip = (page - 1) * limit;
+
+    // 전체 개수
+    const totalCount = await this.prisma.review.count({
+      where: {
+        store_id: sto_id,
+        revi_status: 0,
+        foods: {
+          some: {
+            foo_id: foo_id,
+          },
+        },
+      },
+    });
+
+    // 페이징된 리뷰 조회
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        store_id: sto_id,
+        revi_status: 0,
+        foods: {
+          some: {
+            foo_id: foo_id,
+          },
+        },
+      },
+      select: {
+        revi_id: true,
+        revi_reco_step: true,
+        revi_create: true,
+        revi_content: lang === 'ko',
+
+        review_translate_en:
+          lang === 'en' ? { select: { rt_content_en: true } } : false,
+
+        review_translate_ar:
+          lang === 'ar' ? { select: { rt_ar_content: true } } : false,
+
+        ReviewImage: {
+          select: { revi_img_url: true },
+        },
+      },
+      orderBy: {
+        revi_create: 'desc',
+      },
+      skip,
+      take: limit,
+    });
+
+    // 날짜 및 content 포맷 가공
+    const formatted = reviews.map((r) => {
+      let content = '';
+      if (lang === 'ko') content = r.revi_content ?? '';
+      else if (lang === 'en')
+        content = r.review_translate_en?.rt_content_en ?? '';
+      else if (lang === 'ar')
+        content = r.review_translate_ar?.rt_ar_content ?? '';
+
+      return {
+        revi_id: r.revi_id,
+        revi_reco_step: r.revi_reco_step,
+        revi_create: new Date(r.revi_create).toISOString().substring(0, 10),
+        content,
+        images: r.ReviewImage.map((img) => img.revi_img_url),
+      };
+    });
+
+    return {
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      reviews: formatted,
+    };
+  }
+
+  // 유저가 자기가 쓴 리뷰 볼 때
+  async oneUserReview(ld_log_id: string, lang: string) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      return { message: '유저를 찾을 수 없습니다.', status: 'false' };
+    }
+
+    const reviews = await this.prisma.review.findMany({
+      where: {
+        user_id: user.ld_user_id,
+        revi_status: 0,
+      },
+      select: {
+        revi_id: true,
+        revi_create: true,
+        revi_content: lang === 'ko',
+        review_translate_en:
+          lang === 'en' ? { select: { rt_content_en: true } } : false,
+        review_translate_ar:
+          lang === 'ar' ? { select: { rt_ar_content: true } } : false,
+        ReviewImage: {
+          select: { revi_img_url: true },
+        },
+        store: {
+          select: {
+            sto_name: true,
+          },
+        },
+      },
+      orderBy: {
+        revi_create: 'desc',
+      },
+    });
+
+    return reviews.map((r) => ({
+      revi_id: r.revi_id,
+      revi_create: new Date(r.revi_create).toISOString().substring(0, 10),
+      content:
+        lang === 'ko'
+          ? (r.revi_content ?? '')
+          : lang === 'en'
+            ? (r.review_translate_en?.rt_content_en ?? '')
+            : (r.review_translate_ar?.rt_ar_content ?? ''),
+      images: r.ReviewImage.map((img) => img.revi_img_url),
+      store_name: r.store.sto_name,
+    }));
+  }
+
+  // 유저가 나중에 쓰기 등록한 리뷰볼 때
+  async oneUserLaterReview(ld_log_id: string) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      return { message: '유저를 찾을 수 없습니다.', status: 'false' };
+    }
+
+    const laterReviews = await this.prisma.review.findMany({
+      where: {
+        user_id: user.ld_user_id,
+        revi_status: 1,
+      },
+      select: {
+        revi_id: true,
+        revi_create: true,
+        store: {
+          select: {
+            sto_name: true,
+          },
+        },
+      },
+      orderBy: {
+        revi_create: 'desc',
+      },
+    });
+
+    return laterReviews.map((r) => ({
+      revi_id: r.revi_id,
+      revi_create: new Date(r.revi_create).toISOString().substring(0, 10),
+      store_name: r.store.sto_name,
+    }));
+  }
+  //====== 나중에 쓸 리뷰 등록
+  // 일단 가게로 등록
+  async userRegistWriteLater(ld_log_id: string, sto_id: number) {
+    const user = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: ld_log_id,
+      },
+      select: {
+        ld_user_id: true,
+      },
+    });
+
+    if (!user?.ld_user_id || user.ld_user_id == null) {
+      return {
+        message: '[Review] 토큰에서 유저 아이디 추출 실패',
+        status: 'false',
+      };
+    }
+
+    const existing = await this.prisma.review.findFirst({
+      where: {
+        user_id: user.ld_user_id,
+        store_id: sto_id,
+        revi_status: 1,
+      },
+    });
+
+    if (existing) {
+      return {
+        message: '[Review] 이미 작성 대기 중인 리뷰가 존재합니다.',
+        review_id: existing.revi_id,
+        status: 'exist',
+      };
+    }
+
+    const review = await this.prisma.review.create({
+      data: {
+        store_id: sto_id,
+        user_id: user.ld_user_id,
+        revi_status: 1,
+        revi_reco_step: -1,
+      },
+    });
+
+    return {
+      message: '나중에 쓸 리뷰로 등록 완료',
+      review_id: review.revi_id,
+      status: 'success',
+    };
+  }
+
+  // 나중에 쓰기한 리뷰 작성
+  async writeLaterReview(
+    ld_log_id: string,
+    lang: string,
+    data: WriteLaterReviewDto,
+    files?: Express.Multer.File[],
+  ) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: ld_log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      return { message: '유저를 찾을 수 없습니다.', status: 'false' };
+    }
+
+    const review = await this.prisma.review.findUnique({
+      where: { revi_id: data.review_id },
+    });
+
+    if (
+      !review ||
+      review.revi_status !== 1 ||
+      review.user_id !== user.ld_user_id
+    ) {
+      return {
+        message: '작성 가능한 리뷰가 아니거나, 권한이 없습니다.',
+        status: 'false',
+      };
+    }
+
+    // 이미지 업로드
+    let imageUrls: string[] = [];
+    if (files && files.length > 0) {
+      imageUrls = await this.reviewStorageService.uploadReviewImages(files);
+    }
+
+    // 본 리뷰로 업데이트
+    await this.prisma.review.update({
+      where: { revi_id: data.review_id },
+      data: {
+        revi_content: data.revi_content ?? null,
+        revi_reco_step: data.revi_reco_step,
+        revi_reco_vegan: data.revi_reco_vegan ?? null,
+        revi_status: 0,
+      },
+    });
+
+    // 이미지 저장
+    if (imageUrls.length > 0) {
+      await this.prisma.reviewImage.createMany({
+        data: imageUrls.map((url) => ({
+          revi_img_url: url,
+          review_id: data.review_id,
+        })),
+      });
+    }
+
+    // 번역
+    if (data.revi_content) {
+      try {
+        const { from, to } = this.getFromToLanguages(lang);
+        const translated = await this.translateService.translateMany(
+          data.revi_content,
+          to,
+          from,
+        );
+
+        for (const t of translated[0]?.translations || []) {
+          if (t.to === 'en') {
+            await this.prisma.reviewTranslateEN.upsert({
+              where: { revi_id: data.review_id },
+              update: { rt_content_en: t.text },
+              create: {
+                revi_id: data.review_id,
+                rt_content_en: t.text,
+              },
+            });
+          }
+
+          if (t.to === 'ar') {
+            await this.prisma.reviewTranslateAR.upsert({
+              where: { revi_id: data.review_id },
+              update: { rt_ar_content: t.text },
+              create: {
+                revi_id: data.review_id,
+                rt_ar_content: t.text,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[리뷰 번역 오류]', err);
+      }
+    }
+
+    return {
+      message: '리뷰가 성공적으로 작성되었습니다.',
+      review_id: data.review_id,
       uploaded_images: imageUrls.length,
     };
   }

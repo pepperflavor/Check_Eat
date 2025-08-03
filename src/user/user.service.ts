@@ -300,6 +300,7 @@ export class UserService {
             foo_status: { not: 2 },
           },
           select: {
+            foo_id:true,
             foo_img: true,
             foo_status: true,
             foo_material: true,
