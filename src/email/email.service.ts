@@ -12,8 +12,8 @@ export class EmailService implements OnModuleInit {
       console.log(apiKEY);
       sgMail.setApiKey(apiKEY);
     } else {
-      console.log('샌드 그리드 키 값 : ');
-      console.log(apiKEY);
+      // console.log('샌드 그리드 키 값 : ');
+      // console.log(apiKEY);
       throw new Error('SEND_GRID_MAILER_API_KEY is not defined');
     }
   }
