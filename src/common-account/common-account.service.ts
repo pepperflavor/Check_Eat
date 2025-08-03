@@ -194,15 +194,17 @@ export class CommonAccountService {
 
   // 비번 업데이트, 재설정
   async updatePwdCommon(ld_id: string, inputpwd: string) {
-    const ID = Number(ld_id);
-    const SALT = await this.config.get('BCRYPT_SALT_ROUNDS');
+    const SALT = parseInt(
+      (await this.config.get('BCRYPT_SALT_ROUNDS')) || '12',
+    );
+
     const hashedPWD = await bcrypt.hash(inputpwd, SALT); // 비번 해시화
 
     console.log(hashedPWD);
 
     const result = await this.prisma.loginData.update({
       where: {
-        ld_id: ID,
+        ld_log_id: ld_id,
       },
       data: {
         ld_pwd: hashedPWD,

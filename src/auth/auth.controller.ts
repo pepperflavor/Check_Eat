@@ -134,8 +134,8 @@ export class AuthController {
     summary: '헤더에 토큰, body에 바꿀 비밀번호 보내주면 됩니다.',
     description: '마이페이지에서 비밀번호 바꾸기',
   })
-  async changePWDCommon(@CurrentUser() user: any, @Body() body: UpdatePWDDto) {
-    const accountID = user.sub;
+  async changePWDCommon(@Req() req: any, @Body() body: UpdatePWDDto) {
+    const accountID = req.user.sub;
     return await this.authService.updatePwd(accountID, body.newPwd);
   }
 
