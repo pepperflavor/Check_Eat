@@ -129,7 +129,7 @@ export class ReviewService {
         revi_reco_step: reviData.revi_reco_step,
         revi_content: reviData.revi_content || null,
         revi_status: reviData.revi_status || 0,
-        revi_img: imageUrls.length > 0 ? imageUrls.join(',') : null, // 콤마로 구분된 URL들
+        // revi_img: imageUrls.length > 0 ? imageUrls.join(',') : null, // 콤마로 구분된 URL들
         user_id: userId,
         store_id: reviData.store_id,
         foods: {

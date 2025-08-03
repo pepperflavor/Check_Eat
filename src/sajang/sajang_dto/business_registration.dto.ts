@@ -29,12 +29,12 @@ export class BusinessRegistrationDTO {
   @IsNumber()
   sa_id: number;
 
-  // @ApiProperty({
-  //   example: 'Bongchu Jjimdak <-봉추찜닭',
-  //   description: '가게 이름 영문명',
-  // })
-  // @IsString()
-  // sto_name_en?: string;
+  @ApiProperty({
+    example: 'Bongchu Jjimdak <-봉추찜닭',
+    description: '가게 이름 영문명',
+  })
+  @IsString()
+  sto_name_en: string;
 
   //===== 여기까지 필수 데이터
 

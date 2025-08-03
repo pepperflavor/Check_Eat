@@ -162,7 +162,7 @@ model Vegan{
 // 사장님 마이 페이지에 최신 리뷰 하나 꺼내줘야함
 model Review{
   revi_id Int @id @default(autoincrement())
-  // revi_img String? // 음식사진
+
   revi_reco_step Int // 추천 단계 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수
   revi_content String? // 추천/ 추천안했을 때 텍스트 옵셔널
   revi_status Int @default(0) // 0 : 리뷰 썼음, 1: 나중에 쓰려고 보류 중

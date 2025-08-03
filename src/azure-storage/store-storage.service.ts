@@ -4,13 +4,13 @@ import { BaseStorageService } from './azure-base-storage.service';
 
 @Injectable()
 export class StoreStorageService extends BaseStorageService {
-  private readonly containerName = 'stores';
+  private readonly containerName = 'store-board';
 
   constructor(config: ConfigService) {
-    const conn = config.get<string>('AZURE_STORAGE_STRING_STORE');
+    const conn = config.get<string>('STORE_BOARD_CONNECT_STRING');
     if (!conn) {
       throw new Error(
-        '[StoreStorageService] AZURE_STORAGE_STRING_STORE 환경변수가 누락되었습니다.',
+        '[StoreStorageService] STORE_BOARD_CONNECT_STRING 환경변수가 누락되었습니다.',
       );
     }
     super(conn);
