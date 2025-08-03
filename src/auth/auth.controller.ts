@@ -175,7 +175,7 @@ export class AuthController {
 
   // 비밀번호 찾기이자 변경
   // 이메일 토큰 발송
-  @Post('change-pwd')
+  @Post('change-pwd-send-token')
   @ApiOperation({
     summary: '비밀번호 변경을 위한 이메일 발송',
     description: '비밀번호 찾기를 위한 이메일 토큰발송',
@@ -211,11 +211,8 @@ export class AuthController {
     summary: '로그인 안한상태에서 비밀번호',
     description: '비밀번호 바꾸기',
   })
-  @Post('auth/find-pwd')
+  @Post('find-pwd')
   async findPWD(@Body() body: ChagePwdNoLogin) {
-    return await this.authService.noLoginChangePwd(
-      body.ld_email,
-      body.new_pwd,
-    );
+    return await this.authService.noLoginChangePwd(body.ld_email, body.new_pwd);
   }
 }

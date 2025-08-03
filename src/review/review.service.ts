@@ -2,12 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma.service';
 import { RegistFoodReviewDto } from './dto/regist-food-review.dto';
+import { ReviewStorageService } from '../azure-storage/review-storage.service';
 
 @Injectable()
 export class ReviewService {
   constructor(
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly reviewStorageService: ReviewStorageService,
   ) {}
 
   // 우리 어플에 등록된 가게 맞는지 확인
@@ -119,8 +121,11 @@ export class ReviewService {
     
     // 이미지가 있으면 Azure에 업로드
     if (files && files.length > 0) {
-      // ReviewStorageService를 주입받아야 함
-      // imageUrls = await this.reviewStorageService.uploadReviewImages(files);
+      const uploadResults = await this.reviewStorageService.uploadMultiple(
+        files, 
+        'review-images'
+      );
+      imageUrls = uploadResults.map(result => result.url);
     }
     
     // DB에 리뷰 저장
