@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards, UploadedFiles, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  UseGuards,
+  UploadedFiles,
+  UseInterceptors,
+} from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ReviewService } from './review.service';
 import { ApiOperation, ApiConsumes } from '@nestjs/swagger';
@@ -22,7 +30,7 @@ export class ReviewController {
   })
   @UseGuards(JwtAuthGuard)
   async checkregistStore(@Req() req, @Body() body: IsRegistStoreDto) {
-    const lang = req.user.ld_lang
+    const lang = req.user.ld_lang;
     return await this.reviewService.checkRegistStore(
       body.sto_address,
       body.sto_name,
@@ -36,8 +44,8 @@ export class ReviewController {
   })
   @UseGuards(JwtAuthGuard)
   async reviewWritePage(@Req() req, @Body() body: GetReviewFoodsPageDto) {
-    const lang = req.user.ld_lang
-    return await this.reviewService.oneStoreFoodsList(body.sto_id, lang)
+    const lang = req.user.ld_lang;
+    return await this.reviewService.oneStoreFoodsList(body.sto_id, lang);
   }
 
   // 유저가 리뷰 등록
@@ -45,17 +53,23 @@ export class ReviewController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FilesInterceptor('images', 4)) // 최대 4개 파일
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ 
-    summary: '유저 리뷰등록', 
-    description: '리뷰등록 하기 (최대 4개 이미지 업로드 가능)' 
+  @ApiOperation({
+    summary: '유저 리뷰등록',
+    description: '리뷰등록 하기 (최대 4개 이미지 업로드 가능)',
   })
   async registReview(
-    @Req() req: any, 
+    @Req() req: any,
     @Body() body: RegistFoodReviewDto,
-    @UploadedFiles() files?: Express.Multer.File[]
+    @UploadedFiles() files?: Express.Multer.File[],
   ) {
-    const userID = Number(req.user.sub);
-    const result = await this.reviewService.userRegistReview(userID, body, files);
+    const userID = req.user.sub;
+    const lang = req.user.lang;
+    const result = await this.reviewService.userRegistReview(
+      userID, // ld_log_id 임
+      body,
+      files,
+      lang,
+    );
     return result;
   }
 

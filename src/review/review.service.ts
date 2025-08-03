@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from 'src/prisma.service';
 import { RegistFoodReviewDto } from './dto/regist-food-review.dto';
 import { ReviewStorageService } from '../azure-storage/review-storage.service';
+import { stat } from 'fs';
+import { TranslateService } from 'src/translate/translate.service';
 
 @Injectable()
 export class ReviewService {
@@ -10,6 +12,7 @@ export class ReviewService {
     private readonly config: ConfigService,
     private readonly prisma: PrismaService,
     private readonly reviewStorageService: ReviewStorageService,
+    private readonly translateService: TranslateService,
   ) {}
 
   // 우리 어플에 등록된 가게 맞는지 확인
@@ -106,59 +109,143 @@ export class ReviewService {
     return result;
   }
 
+  // 입력 언어에 따른 번역 언어 세팅해주는 유틸
+  private getFromToLanguages(userLang: string): {
+    from: string;
+    to: string[];
+  } {
+    switch (userLang) {
+      case 'ko':
+        return { from: 'ko', to: ['en', 'ar'] };
+      case 'en':
+        return { from: 'en', to: ['ko', 'ar'] };
+      case 'ar':
+        return { from: 'ar', to: ['ko', 'en'] };
+      default:
+        return { from: 'ko', to: ['en', 'ar'] }; // fallback
+    }
+  }
+
   // 유저 리뷰 등록
   async userRegistReview(
-    userId: number, 
-    reviData: RegistFoodReviewDto, 
-    files?: Express.Multer.File[]
+    ld_log_Id: string,
+    reviData: RegistFoodReviewDto,
+    files?: Express.Multer.File[],
+    lang: string = 'ko',
   ) {
     // 메뉴 이름들, 추천 여부, 사진, 텍스트
     // 당장 리뷰 등록 안할거면 저장되도록 해야함
     // 유저 테이블 관계 연결 필요
     // 사진 애저에 저장해야함
-    
+
+    // 애저에 올린다음 얻을
     let imageUrls: string[] = [];
-    
+
+    if (
+      reviData.revi_reco_step === 2 &&
+      (!reviData.revi_content || reviData.revi_content.length === 0)
+    ) {
+      return {
+        message: '[Review]추천을 하지 않으면 이유를 적어야 합니다.',
+        status: 'false',
+      };
+    }
+    // 리뷰 번역해서 저장하기
+
     // 이미지가 있으면 Azure에 업로드
     if (files && files.length > 0) {
       imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
-    
+
+    const userId = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: ld_log_Id,
+      },
+      select: {
+        ld_user_id: true,
+      },
+    });
+
+    if (!userId || !userId.ld_user_id) {
+      return {
+        message: '[Review]유저 아이디를 찾을 수 없습니다.',
+        status: 'false',
+      };
+    }
+
     // DB에 리뷰 저장
     const review = await this.prisma.review.create({
       data: {
         revi_reco_step: reviData.revi_reco_step,
         revi_content: reviData.revi_content || null,
         revi_status: reviData.revi_status || 0,
-        user_id: userId,
+        user_id: userId.ld_user_id,
         store_id: reviData.store_id,
         foods: {
-          connect: reviData.food_ids.map(id => ({ foo_id: id }))
-        }
+          connect: reviData.food_ids.map((id) => ({ foo_id: id })),
+        },
       },
       include: {
         foods: true,
         user: true,
-        store: true
-      }
+        store: true,
+      },
     });
 
+    if (review.revi_content && review.revi_content.length > 0) {
+      try {
+        const { from, to } = this.getFromToLanguages(lang); // ✅ 유저 언어 기준으로 설정
+        const translated = await this.translateService.translateMany(
+          review.revi_content,
+          to,
+          from,
+        );
+
+        for (const translation of translated[0]?.translations || []) {
+          const { to: langCode, text } = translation;
+
+          if (langCode === 'en') {
+            await this.prisma.reviewTranslateEN.upsert({
+              where: { revi_id: review.revi_id },
+              update: { rt_content_en: text },
+              create: {
+                rt_content_en: text,
+                revi_id: review.revi_id,
+              },
+            });
+          }
+
+          if (langCode === 'ar') {
+            await this.prisma.reviewTranslateAR.upsert({
+              where: { revi_id: review.revi_id },
+              update: { rt_ar_content: text },
+              create: {
+                rt_ar_content: text,
+                revi_id: review.revi_id,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.error('[Review] 리뷰 번역 실패:', err);
+      }
+    }
     // 이미지 URL들을 ReviewImage 테이블에 저장
     if (imageUrls.length > 0) {
-      const reviewImages = imageUrls.map(url => ({
+      const reviewImages = imageUrls.map((url) => ({
         revi_img_url: url,
-        review_id: review.revi_id
+        review_id: review.revi_id,
       }));
-      
+
       await this.prisma.reviewImage.createMany({
-        data: reviewImages
+        data: reviewImages,
       });
     }
-    
+
     return {
       message: '리뷰가 성공적으로 등록되었습니다.',
       review_id: review.revi_id,
-      uploaded_images: imageUrls.length
+      uploaded_images: imageUrls.length,
     };
   }
 }

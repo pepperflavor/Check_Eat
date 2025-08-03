@@ -64,7 +64,7 @@ export class TranslateService {
 
   // 여러 단어, 다국어
   // 영어 아랍어로 픽스?
-  async translateMany(inputText: string, to: string, from: string | string[]) {
+  async translateMany(inputText: string, to: string[], from: string | string[]) {
     const URL = `${this.config.get('TRANSLATE_ENDPOINT')}/translate`;
     // [ar, en] - 아랍어, 영어로 번역
     try {
