@@ -15,13 +15,15 @@ export class UserController {
 
   //==== 유저 마이페이지
 
+  // 마이페이지 진입시 정보
+
   // 닉네임 변경
   @Post('nick-change')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: '닉네입 변경하기', description: '닉네임 변경하기' })
   async changeNickName(@Req() req, @Body() body: UpdateNickDto) {
-    const log_id = req.user.sub
-    console.log(log_id)
+    const log_id = req.user.sub;
+    console.log(log_id);
     return await this.userService.updateNick(log_id, body.nickname);
   }
 

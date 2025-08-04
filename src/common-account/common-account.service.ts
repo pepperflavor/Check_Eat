@@ -235,7 +235,10 @@ export class CommonAccountService {
       };
     }
 
-    const SALT = await this.config.get('BCRYPT_SALT_ROUNDS');
+    const SALT = parseInt(
+      (await this.config.get('BCRYPT_SALT_ROUNDS')) || '12',
+    );
+
     const newHashPwd = await bcrypt.hash(newPwd, SALT);
 
     const result = await this.prisma.loginData.update({
