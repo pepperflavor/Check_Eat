@@ -15,7 +15,10 @@ export class UserController {
 
   //==== 유저 마이페이지
 
-  // 마이페이지 진입시 정보
+  // 마이페이지 진입시 뿌려줄 정보
+  @Post('mypage-enter')
+  @UseGuards(JwtAuthGuard)
+  async enterMypage() {}
 
   // 닉네임 변경
   @Post('nick-change')

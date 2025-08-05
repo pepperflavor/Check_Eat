@@ -57,4 +57,6 @@ export class AzureDocumentOcrController {
       file.mimetype,
     );
   }
+
+  // 사진에 음식 분류
 }

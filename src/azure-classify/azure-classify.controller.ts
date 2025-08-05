@@ -11,16 +11,9 @@ import { FileInterceptor } from '@nestjs/platform-express';
 export class AzureClassifyController {
   constructor(private readonly azureClassifyService: AzureClassifyService) {}
 
-  @Post('food-name')
-  @UseInterceptors(
-    FileInterceptor('file', {
-      dest: './uploads',
-    }),
-  )
+  @Post('predict')
+  @UseInterceptors(FileInterceptor('image'))
   async classifyFood(@UploadedFile() file: Express.Multer.File) {
-    const foodName = await this.azureClassifyService.classifyImageFromBuffer(
-      file.buffer,
-    );
-    return { foodName };
+    return this.azureClassifyService.predictImage(file); // path 대신 파일 전체 전달
   }
 }

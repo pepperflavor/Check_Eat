@@ -1,8 +1,10 @@
 import {
   Body,
   Controller,
+  Get,
   HttpStatus,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -214,5 +216,13 @@ export class AuthController {
   @Post('find-pwd')
   async findPWD(@Body() body: ChagePwdNoLogin) {
     return await this.authService.noLoginChangePwd(body.ld_email, body.new_pwd);
+  }
+
+
+
+  //============ 애플로그인
+  @Get('apple-login')
+  async appleLogin(@Query('code') code: string){
+
   }
 }

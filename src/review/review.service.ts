@@ -6,6 +6,7 @@ import { ReviewStorageService } from '../azure-storage/review-storage.service';
 import { stat } from 'fs';
 import { TranslateService } from 'src/translate/translate.service';
 import { WriteLaterReviewDto } from './dto/write-later-review.dto';
+import { FoodWithOptionalTranslation } from './type/foodTranstype';
 
 @Injectable()
 export class ReviewService {
@@ -56,59 +57,63 @@ export class ReviewService {
 
   // 리뷰페이지에서 뿌려줄 한가게 음식들 리스트
   // 언어별 데이터 다르게 뽑아줌
-  async oneStoreFoodsList(sto_id: number, lang: string) {
-    const foods = await this.prisma.food.findMany({
-      where: {
-        Store: {
-          some: {
-            sto_id,
-          },
-        },
-        foo_status: 0, // 판매중인 음식만
+
+async oneStoreFoodsList(sto_id: number, lang: string) {
+  // 언어별 필요한 번역 테이블만 select
+  let translationSelect = {};
+  if (lang === 'en') {
+    translationSelect = {
+      food_translate_en: {
+        select: { ft_en_name: true, ft_en_mt: true },
       },
-      select: {
-        foo_id: true,
-        foo_price: true,
-        foo_img: true,
-        foo_name: lang === 'ko', // 'ko'일 때만 기본 name 포함
-        food_translate_en:
-          lang === 'en'
-            ? {
-                select: {
-                  ft_en_name: true,
-                },
-              }
-            : false,
-        food_translate_ar:
-          lang === 'ar'
-            ? {
-                select: {
-                  ft_ar_name: true,
-                },
-              }
-            : false,
+    };
+  } else if (lang === 'ar') {
+    translationSelect = {
+      food_translate_ar: {
+        select: { ft_ar_name: true, ft_ar_mt: true },
       },
-    });
-
-    // 언어에 따라 이름 필드를 통일
-    const result = foods.map((food) => {
-      let name = food.foo_name;
-      if (lang === 'en' && food.food_translate_en?.ft_en_name) {
-        name = food.food_translate_en.ft_en_name;
-      } else if (lang === 'ar' && food.food_translate_ar?.ft_ar_name) {
-        name = food.food_translate_ar.ft_ar_name;
-      }
-
-      return {
-        foo_id: food.foo_id,
-        foo_price: food.foo_price,
-        foo_img: food.foo_img,
-        foo_name: name,
-      };
-    });
-
-    return result;
+    };
   }
+
+  // Prisma 조회
+  const foods = await this.prisma.food.findMany({
+    where: {
+      Store: { some: { sto_id } },
+      foo_status: 0, // 판매중인 음식만
+    },
+    select: {
+      foo_id: true,
+      foo_price: true,
+      foo_img: true,
+      foo_name: true,       // 기본 이름
+      foo_material: true,   // 기본 재료
+      ...translationSelect, // 언어별 번역만 조인
+    },
+  }) as FoodWithOptionalTranslation[];
+
+  // 결과 매핑
+  return foods.map((food) => {
+    let name = food.foo_name;
+    let material = food.foo_material;
+
+    if (lang === 'en' && food.food_translate_en) {
+      name = food.food_translate_en.ft_en_name || name;
+      material = food.food_translate_en.ft_en_mt || material;
+    } else if (lang === 'ar' && food.food_translate_ar) {
+      name = food.food_translate_ar.ft_ar_name || name;
+      material = food.food_translate_ar.ft_ar_mt || material;
+    }
+
+    return {
+      foo_id: food.foo_id,
+      foo_price: food.foo_price,
+      foo_img: food.foo_img,
+      foo_name: name,
+      foo_material: material,
+    };
+  });
+}
+
 
   // 입력 언어에 따른 번역 언어 세팅해주는 유틸
   private getFromToLanguages(userLang: string): {
