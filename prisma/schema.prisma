@@ -19,7 +19,7 @@ model User{
   user_is_halal Int @default(0) // 0: 할랄아님, 1: 할랄인 회원
   user_apple Int?  @default(0) // 0: 일반 회원, 1: 애플로그인
 
-  user_vegan Int? // 0: 비건아님, 이외에는 비건 단계
+  user_vegan Int? // null: 비건아님, 이외에는 비건 단계
   vegan Vegan? @relation(fields: [user_vegan], references: [veg_id])
 
   // 다대다
@@ -39,9 +39,9 @@ model User{
 model LoginData{
   ld_id Int @id @default(autoincrement())
   ld_usergrade Int // 0: 일반유저, 1: 업주
-  ld_log_id String @unique // 로그인 아이디
+  ld_log_id String @unique // 로그인 아이디, 애플유조묜 apple sub값으로 저장
   ld_email String @unique // 이메일
-  ld_pwd String // 비밀번호
+  ld_pwd String? // 비밀번호
   ld_refresh_token String? // 리프레시 토큰
   ld_status Int @default(0) // 0: 활성화 되어있음, 1: 탈퇴 대기, 2: 회원 탈퇴함
   ld_lang String @default("ko") // 유저가 사용하는 언어 - 소문자, ko / en / ar

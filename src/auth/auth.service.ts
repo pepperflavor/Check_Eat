@@ -13,6 +13,10 @@ import {
   UserLoginToken,
 } from '../common-account/types/token_type';
 import { CommonAccountService } from 'src/common-account/common-account.service';
+import axios from 'axios';
+import * as qs from 'qs';
+import * as jwt from 'jsonwebtoken';
+import jwksClient from 'jwks-rsa';
 
 @Injectable()
 export class AuthService {
@@ -302,5 +306,154 @@ export class AuthService {
     }
 
     return data;
+  }
+
+  //====== 애플 로그인 관련
+  /** Apple client_secret(JWT) 생성 */
+  private generateAppleClientSecret(): string {
+    const teamId = this.config.get<string>('APPLE_TEAM_ID');
+    const clientId = this.config.get<string>('APPLE_CLIENT_ID');
+    const keyId = this.config.get<string>('APPLE_KEY_ID');
+    const privateKey = this.config.get<string>('APPLE_PRIVATE_KEY');
+
+    if (!privateKey) {
+      throw new Error('APPLE_PRIVATE_KEY is not defined in the configuration');
+    }
+    const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
+
+    const claims = {
+      iss: teamId,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 15777000, // 6개월
+      aud: 'https://appleid.apple.com',
+      sub: clientId,
+    };
+
+    return jwt.sign(claims, privateKey, {
+      algorithm: 'ES256',
+      keyid: keyId,
+    });
+  }
+
+  /** Apple Token API 호출 */
+  private async getAppleToken(code: string) {
+    const clientSecret = this.generateAppleClientSecret();
+
+    const body = {
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: this.config.get<string>('APPLE_REDIRECT_URI'),
+      client_id: this.config.get<string>('APPLE_CLIENT_ID'),
+      client_secret: clientSecret,
+    };
+
+    try {
+      const res = await axios.post(
+        'https://appleid.apple.com/auth/token',
+        qs.stringify(body),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } },
+      );
+      return res.data;
+    } catch (err) {
+      this.logger.error('Apple Token API 호출 실패', err.response?.data || err);
+      throw new UnauthorizedException('Apple 로그인 토큰 발급 실패');
+    }
+  }
+
+  /** Apple ID Token 검증 */
+  private async verifyAppleIdToken(idToken: string) {
+    const client = jwksClient({
+      jwksUri: 'https://appleid.apple.com/auth/keys',
+    });
+
+    const decodedHeader = jwt.decode(idToken, { complete: true }) as {
+      header?: { kid?: string };
+    } | null;
+
+    if (!decodedHeader?.header?.kid) {
+      throw new UnauthorizedException('Apple ID Token 디코딩 실패');
+    }
+
+    const { kid } = decodedHeader.header!;
+    const key = await client.getSigningKey(kid);
+
+    const publicKey = key.getPublicKey();
+
+    try {
+      const payload: any = jwt.verify(idToken, publicKey);
+      return payload; // { sub, email, email_verified, ... }
+    } catch (err) {
+      this.logger.error('Apple ID Token 검증 실패', err);
+      throw new UnauthorizedException('Apple 로그인 검증 실패');
+    }
+  }
+
+  /** 실제 애플 로그인 처리 */
+  async handleAppleLogin(code: string) {
+    // 1. Apple에서 토큰 받기
+    const tokenData = await this.getAppleToken(code);
+
+    // 2. ID 토큰 검증 후 유저 정보 추출
+    const appleUser = await this.verifyAppleIdToken(tokenData.id_token);
+
+    // 3. DB에서 해당 Apple sub(email)로 사용자 조회
+    const existingUser = await this.commonService.findByEmail(appleUser.email);
+
+    let userAccount;
+
+    if (!existingUser) {
+      // 신규 가입 처리 (Apple은 이름을 한 번만 주므로 기본값 설정 필요)
+      const newUser: CreateUserDTO = {
+        log_Id: appleUser.sub,
+        email: appleUser.email,
+        log_pwd: null,
+        ld_lang: 'ko',
+        appleType: 1,
+        vegan: null,
+        isHalal: 0,
+      };
+      userAccount = await this.userService.createUser(newUser);
+    } else {
+      userAccount = existingUser;
+    }
+
+    if (!userAccount) {
+      throw new UnauthorizedException('애플 유저 생성 실패');
+    }
+
+    // 4. JWT 토큰 발급
+    const payload = await this.generateToken(
+      (userAccount as any).ld_log_id,
+      (userAccount as any).ld_usergrade,
+      (userAccount as any).ld_email,
+      (userAccount as any).ld_lang,
+    );
+
+    const accessToken = await this.jwtService.signAsync(payload, {
+      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+    });
+
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: userAccount.ld_id },
+      {
+        secret: this.config.get<string>('JWT_RFRESH_SECRET'),
+        expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
+      },
+    );
+
+    await this.commonService.updateRefreshToken(
+      userAccount.ld_id,
+      refreshToken,
+    );
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        email: appleUser.email,
+        sub: appleUser.sub,
+      },
+    };
   }
 }

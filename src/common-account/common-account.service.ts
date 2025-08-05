@@ -143,6 +143,17 @@ export class CommonAccountService {
     return isExist;
   }
 
+  // 애플에서 필요함
+  async findByEmail(inputEmail: string) {
+    const isExist = await this.prisma.loginData.findUnique({
+      where: {
+        ld_email: inputEmail,
+      },
+    });
+
+    return isExist;
+  }
+
   // 리프레시 토큰 업데이트
   async updateRefreshToken(ld_id, refreshToken: string) {
     const result = await this.prisma.loginData.update({
@@ -156,7 +167,7 @@ export class CommonAccountService {
     return result;
   }
 
-  async comparePassword(plainPWD: string, hashedPWD: string): Promise<boolean> {
+  async comparePassword(plainPWD: string, hashedPWD): Promise<boolean> {
     if (!hashedPWD || !hashedPWD.startsWith('$2')) {
       throw new Error('저장된 비밀번호 형식이 잘못되었습니다.');
     }

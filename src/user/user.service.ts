@@ -51,7 +51,7 @@ export class UserService {
         data: {
           user_nick: nickname,
           user_allergy: allergy,
-          user_vegan: vegan > 0 ? vegan : null,
+          user_vegan: vegan != null && vegan > 0 ? vegan : null,
           user_is_halal: isHalal,
           user_allergy_common:
             commonAllergies.length > 0

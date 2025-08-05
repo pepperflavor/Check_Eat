@@ -6,6 +6,8 @@ import {
   Post,
   Query,
   Req,
+  Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
@@ -24,12 +26,15 @@ import { FindIDSendTokenDto } from './dto/find-id-sendtoken.dto';
 import { UpdatePWDDto } from './dto/pwd-update.dto';
 import { FindPWDSendTokenDto } from './dto/find-pwd-sendtoken.dto';
 import { ChagePwdNoLogin } from './dto/pwd-change-nologin.dto';
+import { ConfigService } from '@nestjs/config';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly commonService: CommonAccountService,
+    private readonly config: ConfigService,
   ) {}
 
   // 일반 유저 회원가입
@@ -218,11 +223,41 @@ export class AuthController {
     return await this.authService.noLoginChangePwd(body.ld_email, body.new_pwd);
   }
 
-
-
   //============ 애플로그인
   @Get('apple-login')
-  async appleLogin(@Query('code') code: string){
+  @ApiOperation({
+    summary: '애플 로그인 처리',
+    description: '애플에서 전달받은 Authorization Code로 로그인 처리.',
+  })
+  async appleLogin(@Query('code') code: string) {
+    if (!code) {
+      throw new UnauthorizedException('Apple Authorization Code가 필요합니다.');
+    }
+    return await this.authService.handleAppleLogin(code);
+  }
 
+  // 프론트에서 Apple 로그인 URL을 만드는 로직이 없다면 필요
+  @Get('apple-login-start')
+  @ApiOperation({
+    summary: '애플 로그인 시작',
+    description: '사용자를 Apple 로그인 페이지로 리다이렉트합니다.',
+  })
+  async redirectToAppleLogin(@Res() res: Response) {
+    const clientId = this.config.get<string>('APPLE_CLIENT_ID');
+    if (!clientId) {
+      throw new Error('APPLE_CLIENT_ID is not defined');
+    }
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      response_mode: 'query',
+      client_id: clientId,
+      redirect_uri: 'https://summer-jin.store/auth/apple-login', // 콜백 URL
+      scope: 'name email',
+    });
+
+    res.redirect(
+      `https://appleid.apple.com/auth/authorize?${params.toString()}`,
+    );
   }
 }
