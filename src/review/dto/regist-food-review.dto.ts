@@ -11,6 +11,7 @@ export class RegistFoodReviewDto {
   @ApiProperty({
     example: [1, 2, 3],
     description: '선택한 음식 ID 배열',
+    type: [Number],
   })
   @IsArray()
   @IsNumber({}, { each: true })
