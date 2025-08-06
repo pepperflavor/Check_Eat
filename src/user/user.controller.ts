@@ -8,6 +8,8 @@ import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
 import { DetailStoreDto } from './user_dto/detail-store.dto';
 import { OptionalUser } from 'src/auth/decorator/user.decorator';
 import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
+import { MyReviewsDto } from './user_dto/review-mypage.dto';
+import { JwtStrategy } from 'src/auth/jwt.strategy';
 
 @Controller('user')
 export class UserController {
@@ -33,9 +35,29 @@ export class UserController {
   // 내가쓴 리뷰 리스트
   @Post('my-reviews')
   @UseGuards(JwtAuthGuard)
-  async getMyReviews(@Req() req) {
-    const log_id = Number(req.user.sub);
-    return await this.userService.myAllReviews(log_id);
+  @ApiOperation({
+    summary: '마이페이지 - 내가 쓴 리뷰들',
+    description: '마이페이지 내가쓴 리뷰',
+  })
+  async getMyReviews(@Req() req, @Body() body: MyReviewsDto) {
+    const log_id = req.user.sub;
+    const lang = req.user.lang;
+    const { page, limit } = body;
+    return await this.userService.myAllReviews(log_id, lang, page, limit);
+  }
+
+  // 미작성한 리뷰 보기
+  @Post('my-pending-reviews')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '마이페이지 - 아직 미작성한 리뷰',
+    description: '마이페이지 - 아직 작성안한 리뷰',
+  })
+  async getMyPendingReviews(@Req() req, @Body() body:MyReviewsDto) {
+    const log_id = req.user.sub;
+    // const lang = req.user.lang;
+    const { page, limit } = body;
+    return await this.userService.myYetReviews(log_id, page, limit);
   }
 
   //====== 유저 메인 화면관련

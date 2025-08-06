@@ -300,7 +300,7 @@ export class UserService {
             foo_status: { not: 2 },
           },
           select: {
-            foo_id:true,
+            foo_id: true,
             foo_img: true,
             foo_status: true,
             foo_material: true,
@@ -440,18 +440,154 @@ export class UserService {
   }
 
   // 내가 쓴 리뷰들 목록
-  async myAllReviews(log_id) {
-    // 유저 아이디
-    const userID = await this.prisma.loginData.findUnique({
-      where: {
-        ld_log_id: log_id,
+  async myAllReviews(log_id: string, lang: string, page = 1, limit = 10) {
+    // 1. 로그인 데이터 → 유저 ID 찾기
+    const loginData = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!loginData?.ld_user_id) {
+      throw new HttpException('유저를 찾을 수 없습니다.', HttpStatus.NOT_FOUND);
+    }
+
+    const skip = (page - 1) * limit;
+
+    // 2. 총 리뷰 개수
+    const totalCount = await this.prisma.review.count({
+      where: { user_id: loginData.ld_user_id, revi_status: 0 },
+    });
+
+    // 3. 리뷰 목록 (페이징 적용)
+    const reviews = await this.prisma.review.findMany({
+      where: { user_id: loginData.ld_user_id, revi_status: 0 },
+      orderBy: { revi_create: 'desc' },
+      skip,
+      take: limit,
+      include: {
+        store: {
+          select: {
+            sto_id: true,
+            sto_name: true,
+            sto_name_en: true,
+            sto_img: true,
+          },
+        },
+        foods: {
+          select: {
+            foo_id: true,
+            foo_img: true,
+            ...(lang === 'ko' && { foo_name: true }),
+            ...(lang === 'en' && {
+              food_translate_en: { select: { ft_en_name: true } },
+            }),
+            ...(lang === 'ar' && {
+              food_translate_ar: { select: { ft_ar_name: true } },
+            }),
+          },
+        },
+        ReviewImage: { select: { revi_img_url: true } },
+        ...(lang === 'en' && {
+          review_translate_en: { select: { rt_content_en: true } },
+        }),
+        ...(lang === 'ar' && {
+          review_translate_ar: { select: { rt_ar_content: true } },
+        }),
       },
     });
 
-    // const reviews = await this.prisma.review.findMany({
-    //   where:{
-    //     user_id : userID
-    //   }
-    // })
+    // 4. 언어별 변환
+    const transformed = reviews.map((review) => {
+      let revi_content = review.revi_content;
+      if (lang === 'en') {
+        revi_content = review.review_translate_en?.rt_content_en || '';
+      } else if (lang === 'ar') {
+        revi_content = review.review_translate_ar?.rt_ar_content || '';
+      }
+
+      const food_list = review.foods.map((f) => {
+        let foo_name = f.foo_name;
+        if (lang === 'en') foo_name = f.food_translate_en?.ft_en_name || '';
+        if (lang === 'ar') foo_name = f.food_translate_ar?.ft_ar_name || '';
+        return {
+          foo_id: f.foo_id,
+          foo_img: f.foo_img,
+          foo_name,
+        };
+      });
+
+      return {
+        revi_id: review.revi_id,
+        revi_reco_step: review.revi_reco_step,
+        revi_reco_vegan: review.revi_reco_vegan,
+        revi_content,
+        revi_create: review.revi_create,
+        store: {
+          sto_id: review.store.sto_id,
+          sto_name:
+            lang === 'en' ? review.store.sto_name_en : review.store.sto_name,
+          sto_img: review.store.sto_img,
+        },
+        food_list,
+        images: review.ReviewImage.map((img) => img.revi_img_url),
+      };
+    });
+
+    return {
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      reviews: transformed,
+    };
+  }
+
+  async myYetReviews(log_id: string, page = 1, limit = 10) {
+    const loginData = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!loginData?.ld_user_id) {
+      throw new HttpException('유저를 찾을 수 없습니다.', HttpStatus.NOT_FOUND);
+    }
+
+    const skip = (page - 1) * limit;
+
+    // 2. 총 개수 구하기
+    const totalCount = await this.prisma.review.count({
+      where: {
+        user_id: loginData.ld_user_id,
+        revi_status: 1,
+      },
+    });
+
+    // 3. 데이터 가져오기 (페이징 적용)
+    const pending = await this.prisma.review.findMany({
+      where: {
+        user_id: loginData.ld_user_id,
+        revi_status: 1,
+      },
+      skip,
+      take: limit,
+      orderBy: { revi_create: 'desc' },
+      select: {
+        store: {
+          select: {
+            sto_id: true,
+            sto_name: true,
+            sto_name_en: true,
+          },
+        },
+      },
+    });
+
+    return {
+      totalCount,
+      page,
+      limit,
+      totalPages: Math.ceil(totalCount / limit),
+      stores: pending.map((p) => p.store),
+    };
   }
 }

@@ -237,6 +237,7 @@ export class AuthController {
   }
 
   // 프론트에서 Apple 로그인 URL을 만드는 로직이 없다면 필요
+  // 스위프트 프론트라 나중에 확장할때 필요할듯
   @Get('apple-login-start')
   @ApiOperation({
     summary: '애플 로그인 시작',
