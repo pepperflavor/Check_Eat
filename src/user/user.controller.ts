@@ -15,7 +15,7 @@ import { JwtStrategy } from 'src/auth/jwt.strategy';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  //==== 유저 마이페이지
+  //==== 유저 마이페이지 관련
 
   // 마이페이지 진입시 뿌려줄 정보
   @Post('mypage-enter')
@@ -31,6 +31,10 @@ export class UserController {
     console.log(log_id);
     return await this.userService.updateNick(log_id, body.nickname);
   }
+
+  // 알러지수정
+
+  // 사용하는 언어 수정
 
   // 내가쓴 리뷰 리스트
   @Post('my-reviews')
@@ -53,7 +57,7 @@ export class UserController {
     summary: '마이페이지 - 아직 미작성한 리뷰',
     description: '마이페이지 - 아직 작성안한 리뷰',
   })
-  async getMyPendingReviews(@Req() req, @Body() body:MyReviewsDto) {
+  async getMyPendingReviews(@Req() req, @Body() body: MyReviewsDto) {
     const log_id = req.user.sub;
     // const lang = req.user.lang;
     const { page, limit } = body;

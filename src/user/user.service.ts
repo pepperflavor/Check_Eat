@@ -356,17 +356,38 @@ export class UserService {
         foo_price = food.food_translate_ar?.ft_ar_price ?? undefined;
       }
 
-      // 알러지 필터링
+      // 알러지 필터링, 언어별로 필터링 분기 추가
       let foo_warning: string | undefined = undefined;
       let foo_warning_coal: number[] = [];
 
-      if (
-        userData.user_allergy &&
-        foo_material?.includes(userData.user_allergy)
-      ) {
-        foo_warning = userData.user_allergy;
+      if (lang === 'ko') {
+        if (
+          userData.user_allergy &&
+          foo_material?.includes(userData.user_allergy)
+        ) {
+          foo_warning = userData.user_allergy;
+        }
+      } else if (lang === 'en') {
+        if (
+          (userData as any).user_allergy_en &&
+          food.food_translate_en?.ft_en_mt?.includes(
+            (userData as any).user_allergy_en,
+          )
+        ) {
+          foo_warning = (userData as any).user_allergy_en;
+        }
+      } else if (lang === 'ar') {
+        if (
+          (userData as any).user_allergy_ar &&
+          food.food_translate_ar?.ft_ar_mt?.includes(
+            (userData as any).user_allergy_ar,
+          )
+        ) {
+          foo_warning = (userData as any).user_allergy_ar;
+        }
       }
 
+      // 공통 알러지 필터
       const coalIds = food.CommonAl?.map((coal) => coal.coal_id) || [];
       foo_warning_coal = coalIds.filter((id) =>
         userData.user_allergy_common?.includes(id),
@@ -398,7 +419,85 @@ export class UserService {
   //========================= 유저 마이페이지 관련 시작
 
   // 유저 마이페이지에서 자기 정보 업데이트시 db에 정보 저장, 토큰도 새로 발급해줘야함
-  async updateUserMypage() {}
+
+  // 알러지 수정
+  async updateUserAllergy(
+    ld_log_id: string,
+    lang: string,
+    coal: number[],
+    personalAl: string,
+  ) {
+    const user = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id: ld_log_id,
+      },
+      select: {
+        ld_user_id: true,
+      },
+    });
+
+    if (!user?.ld_user_id || user.ld_user_id == null) {
+      return {
+        message: '[Usermypage] 해당 유저를 찾을 수 없습니다.',
+        status: 'false',
+      };
+    }
+
+    let updateData = {
+      commonal: coal,
+      personalAl: personalAl,
+    };
+
+    if (lang == 'en') {
+      const result = await this.prisma.user.update({
+        where: {
+          user_id: user.ld_user_id,
+        },
+        data: {
+          user_allergy_en: updateData.personalAl,
+          user_allergy_common: {
+            set: updateData.commonal.map((coalID) => ({ coal_id: coalID })),
+          },
+        },
+      });
+    } else if (lang == 'ar') {
+      const result = await this.prisma.user.update({
+        where: {
+          user_id: user.ld_user_id,
+        },
+        data: {
+          user_allergy_ar: updateData.personalAl,
+          user_allergy_common: {
+            set: updateData.commonal.map((coalID) => ({ coal_id: coalID })),
+          },
+        },
+      });
+    }
+  }
+
+  // 언어 변경
+  async updateUserLang(ld_log_id: string, newLang: string) {
+    const result = await this.prisma.loginData.update({
+      where: {
+        ld_log_id: ld_log_id,
+      },
+      data: {
+        ld_lang: newLang,
+      },
+    });
+
+    if (!result || result == null) {
+      return {
+        message: '[Usermypage] 해당 유저를 찾을 수 없습니다.',
+        status: 'false',
+      };
+    }
+
+    return {
+      message: '[Usermypage] 사용하는 언어 업데이트 완료',
+      status: 'success',
+    };
+  }
 
   // 닉네임 변경
   async updateNick(ld_id: string, newNick: string) {

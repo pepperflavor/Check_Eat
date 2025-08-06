@@ -301,6 +301,10 @@ export class SajangService {
       status: 'success',
     };
   }
+
+
+  // 마이페이지에서 가게 간판 이미지 수정하기
+  async updateStoreImg(){}
 }
 
 /*
