@@ -1,4 +1,4 @@
-import { HttpStatus, Injectable, HttpException } from '@nestjs/common';
+import { HttpStatus, Injectable, HttpException, Inject, forwardRef } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { SignInDTO } from './user_dto/sign-in.dto';
 import * as bcrypt from 'bcrypt';
@@ -9,12 +9,15 @@ import Decimal from 'decimal.js';
 
 import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
 import dayjs from 'dayjs';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class UserService {
   constructor(
     private prisma: PrismaService,
     private readonly config: ConfigService,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
   async createUser(createDTO: CreateUserDTO) {
@@ -424,55 +427,91 @@ export class UserService {
   async updateUserAllergy(
     ld_log_id: string,
     lang: string,
-    coal: number[],
-    personalAl: string,
+    coal?: number[] | null,
+    personalAl?: string | null,
   ) {
     const user = await this.prisma.loginData.findUnique({
-      where: {
-        ld_log_id: ld_log_id,
-      },
-      select: {
-        ld_user_id: true,
-      },
+      where: { ld_log_id },
+      select: { ld_user_id: true },
     });
 
-    if (!user?.ld_user_id || user.ld_user_id == null) {
+    if (!user?.ld_user_id) {
       return {
         message: '[Usermypage] 해당 유저를 찾을 수 없습니다.',
         status: 'false',
       };
     }
 
-    let updateData = {
-      commonal: coal,
-      personalAl: personalAl,
-    };
+    const data: any = {};
 
-    if (lang == 'en') {
-      const result = await this.prisma.user.update({
-        where: {
-          user_id: user.ld_user_id,
-        },
-        data: {
-          user_allergy_en: updateData.personalAl,
-          user_allergy_common: {
-            set: updateData.commonal.map((coalID) => ({ coal_id: coalID })),
-          },
-        },
-      });
-    } else if (lang == 'ar') {
-      const result = await this.prisma.user.update({
-        where: {
-          user_id: user.ld_user_id,
-        },
-        data: {
-          user_allergy_ar: updateData.personalAl,
-          user_allergy_common: {
-            set: updateData.commonal.map((coalID) => ({ coal_id: coalID })),
-          },
-        },
-      });
+    // 🟡 개별 알러지(문자열) 처리
+    if (lang === 'en') {
+      if (personalAl === null) {
+        data.user_allergy_en = null;
+      } else if (personalAl !== undefined) {
+        data.user_allergy_en = personalAl;
+      }
+    } else if (lang === 'ar') {
+      if (personalAl === null) {
+        data.user_allergy_ar = null;
+      } else if (personalAl !== undefined) {
+        data.user_allergy_ar = personalAl;
+      }
+    } else if (lang === 'ko') {
+      if (personalAl === null) {
+        data.user_allergy = null;
+      } else if (personalAl !== undefined) {
+        data.user_allergy = personalAl;
+      }
     }
+
+    // 🟢 보편 알러지(숫자 배열) 처리
+    if (coal === null) {
+      // 모든 알러지 제거
+      data.user_allergy_common = {
+        set: [],
+      };
+    } else if (coal !== undefined) {
+      // 전달된 값으로 교체
+      data.user_allergy_common = {
+        set: coal.map((coalID) => ({ coal_id: coalID })),
+      };
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { user_id: user.ld_user_id },
+      data,
+    });
+
+    // 토큰 재발급
+    const loginData = await this.prisma.loginData.findUnique({
+      where: {
+        ld_log_id,
+      },
+    });
+
+    if (!loginData || loginData == null) {
+      return {
+        message: '[UserMypage] 데이터 업데이트 후 조회 실패',
+        status: 'false',
+      };
+    }
+
+    const tokenPayload = await this.authService.generateToken(
+      loginData.ld_log_id,
+      loginData.ld_usergrade,
+      loginData.ld_email,
+      loginData.ld_lang,
+    );
+
+    const accessToken = await this.authService.getAccessToken(tokenPayload);
+
+    return {
+      message: '[Usermypage] 알러지 정보가 업데이트되었습니다.',
+      status: 'true',
+      result: updatedUser,
+      accessToken: accessToken,
+    };
   }
 
   // 언어 변경
@@ -493,9 +532,19 @@ export class UserService {
       };
     }
 
+    const tokenPayload = await this.authService.generateToken(
+      result.ld_log_id,
+      result.ld_usergrade,
+      result.ld_email,
+      result.ld_lang,
+    );
+
+    const accessToken = await this.authService.getAccessToken(tokenPayload);
+
     return {
       message: '[Usermypage] 사용하는 언어 업데이트 완료',
       status: 'success',
+      accessToken: accessToken,
     };
   }
 
@@ -505,9 +554,6 @@ export class UserService {
     const userID = await this.prisma.loginData.findUnique({
       where: {
         ld_log_id: ld_id,
-      },
-      select: {
-        ld_user_id: true,
       },
     });
 
@@ -532,9 +578,19 @@ export class UserService {
       throw new Error('[updateNick] 닉네임 변경 중 오류가 발생했습니다.');
     }
 
+    const tokenPayload = await this.authService.generateToken(
+      userID.ld_log_id,
+      userID.ld_usergrade,
+      userID.ld_email,
+      userID.ld_lang,
+    );
+
+    const accessToken = await this.authService.getAccessToken(tokenPayload);
+
     return {
       message: '닉네임 변경 성공',
       status: 'success',
+      accessToken: accessToken,
     };
   }
 

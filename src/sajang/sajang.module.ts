@@ -7,12 +7,14 @@ import { EmailModule } from 'src/email/email.module';
 import { TranslateModule } from 'src/translate/translate.module';
 import { BullModule } from '@nestjs/bull';
 import { CheckBusinessProcessor } from './processor/check-business.processor';
+import { AzureStorageModule } from 'src/azure-storage/azure-storage.module';
 
 @Module({
   imports: [
     CacheConfigModule,
     EmailModule,
     TranslateModule,
+    AzureStorageModule,
     BullModule.registerQueue({
       name: 'check-business',
     }),

@@ -14,6 +14,7 @@ import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import * as bcrypt from 'bcrypt';
 import Decimal from 'decimal.js';
+import { StoreStorageService } from 'src/azure-storage/store-storage.service';
 
 @Injectable()
 export class SajangService {
@@ -21,6 +22,7 @@ export class SajangService {
     private readonly prisma: PrismaService,
     private transServcice: TranslateService,
     private readonly config: ConfigService,
+    private readonly storeStorageService: StoreStorageService,
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
 
@@ -302,9 +304,159 @@ export class SajangService {
     };
   }
 
+  // 사장 마이페이지 입장
+  async sajangEnterMypage(ld_log_id: string) {
+    const login = await this.prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: {
+        sajang: {
+          select: {
+            sa_id: true,
+            Store: {
+              select: {
+                sto_id: true,
+                sto_name: true,
+                sto_name_en: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!login || !login.sajang?.Store?.length) {
+      return {
+        message: '사장님의 가게 정보가 없습니다',
+        status: 'false',
+      };
+    }
+
+    return {
+      sa_id: login.sajang.sa_id,
+      stores: login.sajang.Store.map((store) => ({
+        sto_id: store.sto_id,
+        sto_name: store.sto_name,
+        sto_name_en: store.sto_name_en,
+      })),
+    };
+  }
 
   // 마이페이지에서 가게 간판 이미지 수정하기
-  async updateStoreImg(){}
+  async updateStoreImg(ld_log_id: string, file: Express.Multer.File) {
+    // 로그인 정보 조회 → 사장 ID → 첫 번째 가게 찾기
+    const loginData = await this.prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: {
+        sajang: {
+          select: {
+            Store: {
+              orderBy: { sto_id: 'asc' },
+              take: 1,
+              select: {
+                sto_id: true,
+                sto_img: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const targetStore = loginData?.sajang?.Store?.[0];
+
+    if (!targetStore) {
+      return {
+        message: '사장님의 가게가 존재하지 않습니다.',
+        status: 'false',
+      };
+    }
+
+    const storeId = targetStore.sto_id;
+    const existingImageUrl = targetStore.sto_img;
+
+    // ✅ 기존 이미지 삭제 (기본값 "0" 이 아닌 경우만)
+    if (existingImageUrl && existingImageUrl !== '0') {
+      try {
+        await this.storeStorageService.deleteStoreImage(existingImageUrl);
+      } catch (err) {
+        console.warn('기존 이미지 삭제 실패:', err.message);
+      }
+    }
+
+    // 새로운 이미지 업로드
+    const uploaded = await this.storeStorageService.uploadStoreImage(file);
+
+    // DB에 반영
+    await this.prisma.store.update({
+      where: { sto_id: storeId },
+      data: { sto_img: uploaded.url },
+    });
+
+    return {
+      message: '가게 대표 이미지가 성공적으로 업데이트되었습니다.',
+      imageUrl: uploaded.url,
+      status: 'success',
+    };
+  }
+
+  // 사장 홈 화면
+  // sajang.service.ts
+  async sajangHome(ld_log_id: string) {
+    // 로그인 정보 → 사장 ID 찾기
+    const login = await this.prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: {
+        sajang: {
+          select: {
+            sa_id: true,
+            Store: {
+              orderBy: { sto_id: 'asc' }, // 여러 가게 중 첫 번째
+              take: 1,
+              select: {
+                sto_id: true,
+                sto_name: true,
+                sto_halal: true,
+                review: {
+                  orderBy: { revi_create: 'desc' },
+                  select: {
+                    revi_id: true,
+                    revi_content: true,
+                    revi_reco_step: true,
+                    revi_create: true,
+                    ReviewImage: {
+                      select: { revi_img_url: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!login || !login.sajang?.Store?.length) {
+      return {
+        message: '가게정보를 찾을 수 없습니다.',
+        status: 'false',
+      };
+    }
+
+    const store = login.sajang.Store[0];
+
+    return {
+      sto_id: store.sto_id,
+      sto_name: store.sto_name,
+      sto_halal: store.sto_halal,
+      reviews: store.review.map((r) => ({
+        revi_id: r.revi_id,
+        content: r.revi_content,
+        reco_step: r.revi_reco_step,
+        created_at: r.revi_create,
+        images: r.ReviewImage.map((img) => img.revi_img_url),
+      })),
+    };
+  }
 }
 
 /*

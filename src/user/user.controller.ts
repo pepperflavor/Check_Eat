@@ -10,6 +10,8 @@ import { OptionalUser } from 'src/auth/decorator/user.decorator';
 import { OptionalJwtAuthGuard } from 'src/auth/optional-jwt-auth.guard';
 import { MyReviewsDto } from './user_dto/review-mypage.dto';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
+import { UpdateUserAllDto } from './user_dto/update-user-all.dto';
+import { UpdateUserLangDto } from './user_dto/update-user-lang.dto';
 
 @Controller('user')
 export class UserController {
@@ -33,8 +35,31 @@ export class UserController {
   }
 
   // 알러지수정
+  @Post('update-all')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'null을 전달받으면 기존 데이터 삭제, undefined면 기존 값 유지',
+    description: '마이페이지- 알러지 정보 수정',
+  })
+  async updateAllergy(@Req() req, @Body() body: UpdateUserAllDto) {
+    const ld_id = req.user.sub;
+    const lang = req.user.lang;
+    return await this.userService.updateUserAllergy(
+      ld_id,
+      lang,
+      body.common_al,
+      body.personal_al,
+    );
+  }
 
   // 사용하는 언어 수정
+  @Post('update-lang')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '', description: '사용하는 언어 설정 업데이트' })
+  async updateLang(@Req() req, @Body() body: UpdateUserLangDto) {
+    const ld_log_id = req.user.sub;
+    return await this.userService.updateUserLang(ld_log_id, body.new_lang);
+  }
 
   // 내가쓴 리뷰 리스트
   @Post('my-reviews')

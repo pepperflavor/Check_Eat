@@ -28,6 +28,8 @@ import { FindPWDSendTokenDto } from './dto/find-pwd-sendtoken.dto';
 import { ChagePwdNoLogin } from './dto/pwd-change-nologin.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
+import { UpdateRefreshDto } from './dto/update-refresh.dto';
+import { AuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -60,10 +62,26 @@ export class AuthController {
   // 로그인
   // status 2 이면 로그인 안됨, 탈퇴한 회원
   @Post('login')
+  @UseGuards(AuthGuard('local'))
   @ApiOperation({ summary: '로그인', description: '로그인' })
-  async signInCommon(@Body() body: CommonLoginDTO) {
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        ld_log_id: { type: 'string', example: 'test1234' },
+        ld_pwd: { type: 'string', example: 'mypassword' },
+      },
+    },
+  })
+  async signInCommon(@Req() req: any) {
+    const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
+    return await this.authService.login(user.ld_log_id, user.ld_pwd);
+  }
+  /*
+    async signInCommon(@Body() body: CommonLoginDTO) {
     return await this.authService.login(body.ld_log_id, body.ld_pwd);
   }
+  */
 
   // 회원가입시 - 이메일 중복확인
   @ApiOperation({
@@ -111,12 +129,22 @@ export class AuthController {
   }
 
   // 리프레시 토큰 검증
-  @Post('check-refresh-token')
+  @Post('refresh')
   @ApiOperation({
     summary: '리프레시 토큰 검증',
     description: '리프레시 토큰 검증',
   })
-  async checkRefreshToken() {}
+  async refreshAccessToken(@Body() body: UpdateRefreshDto) {
+    const { log_Id, refreshToken } = body;
+
+    if (!log_Id || !refreshToken) {
+      throw new UnauthorizedException(
+        '아이디 또는 리프레시 토큰이 누락되었습니다.',
+      );
+    }
+
+    return await this.authService.refreshToken(log_Id, refreshToken);
+  }
 
   // 로그아웃
   @ApiOperation({ summary: '로그아웃', description: '로그아웃' })

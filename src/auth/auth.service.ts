@@ -180,15 +180,65 @@ export class AuthService {
 
   // 엑세스, 리프레시 발급 로직 분리 필요
 
-  // 리프레시 발급
+  // 리프레시 새로 발급
   async refreshToken(inputId: string, refreshToken: string) {
-    const data = await this.commonService.findById(inputId);
+    const user = await this.commonService.findById(inputId);
 
-    if (!data || data.ld_refresh_token) {
+    if (!user || !user.ld_refresh_token) {
       throw new UnauthorizedException('리프레시 토큰이 존재하지 않습니다.');
     }
 
-    // 새토큰 재발급 // 로그인 쪽으로 연결
+    // db에 저장돼 있던 로큰이랑 비교
+    if (user.ld_refresh_token !== refreshToken) {
+      throw new UnauthorizedException('리프레시 토큰이 일치하지 않습니다.');
+    }
+
+    try {
+      // 유효성 검사
+      // 리프레시 만료되면 리턴
+      /*
+      {
+        name: 'TokenExpiredError',
+        message: 'jwt expired',
+        expiredAt: ...
+      }
+      */
+      const decoded = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.config.get<string>('JWT_RFRESH_SECRET'),
+      });
+
+      const newPayload = await this.generateToken(
+        user.ld_log_id,
+        user.ld_usergrade,
+        user.ld_email,
+        user.ld_lang,
+      );
+
+      const newAccessToken = await this.jwtService.signAsync(newPayload, {
+        secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+        expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+      });
+
+      // 여기에 요청들어오면 무조건 새 refresh token 발급
+      const newRefreshToken = await this.jwtService.signAsync(
+        { sub: user.ld_id },
+        {
+          secret: this.config.get<string>('JWT_RFRESH_SECRET'),
+          expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
+        },
+      );
+
+      await this.commonService.updateRefreshToken(user.ld_id, newRefreshToken);
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      throw new UnauthorizedException(
+        '리프레시 토큰이 유효하지 않습니다. 다시 로그인해주세요.',
+      );
+    }
   }
 
   // 이메일 본인 인증하기
@@ -292,8 +342,8 @@ export class AuthService {
   async validateUser(username: string, password: string): Promise<any> {
     const data = await this.commonService.findById(username);
 
-    if (!data || data == null) {
-      throw new Error('유저가 존재하지 않습니다');
+    if (!data?.ld_log_id) {
+      throw new UnauthorizedException('유저가 존재하지 않습니다');
     }
 
     const isMatch = await this.commonService.comparePassword(
@@ -302,7 +352,7 @@ export class AuthService {
     );
 
     if (!isMatch) {
-      return null;
+      throw new UnauthorizedException('비밀번호가 일치하지 않습니다');
     }
 
     return data;
@@ -455,5 +505,13 @@ export class AuthService {
         sub: appleUser.sub,
       },
     };
+  }
+
+  // 유저 정보 업데이트 후 새토큰 발급
+  async getAccessToken(payload: any) {
+    return this.jwtService.signAsync(payload, {
+      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+    });
   }
 }
