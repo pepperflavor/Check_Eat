@@ -168,10 +168,15 @@ export class CommonAccountService {
   }
 
   async comparePassword(plainPWD: string, hashedPWD): Promise<boolean> {
+    console.log('🧪 입력 비번:', plainPWD);
+    console.log('🧪 해시 비번:', hashedPWD);
     if (!hashedPWD || !hashedPWD.startsWith('$2')) {
       throw new Error('저장된 비밀번호 형식이 잘못되었습니다.');
     }
-    return bcrypt.compare(plainPWD, hashedPWD);
+
+    const result = await bcrypt.compare(plainPWD, hashedPWD);
+    console.log('🧪 비교 결과:', result);
+    return result;
   }
 
   // 탈퇴한 회원인지 확인

@@ -75,8 +75,9 @@ export class AuthController {
   })
   async signInCommon(@Req() req: any) {
     const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
-    return await this.authService.login(user.ld_log_id, user.ld_pwd);
+    return await this.authService.login(user.ld_log_id);
   }
+
   /*
     async signInCommon(@Body() body: CommonLoginDTO) {
     return await this.authService.login(body.ld_log_id, body.ld_pwd);

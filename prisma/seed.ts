@@ -73,7 +73,7 @@ async function main() {
       });
 
       // 업주용 LoginData 생성 및 Sajang 연결
-      const hashedPwd = await bcrypt.hash(`passwordOwner${i}`, 10);
+      const hashedPwd = await bcrypt.hash(`passwordOwner${i}`, 12);
       const login = await prisma.loginData.create({
         data: {
           ld_usergrade: 1,

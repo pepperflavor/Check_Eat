@@ -61,7 +61,7 @@ export class AuthService {
   }
 
   // 로그인
-  async login(inputId: string, inputPwd: string) {
+  async login(inputId: string) {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
     if (!data) {
@@ -76,15 +76,15 @@ export class AuthService {
         status: 'false',
       };
     }
-    // 비밀번호 확인
-    const isMatch = await this.commonService.comparePassword(
-      inputPwd,
-      data.ld_pwd,
-    );
+    // // 비밀번호 확인
+    // const isMatch = await this.commonService.comparePassword(
+    //   inputPwd,
+    //   data.ld_pwd,
+    // );
 
-    if (isMatch == false) {
-      throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
-    }
+    // if (isMatch == false) {
+    //   throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+    // }
 
     // 토큰 발급
     const tokenPayload = await this.generateToken(
