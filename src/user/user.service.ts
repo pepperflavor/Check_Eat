@@ -404,6 +404,7 @@ export class UserService {
       );
 
       return {
+        foo_id: food.foo_id,
         foo_name,
         foo_material,
         foo_price,
