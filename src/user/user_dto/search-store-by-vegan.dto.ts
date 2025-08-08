@@ -17,7 +17,14 @@ export class SearchStoreByVeganDto {
   @IsString()
   user_long: string;
 
-  @ApiProperty({ example: '1000', description: '1km == 1000 으로 입력'})
+  @ApiProperty({ example: '1000', description: '1km == 1000 으로 입력' })
   @IsString()
   radius: string;
+
+  @ApiProperty({
+    example: 'ar',
+    description: '로그인 안한유저면 사용하는 언어값',
+  })
+  @IsString()
+  lang?: string;
 }

@@ -11,4 +11,8 @@ export class UserLocationDto {
   @ApiProperty({ example: '0.123235', description: '유저 현재 위치의 경도' })
   @IsString()
   user_long: string;
+
+  @ApiProperty({ example: '1000', description: '반경, 1km === 1000' })
+  @IsString()
+  radius: string;
 }

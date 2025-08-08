@@ -21,6 +21,7 @@ import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { UpdateUserAllDto } from './user_dto/update-user-all.dto';
 import { UpdateUserLangDto } from './user_dto/update-user-lang.dto';
 import { FavoritStoreDto } from './user_dto/favorite-store.dto';
+import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 
 @Controller('user')
 export class UserController {
@@ -121,12 +122,13 @@ export class UserController {
 
   @ApiOperation({
     summary: '가게 이름으로 검색하기',
-    description: '가게이름 입력하면 관련 정보 찾아줌',
+    description: '가게이름 입력하면 관련 정보 찾아줌,',
   })
   @Post('search-store-nm')
-  async searchStoreByName(@Req() req, @Body() body) {
+  @UseGuards(OptionalJwtAuthGuard)
+  async searchStoreByName(@OptionalUser() user: any, @Body() body:SearchStoreByNameDto) {
     // 유저가 쓰는 언어 추출
-    const lang = req.user.lang;
+    const lang = user?.lang || body.lang || 'ko'; // 언어값 입력안되면 'ko'
     // store 아이디랑 이름 같이 보내줘야할듯
     const result = await this.userService.getStoreByName(lang, body);
     return result;
@@ -135,11 +137,12 @@ export class UserController {
   // 비건 단계로 가게 찾기
   @ApiOperation({
     summary: '',
-    description: '비건 단계로 가게 검색하기, 반경 2KM 이내',
+    description: '비건 단계로 가게 검색하기, 반경 입력해야함',
   })
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(OptionalJwtAuthGuard)
   @Post('search-store-vegan')
-  async searchStoreByVegan(@Body() body: SearchStoreByVeganDto) {
+  async searchStoreByVegan(@OptionalUser() user: any, @Body() body: SearchStoreByVeganDto) {
+    const lang = user?.lang || body.lang || 'ko'; // 언어값 입력안되면 'ko'
     const result = await this.userService.getStoreByVegan(body);
     return result;
   }

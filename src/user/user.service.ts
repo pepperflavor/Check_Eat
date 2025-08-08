@@ -16,6 +16,7 @@ import Decimal from 'decimal.js';
 import { SearchStoreByVeganDto } from './user_dto/search-store-by-vegan.dto';
 import dayjs from 'dayjs';
 import { AuthService } from 'src/auth/auth.service';
+import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 
 @Injectable()
 export class UserService {
@@ -200,11 +201,12 @@ export class UserService {
   }
 
   // 이름으로 가게 검색
-  async getStoreByName(lang: string, data) {
-    const { sto_name, user_latitude, user_longitude } = data;
-    const LA = new Decimal(user_latitude);
-    const LONG = new Decimal(user_longitude);
-    const radius = 2000;
+  // 언어별 리턴...?
+  async getStoreByName(lang: string, data: SearchStoreByNameDto) {
+    const { sto_name, user_la, user_long, radius } = data;
+    const LA = new Decimal(user_la);
+    const LONG = new Decimal(user_long);
+    const Parseradius = Number(radius);
 
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
@@ -228,7 +230,7 @@ export class UserService {
       LONG,
       LA,
       sto_name,
-      radius,
+      Parseradius,
     );
 
     if (!stores || stores.length === 0) {
@@ -243,11 +245,11 @@ export class UserService {
 
   // 비건 단계별 검색
   async getStoreByVegan(data: SearchStoreByVeganDto) {
-    const { vegan_level, user_la, user_long } = data;
+    const { vegan_level, user_la, user_long, radius } = data;
     const parseVegan = Number(vegan_level);
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
-    const radius = data.radius;
+    const Parseradius = Number(radius);
 
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
@@ -272,7 +274,7 @@ export class UserService {
       `,
       LONG,
       LA,
-      radius,
+      Parseradius,
       parseVegan,
     );
 
