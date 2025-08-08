@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpException,
+  HttpStatus,
+  Post,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UserService } from './user.service';
 import { ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { UserLocationDto } from './user_dto/user-location.dto';
@@ -12,6 +20,7 @@ import { MyReviewsDto } from './user_dto/review-mypage.dto';
 import { JwtStrategy } from 'src/auth/jwt.strategy';
 import { UpdateUserAllDto } from './user_dto/update-user-all.dto';
 import { UpdateUserLangDto } from './user_dto/update-user-lang.dto';
+import { FavoritStoreDto } from './user_dto/favorite-store.dto';
 
 @Controller('user')
 export class UserController {
@@ -132,6 +141,7 @@ export class UserController {
   @Post('search-store-vegan')
   async searchStoreByVegan(@Body() body: SearchStoreByVeganDto) {
     const result = await this.userService.getStoreByVegan(body);
+    return result;
   }
 
   // 가게 디테일 페이지
@@ -152,5 +162,42 @@ export class UserController {
       user_allergy_common: user?.user_allergy_common || [],
     });
     return result;
+  }
+
+  // 즐겨찾기 추가
+  @Post('regist-favorite')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '즐겨찾기 가게 추가 ' })
+  async addFavoriteStore(@Req() req, @Body() body: FavoritStoreDto) {
+    const response = await this.userService.registFavoriteStore(
+      req.user.sub,
+      Number(body.sto_id),
+    );
+
+    // 중복 응답일 경우 409 반환하도록 처리 가능
+    if (response.status === 'duplicate') {
+      throw new HttpException(response.message, HttpStatus.CONFLICT);
+    }
+
+    return response;
+  }
+
+  // 즐겨찾기 삭제
+  @Post('delete-favorite')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '즐겨찾기 가게 삭제 ' })
+  async deleteFavoriteStore(@Req() req, @Body() body: FavoritStoreDto) {
+    const sto_id = Number(body.sto_id);
+    const log_id = req.user.sub;
+    return await this.userService.registFavoriteStore(log_id, sto_id);
+  }
+
+  // 즐겨찾기한 가게 목록조회
+  @Post('my-favorite-store')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '즐겨찾기 가게들 목록 조회' })
+  async getFavoriteStores(@Req() req) {
+    const log_id = req.user.sub;
+    return await this.userService.getListFavoriteStore(log_id);
   }
 }

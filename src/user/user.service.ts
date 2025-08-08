@@ -244,9 +244,10 @@ export class UserService {
   // 비건 단계별 검색
   async getStoreByVegan(data: SearchStoreByVeganDto) {
     const { vegan_level, user_la, user_long } = data;
+    const parseVegan = Number(vegan_level);
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
-    const radius = 2000;
+    const radius = data.radius;
 
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
@@ -272,7 +273,7 @@ export class UserService {
       LONG,
       LA,
       radius,
-      vegan_level,
+      parseVegan,
     );
 
     if (!stores || stores.length === 0) {
@@ -753,6 +754,156 @@ export class UserService {
       limit,
       totalPages: Math.ceil(totalCount / limit),
       stores: pending.map((p) => p.store),
+    };
+  }
+
+  // 새로운 즐겨찾기 등록 (등록 시 순서값 자동 설정)
+  async registFavoriteStore(log_id: string, sto_id: number) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      throw new Error('유저를 찾을 수 없습니다.');
+    }
+
+    const existing = await this.prisma.favoriteStore.findUnique({
+      where: {
+        user_id_sto_id: {
+          user_id: user.ld_user_id,
+          sto_id,
+        },
+      },
+    });
+
+    if (existing) {
+      return {
+        message: '이미 즐겨찾기한 가게입니다.',
+        status: 'duplicate',
+      };
+    }
+
+    // 현재 등록된 즐겨찾기 개수를 바탕으로 order_index 부여
+    const count = await this.prisma.favoriteStore.count({
+      where: { user_id: user.ld_user_id },
+    });
+
+    await this.prisma.favoriteStore.create({
+      data: {
+        user_id: user.ld_user_id,
+        sto_id,
+        order_index: count,
+      },
+    });
+
+    return {
+      message: '즐겨찾기 등록 완료',
+      status: 'success',
+    };
+  }
+
+  // 즐겨찾기 삭제
+  async deleteFavoriteStore(log_id: string, sto_id: number) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      throw new Error('유저를 찾을 수 없습니다.');
+    }
+
+    const target = await this.prisma.favoriteStore.findUnique({
+      where: {
+        user_id_sto_id: {
+          user_id: user.ld_user_id,
+          sto_id,
+        },
+      },
+    });
+
+    if (!target) {
+      return {
+        message: '즐겨찾기 목록에 없는 가게입니다.',
+        status: 'not_found',
+      };
+    }
+
+    await this.prisma.favoriteStore.delete({
+      where: {
+        user_id_sto_id: {
+          user_id: user.ld_user_id,
+          sto_id,
+        },
+      },
+    });
+
+    return {
+      message: '즐겨찾기 삭제 완료',
+      status: 'success',
+    };
+  }
+
+  // 즐겨찾기한 가게목록 조회
+  async getListFavoriteStore(log_id: string) {
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: log_id },
+      select: { ld_user_id: true },
+    });
+
+    if (!user?.ld_user_id) {
+      throw new Error('유저를 찾을 수 없습니다.');
+    }
+
+    const today = dayjs().day();
+    const runtimeKeyMap = {
+      0: 'holi_runtime_sun',
+      1: 'holi_runtime_mon',
+      2: 'holi_runtime_tue',
+      3: 'holi_runtime_wed',
+      4: 'holi_runtime_thu',
+      5: 'holi_runtime_fri',
+      6: 'holi_runtime_sat',
+    };
+    const runtimeKey = runtimeKeyMap[today];
+
+    const favorites = await this.prisma.favoriteStore.findMany({
+      where: {
+        user_id: user.ld_user_id,
+        store: {
+          sto_status: { not: 2 }, // ✅ include 안이 아니라 where 절에 위치해야 함
+        },
+      },
+      orderBy: { order_index: 'asc' },
+      include: {
+        store: {
+          include: {
+            holiday: true,
+          },
+        },
+      },
+    });
+
+    const storesWithTodayRuntime = favorites.map((f) => {
+      const store = f.store;
+      const holiday = store.holiday?.[0];
+
+      return {
+        sto_id: store.sto_id,
+        sto_name: store.sto_name,
+        sto_img: store.sto_img,
+        sto_address: store.sto_address,
+        today_runtime: holiday?.[runtimeKey] ?? null,
+        holi_break: holiday?.holi_break ?? null,
+        holi_regular: holiday?.holi_regular ?? null,
+        holi_public: holiday?.holi_public ?? null,
+      };
+    });
+
+    return {
+      status: 'success',
+      stores: storesWithTodayRuntime,
     };
   }
 }

@@ -28,7 +28,7 @@ model User{
   LoginData LoginData[]
 
 // 즐겨찾기 추가, 유저랑 1 :1
-  favorites          Favorites?  
+  favoriteStores FavoriteStore[] // 1:N 
 
   // 리뷰 관계 추가
   reviews Review[] // 1: 다
@@ -230,17 +230,26 @@ model Store{
   holiday Holiday[] 
 
   Food Food[]
-  favorites      Favorites[]  @relation("FavoritesStores") 
+  favoriteUsers FavoriteStore[] // 1:N 
 
 // 리뷰 관계
   review Review[] // 1:n 가게 리뷰
 }
 
-model Favorites{
-  fa_id Int @id @default(autoincrement())
-  user    User  @relation(fields: [user_id], references: [user_id])
-  user_id Int   @unique
-  stores  Store[] @relation("FavoritesStores")
+// 즐겨찾기 한 가게
+model FavoriteStore {
+  id          Int      @id @default(autoincrement())
+  
+  user        User     @relation(fields: [user_id], references: [user_id])
+  user_id     Int
+
+  store       Store    @relation(fields: [sto_id], references: [sto_id])
+  sto_id      Int
+
+  added_at    DateTime @default(now()) // 즐겨찾기 등록 시간
+  order_index Int?                // 사용자가 재정렬한 순서 저장 가능
+
+  @@unique([user_id, sto_id])     // 같은 가게 중복 즐겨찾기 방지
 }
 
 model FoodMeterialSeed{

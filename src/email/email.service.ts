@@ -25,6 +25,8 @@ export class EmailService implements OnModuleInit {
     type: number,
   ) {
     const from = this.config.get<string>('SEND_GRID_SENDER_EMAIL');
+    console.log('샌드그리드 안 : ');
+    console.log(from);
     if (!from) {
       throw new Error('SEND_GRID_SENDER_EMAIL is not defined');
     }
@@ -94,6 +96,7 @@ export class EmailService implements OnModuleInit {
 
     await sgMail.send(msg).catch((error) => {
       console.error('Error sending email:', error);
+      console.error('Error sending email:', JSON.stringify(error, null, 2));
       throw new Error('Failed to send verification email');
     });
   }
