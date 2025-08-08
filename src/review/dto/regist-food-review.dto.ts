@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsNumber,
@@ -51,7 +52,7 @@ export class RegistFoodReviewDto {
     example: 0,
     description: '리뷰 상태 - 0: 리뷰 완료, 1: 나중에 작성 예정',
   })
-  @IsNumber()
   @IsOptional()
-  revi_status?: number = 0;
+  @IsString()
+  revi_status?: string;
 }
