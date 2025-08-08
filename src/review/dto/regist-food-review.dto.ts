@@ -20,8 +20,8 @@ export class RegistFoodReviewDto {
     example: '가게 ID',
     description: '리뷰를 작성할 가게 ID',
   })
-  @IsNumber()
-  store_id: number;
+  @IsString()
+  store_id: string;
 
   @ApiProperty({
     example: '짜장면 존맛탱',
@@ -36,7 +36,7 @@ export class RegistFoodReviewDto {
     description: '이 음식을 추천하고 싶은 비건단계, 옵셔널',
   })
   @IsOptional()
-  revi_reco_vegan: number;
+  revi_reco_vegan: string;
 
   @ApiProperty({
     example: 0,

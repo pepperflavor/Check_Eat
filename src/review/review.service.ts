@@ -183,15 +183,18 @@ export class ReviewService {
       };
     }
 
+    const parsingVegan = Number(reviData.revi_reco_vegan);
+    const parsingStoID = Number(reviData.store_id);
+
     // DB에 리뷰 저장
     const review = await this.prisma.review.create({
       data: {
         revi_reco_step: reviData.revi_reco_step,
-        revi_reco_vegan: reviData.revi_reco_vegan ?? null,
+        revi_reco_vegan: parsingVegan ?? null,
         revi_content: reviData.revi_content || null,
         revi_status: reviData.revi_status || 0,
         user_id: userId.ld_user_id,
-        store_id: reviData.store_id,
+        store_id: parsingStoID,
         foods: {
           connect: reviData.food_ids.map((id) => ({ foo_id: id })),
         },
