@@ -15,7 +15,9 @@ export class AzureFoodClassifierController {
 
   // 음식명 추론 - 애저
   @Post('predict')
-  @UseInterceptors(FileInterceptor('image'))
+  @UseInterceptors(FileInterceptor('image', {
+    limits: { fileSize: 5 * 1024 * 1024 }, 
+  }))
   async predict(@UploadedFile() file: Express.Multer.File) {
     return this.azureFoodClassifierService.predictFromAllModels(file);
   }
