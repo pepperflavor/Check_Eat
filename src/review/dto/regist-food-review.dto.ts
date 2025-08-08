@@ -13,8 +13,8 @@ export class RegistFoodReviewDto {
     description: '선택한 음식 ID 배열',
   })
   @IsArray()
-  @IsNumber({}, { each: true })
-  food_ids: any[];
+  @IsString({ each: true })
+  food_ids: string[];
 
   @ApiProperty({
     example: '가게 ID',
@@ -36,6 +36,7 @@ export class RegistFoodReviewDto {
     description: '이 음식을 추천하고 싶은 비건단계, 옵셔널',
   })
   @IsOptional()
+  @IsString()
   revi_reco_vegan: string;
 
   @ApiProperty({
@@ -43,8 +44,8 @@ export class RegistFoodReviewDto {
     description:
       '추천 단계 - 0: 추천함, 1: 보통, 2: 추천안함-이때는 텍스트 필수',
   })
-  @IsNumber()
-  revi_reco_step: number;
+  @IsString()
+  revi_reco_step: string;
 
   @ApiProperty({
     example: 0,

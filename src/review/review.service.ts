@@ -136,67 +136,64 @@ export class ReviewService {
     ld_log_Id: string,
     reviData: RegistFoodReviewDto,
     files?: Express.Multer.File[],
-    lang: string = 'ko',
+    lang: 'ko' | 'en' | 'ar' = 'ko',
   ) {
-    // 메뉴 이름들, 추천 여부, 사진, 텍스트
-    // 당장 리뷰 등록 안할거면 저장되도록 해야함
-    // 유저 테이블 관계 연결 필요
-    // 사진 애저에 저장해야함
+    // ✅ string[] → number[] 변환 및 NaN 필터링
+    const foodIds: number[] = Array.isArray(reviData.food_ids)
+      ? reviData.food_ids.map((id) => Number(id)).filter((id) => !isNaN(id))
+      : [];
 
-    // food_ids가 string으로 왔다면 숫자로 변환
-    if (Array.isArray(reviData.food_ids)) {
-      reviData.food_ids = reviData.food_ids.map((id) => Number(id));
-    }
+    const parsingVegan = reviData.revi_reco_vegan
+      ? Number(reviData.revi_reco_vegan)
+      : null;
 
-    // 애저에 올린다음 얻을
-    let imageUrls: string[] = [];
+    const parsingRecoStep = Number(reviData.revi_reco_step);
+    const parsingStoID = Number(reviData.store_id);
+    const parsingStatus = reviData.revi_status
+      ? Number(reviData.revi_status)
+      : 0;
 
+    // ✅ 추천하지 않음인데 이유 없음 → 에러
     if (
-      reviData.revi_reco_step === 2 &&
-      (!reviData.revi_content || reviData.revi_content.length === 0)
+      parsingRecoStep === 2 &&
+      (!reviData.revi_content || reviData.revi_content.trim().length === 0)
     ) {
       return {
         message: '[Review]추천을 하지 않으면 이유를 적어야 합니다.',
         status: 'false',
       };
     }
-    // 리뷰 번역해서 저장하기
 
-    // 이미지가 있으면 Azure에 업로드
+    // ✅ 이미지 업로드
+    let imageUrls: string[] = [];
     if (files && files.length > 0) {
       imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
 
-    const userId = await this.prisma.loginData.findUnique({
-      where: {
-        ld_log_id: ld_log_Id,
-      },
-      select: {
-        ld_user_id: true,
-      },
+    // ✅ 유저 아이디 조회
+    const user = await this.prisma.loginData.findUnique({
+      where: { ld_log_id: ld_log_Id },
+      select: { ld_user_id: true },
     });
 
-    if (!userId || !userId.ld_user_id) {
+    if (!user?.ld_user_id) {
       return {
         message: '[Review]유저 아이디를 찾을 수 없습니다.',
         status: 'false',
       };
     }
 
-    const parsingVegan = Number(reviData.revi_reco_vegan);
-    const parsingStoID = Number(reviData.store_id);
-
-    // DB에 리뷰 저장
+    // ✅ 리뷰 생성
     const review = await this.prisma.review.create({
       data: {
-        revi_reco_step: reviData.revi_reco_step,
-        revi_reco_vegan: parsingVegan ?? null,
-        revi_content: reviData.revi_content || null,
-        revi_status: reviData.revi_status || 0,
-        user_id: userId.ld_user_id,
+        revi_reco_step: parsingRecoStep,
+        revi_reco_vegan: parsingVegan,
+        revi_content: reviData.revi_content ?? null,
+        revi_status: parsingStatus,
+        user_id: user.ld_user_id,
         store_id: parsingStoID,
         foods: {
-          connect: reviData.food_ids.map((id) => ({ foo_id: id })),
+          connect: foodIds.map((id) => ({ foo_id: id })),
         },
       },
       include: {
@@ -206,9 +203,10 @@ export class ReviewService {
       },
     });
 
+    // ✅ 번역 처리
     if (review.revi_content && review.revi_content.length > 0) {
       try {
-        const { from, to } = this.getFromToLanguages(lang); // ✅ 유저 언어 기준으로 설정
+        const { from, to } = this.getFromToLanguages(lang);
         const translated = await this.translateService.translateMany(
           review.revi_content,
           to,
@@ -244,7 +242,8 @@ export class ReviewService {
         console.error('[Review] 리뷰 번역 실패:', err);
       }
     }
-    // 이미지 URL들을 ReviewImage 테이블에 저장
+
+    // ✅ 이미지 DB 저장
     if (imageUrls.length > 0) {
       const reviewImages = imageUrls.map((url) => ({
         revi_img_url: url,
@@ -262,7 +261,6 @@ export class ReviewService {
       uploaded_images: imageUrls.length,
     };
   }
-
   //===== 한 메뉴에 대한 리뷰 조회
   async oneMenuReviews(
     sto_id: number,
