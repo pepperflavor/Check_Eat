@@ -1,4 +1,10 @@
-import { HttpStatus, Injectable, HttpException, Inject, forwardRef } from '@nestjs/common';
+import {
+  HttpStatus,
+  Injectable,
+  HttpException,
+  Inject,
+  forwardRef,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { SignInDTO } from './user_dto/sign-in.dto';
 import * as bcrypt from 'bcrypt';
@@ -440,6 +446,10 @@ export class UserService {
         message: '[Usermypage] 해당 유저를 찾을 수 없습니다.',
         status: 'false',
       };
+    }
+
+    if (Array.isArray(coal)) {
+      coal = coal.map((id) => Number(id));
     }
 
     const data: any = {};
