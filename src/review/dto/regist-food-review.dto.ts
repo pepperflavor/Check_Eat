@@ -11,11 +11,10 @@ export class RegistFoodReviewDto {
   @ApiProperty({
     example: [1, 2, 3],
     description: '선택한 음식 ID 배열',
-    type: [Number],
   })
   @IsArray()
   @IsNumber({}, { each: true })
-  food_ids: number[];
+  food_ids: any[];
 
   @ApiProperty({
     example: '가게 ID',
