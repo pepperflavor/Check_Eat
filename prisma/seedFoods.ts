@@ -111,7 +111,7 @@ export default async function seedFoods() {
         data: {
           foo_name: menu,
           foo_price: priceBase,
-          foo_material: materials.length > 0 ? materials.join(', ') : null,
+          foo_material: materials.length > 0 ? materials : [],
           foo_img: null,
           foo_status: 0,
           foo_sa_id: store.sto_sa_id,

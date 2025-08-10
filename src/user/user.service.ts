@@ -212,7 +212,7 @@ export class UserService {
       `
       SELECT
         sto_id, sto_name, sto_latitude, sto_longitude,
-        sto_type, sto_address, sto_halal, sto_status, sto_img,
+        sto_type,  sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
           geography(ST_MakePoint(sto_longitude, sto_latitude)),
           geography(ST_MakePoint($1, $2))
@@ -255,13 +255,14 @@ export class UserService {
       `
       SELECT
         s.sto_id, s.sto_name, s.sto_latitude, s.sto_longitude,
-        s.sto_type, s.sto_img, s.sto_address, s.sto_halal,
+        s.sto_type, s.sto_img, s.sto_address, s.sto_halal, sto_status,
         ST_Distance(
           geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
           geography(ST_MakePoint($1, $2))
         ) AS distance
       FROM "Store" s
-      WHERE ST_DWithin(
+      WHERE sto_status != 2
+        AND ST_DWithin(
         geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
         geography(ST_MakePoint($1, $2)),
         $3
@@ -286,6 +287,14 @@ export class UserService {
   }
 
   //========== 가게 상세 페이지
+
+  // 빈문자열, 공백제거
+  private nonEmpty(s?: string | null): string | undefined {
+    if (typeof s !== 'string') return undefined;
+    const t = s.trim();
+    return t.length > 0 ? t : undefined;
+  }
+
   async detailStoreData(
     sto_id: number,
     lang: string,
@@ -333,11 +342,17 @@ export class UserService {
               },
             }),
             ...(lang === 'ar' && {
+              foo_name: true, // 최종 fallback
               food_translate_ar: {
                 select: {
                   ft_ar_name: true,
                   ft_ar_mt: true,
                   ft_ar_price: true,
+                },
+              },
+              food_translate_en: {
+                select: {
+                  ft_en_name: true,
                 },
               },
             }),
@@ -351,7 +366,7 @@ export class UserService {
     const transformedFoods = store.Food.map((food) => {
       // 언어별 필드 분기
       let foo_name: string | undefined;
-      let foo_material: string | undefined;
+      let foo_material: string[] | undefined;
       let foo_price: string | undefined;
 
       if (lang === 'ko') {
@@ -363,7 +378,14 @@ export class UserService {
         foo_material = food.food_translate_en?.ft_en_mt ?? undefined;
         foo_price = food.food_translate_en?.ft_en_price ?? undefined;
       } else if (lang === 'ar') {
-        foo_name = food.food_translate_ar?.ft_ar_name ?? undefined;
+        const arName = this.nonEmpty(food.food_translate_ar?.ft_ar_name);
+        const enName = this.nonEmpty(
+          (food as any).food_translate_en?.ft_en_name,
+        );
+        const koName = this.nonEmpty((food as any).foo_name);
+        // ✅ 아랍어 → 영어 → 한글 순으로 fallback
+        foo_name = arName ?? enName ?? koName;
+
         foo_material = food.food_translate_ar?.ft_ar_mt ?? undefined;
         foo_price = food.food_translate_ar?.ft_ar_price ?? undefined;
       }
@@ -375,25 +397,26 @@ export class UserService {
       if (lang === 'ko') {
         if (
           userData.user_allergy &&
-          foo_material?.includes(userData.user_allergy)
+          Array.isArray(foo_material) &&
+          foo_material.includes(userData.user_allergy)
         ) {
           foo_warning = userData.user_allergy;
         }
       } else if (lang === 'en') {
+        const mt = food.food_translate_en?.ft_en_mt;
         if (
           (userData as any).user_allergy_en &&
-          food.food_translate_en?.ft_en_mt?.includes(
-            (userData as any).user_allergy_en,
-          )
+          Array.isArray(mt) &&
+          mt.includes((userData as any).user_allergy_en)
         ) {
           foo_warning = (userData as any).user_allergy_en;
         }
       } else if (lang === 'ar') {
+        const mt = food.food_translate_ar?.ft_ar_mt;
         if (
           (userData as any).user_allergy_ar &&
-          food.food_translate_ar?.ft_ar_mt?.includes(
-            (userData as any).user_allergy_ar,
-          )
+          Array.isArray(mt) &&
+          mt.includes((userData as any).user_allergy_ar)
         ) {
           foo_warning = (userData as any).user_allergy_ar;
         }
@@ -651,7 +674,9 @@ export class UserService {
               food_translate_en: { select: { ft_en_name: true } },
             }),
             ...(lang === 'ar' && {
+              foo_name: true,
               food_translate_ar: { select: { ft_ar_name: true } },
+              food_translate_en: { select: { ft_en_name: true } },
             }),
           },
         },
@@ -676,8 +701,16 @@ export class UserService {
 
       const food_list = review.foods.map((f) => {
         let foo_name = f.foo_name;
-        if (lang === 'en') foo_name = f.food_translate_en?.ft_en_name || '';
-        if (lang === 'ar') foo_name = f.food_translate_ar?.ft_ar_name || '';
+        if (lang === 'en') {
+          foo_name = f.food_translate_en?.ft_en_name || '';
+        } else if (lang === 'ar') {
+          const arName = this.nonEmpty(f.food_translate_ar?.ft_ar_name);
+          const enName = this.nonEmpty(f.food_translate_en?.ft_en_name);
+          const koName = this.nonEmpty(f.foo_name);
+          // ✅ 아랍어 → 영어 → 한글
+          foo_name = arName ?? enName ?? koName ?? '';
+        }
+
         return {
           foo_id: f.foo_id,
           foo_img: f.foo_img,

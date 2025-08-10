@@ -18,6 +18,7 @@ import { ReviewModule } from './review/review.module';
 import { FoodSeedModule } from './food-seed/food-seed.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { AzureFoodClassifierModule } from './azure-food-classifier/azure-food-classifier.module';
+import { AzureFoodRecognizerModule } from './azure-food-recognizer/azure-food-recognizer.module';
 
 @Module({
   imports: [
@@ -40,6 +41,8 @@ import { AzureFoodClassifierModule } from './azure-food-classifier/azure-food-cl
     ScheduleModule.forRoot(),
 
     AzureFoodClassifierModule,
+
+    AzureFoodRecognizerModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

@@ -290,4 +290,8 @@ export class AuthController {
       `https://appleid.apple.com/auth/authorize?${params.toString()}`,
     );
   }
+
+  // 본인 인증 추가
+
+  
 }

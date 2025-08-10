@@ -1,8 +1,10 @@
 import {
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import { TranslateService } from 'src/translate/translate.service';
@@ -15,6 +17,7 @@ import { Queue } from 'bull';
 import * as bcrypt from 'bcrypt';
 import Decimal from 'decimal.js';
 import { StoreStorageService } from 'src/azure-storage/store-storage.service';
+import { RegistFoodInput } from './types/regist-food';
 
 @Injectable()
 export class SajangService {
@@ -23,8 +26,19 @@ export class SajangService {
     private transServcice: TranslateService,
     private readonly config: ConfigService,
     private readonly storeStorageService: StoreStorageService,
+    private readonly translate: TranslateService,
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
+
+  private async assertOwner(saId: any) {
+    const isExist = await this.prisma.sajang.findUnique({
+      where: { sa_id: saId },
+    });
+    if (!isExist || !saId) {
+      throw new ForbiddenException('업주 권한이 필요합니다.');
+    }
+    return { saId: Number(saId) };
+  }
 
   // 사업자 등록진위여부, 재시도 포함
   async checkBusinessRegistration(data: BusinessRegistrationDTO) {
@@ -78,7 +92,7 @@ export class SajangService {
       await this.prisma.store.create({
         data: {
           sto_name: storeData.sto_name ?? '',
-          sto_name_en: storeData.sto_name_en,
+          sto_name_en: storeData.sto_name_en ?? storeData.sto_name ?? '',
           sto_address: storeData.sto_address ?? '',
           sto_phone: storeData.sto_phone ? String(storeData.sto_phone) : null,
           sto_latitude: parseFloat(storeData.sto_latitude.toFixed(6)),
@@ -263,20 +277,151 @@ export class SajangService {
     }
   }
 
-  //===== OCR 관련
-  // 음식 사진 찍으면 재료명 추출해주기
-  async recommendMeterials() {}
+  //===== 음식 등록 나머지 로직
+  // 음식 나머지 데이터 저장
+  async registFood(sa_id: number, input: RegistFoodInput) {
+    const { saId } = await this.assertOwner(sa_id); // 사장님 맞는지 확인
 
-  // 사진에서 추출한 음식명에서 재료 추출 -> 대화형 ai로 꺼내옴
-  async extractIngredients(foodName: string) {
-    // 대화형 AI를 사용하여 재료 추출
-    // 예시로 간단한 문자열 분리 사용
-    const materials = foodName.split(',').map((item) => item.trim());
-    return materials;
+    const fooId = Number(input.foo_id);
+    if (!fooId || Number.isNaN(fooId)) {
+      throw new BadRequestException('foo_id가 유효하지 않습니다.');
+    }
+
+    // 실제 사장님이 등록하던 음식이 맞는지 검증
+    const food = await this.prisma.food.findUnique({
+      where: { foo_id: fooId },
+      select: { foo_id: true, foo_sa_id: true, foo_name: true },
+    });
+
+    if (!food) throw new NotFoundException('해당 음식이 존재하지 않습니다.');
+    if (food.foo_sa_id !== saId) {
+      return {
+        message: '본인 소유의 음식만 수정할 수 있습니다.',
+        status: 'false',
+      };
+    }
+
+    const updateData: any = {};
+    let nameChanged = false;
+    if (
+      typeof input.foo_name === 'string' &&
+      input.foo_name.trim().length > 0
+    ) {
+      const newName = input.foo_name.trim();
+      if (newName !== food.foo_name) {
+        updateData.foo_name = newName;
+        nameChanged = true;
+      }
+    }
+
+    // 가격
+    if (input.foo_price !== undefined) {
+      const priceNum =
+        typeof input.foo_price === 'string'
+          ? Number(input.foo_price)
+          : Number(input.foo_price);
+      if (Number.isNaN(priceNum) || priceNum < 0) {
+        throw new BadRequestException('가격이 유효한 숫자가 아닙니다.');
+      }
+      updateData.foo_price = priceNum;
+    }
+
+    // 비건 단계
+    if (input.foo_vegan !== undefined) {
+      if (input.foo_vegan === null) {
+        updateData.foo_vegan = null;
+      } else {
+        const veganId = Number(input.foo_vegan);
+        if (Number.isNaN(veganId)) {
+          throw new BadRequestException('비건 단계가 유효하지 않습니다.');
+        }
+        // FK 존재 확인(옵션)
+        const vegan = await this.prisma.vegan.findUnique({
+          where: { veg_id: veganId },
+          select: { veg_id: true },
+        });
+        if (!vegan) {
+          throw new BadRequestException('존재하지 않는 비건 단계입니다.');
+        }
+        updateData.foo_vegan = veganId;
+      }
+    }
+
+    // 업데이트할 필드가 하나도 없으면 패스
+    if (Object.keys(updateData).length === 0) {
+      return {
+        message: '[sajang] 변경할 데이터가 없습니다.',
+        status: 'skip',
+      };
+    }
+
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedFood = await tx.food.update({
+        where: { foo_id: fooId },
+        data: updateData,
+        select: {
+          foo_id: true,
+          foo_name: true,
+          foo_price: true,
+          foo_vegan: true,
+          foo_img: true,
+        },
+      });
+
+      if (nameChanged && updatedFood.foo_name) {
+        try {
+          const resp = await this.translate.translateMany(
+            updatedFood.foo_name,
+            ['en', 'ar'],
+            'ko',
+          );
+          const translations: Array<{ text: string; to: string }> =
+            resp?.[0]?.translations ?? [];
+
+          const enName =
+            translations.find((t) => t.to === 'en')?.text?.trim() || null;
+          const arName =
+            translations.find((t) => t.to === 'ar')?.text?.trim() || null;
+
+          await tx.foodTranslateEN.upsert({
+            where: { food_id: fooId },
+            update: { ...(enName ? { ft_en_name: enName } : {}) },
+            create: {
+              food_id: fooId,
+              ft_en_name: enName,
+              ft_en_mt: [], // 배열 필드는 안전하게 기본값
+              ft_en_price: null,
+            },
+          });
+
+          await tx.foodTranslateAR.upsert({
+            where: { food_id: fooId },
+            update: { ...(arName ? { ft_ar_name: arName } : {}) },
+            create: {
+              food_id: fooId,
+              ft_ar_name: arName,
+              ft_ar_mt: [],
+              ft_ar_price: null,
+            },
+          });
+        } catch (trErr) {
+          // 번역 실패해도 업데이트는 성공시키고 로그만 남김
+          console.error(
+            '[registFood] name translate failed',
+            trErr?.response?.data || trErr?.message,
+          );
+        }
+      }
+
+      return updatedFood;
+    });
+
+    return {
+      message: '[sajang] 음식 데이터 등록 완료',
+      status: 'success',
+      food: updated,
+    };
   }
-
-  // 음식 등록 -> 등록하면 이때 번역도 해서 db에 저장
-  async registFood() {}
 
   // 가게 상태 변경
   async editStoreState(sa_id: number, updateState: number) {
@@ -304,40 +449,38 @@ export class SajangService {
     };
   }
 
-  // 사장 마이페이지 입장
-  async sajangEnterMypage(ld_log_id: string) {
-    const login = await this.prisma.loginData.findUnique({
-      where: { ld_log_id },
+  //-------------  사장 마이페이지 입장
+
+  async sajangEnterMypage(sa_id: number) {
+    // 사장 존재 확인
+    const sajang = await this.prisma.sajang.findUnique({
+      where: { sa_id },
       select: {
-        sajang: {
-          select: {
-            sa_id: true,
-            Store: {
-              select: {
-                sto_id: true,
-                sto_name: true,
-                sto_name_en: true,
-              },
-            },
-          },
+        sa_id: true,
+        sa_certification: true,
+        sa_certi_status: true,
+        Store: {
+          select: { sto_id: true },
+          orderBy: { sto_id: 'asc' },
         },
       },
     });
-
-    if (!login || !login.sajang?.Store?.length) {
+  
+    if (!sajang) {
       return {
-        message: '사장님의 가게 정보가 없습니다',
+        message: '사장님 정보를 찾을 수 없습니다.',
         status: 'false',
       };
     }
-
+  
+    const storeIds = (sajang.Store ?? []).map((s) => s.sto_id);
+  
     return {
-      sa_id: login.sajang.sa_id,
-      stores: login.sajang.Store.map((store) => ({
-        sto_id: store.sto_id,
-        sto_name: store.sto_name,
-        sto_name_en: store.sto_name_en,
-      })),
+      status: 'success',
+      sa_id: sajang.sa_id,
+      sa_certification: sajang.sa_certification, // 0/1/2
+      sa_certi_status: sajang.sa_certi_status,   // 0/1/2/3
+      store_ids: storeIds,                       // 예: [12, 34, 56]
     };
   }
 
@@ -399,7 +542,84 @@ export class SajangService {
     };
   }
 
-  // 사장 홈 화면
+  // 가게 정보 업데이트
+  async updateStoreData(
+    sa_id: number,
+    body: {
+      sto_id: number;
+      sto_name?: string;
+      sto_phone?: string;
+      sto_name_en?: string;
+    },
+  ) {
+    await this.assertOwner(sa_id);
+
+    // 매장이 해당 사장의 소유인지 확인
+    const target = await this.prisma.store.findUnique({
+      where: { sto_id: body.sto_id },
+      select: { sto_id: true, sto_sa_id: true },
+    });
+    if (!target) throw new BadRequestException('해당 매장을 찾을 수 없습니다.');
+    if (target.sto_sa_id !== sa_id)
+      throw new ForbiddenException('권한이 없습니다.');
+
+    const data: Record<string, any> = {};
+    if (body.sto_name !== undefined) data.sto_name = body.sto_name;
+    if (body.sto_phone !== undefined) data.sto_phone = body.sto_phone;
+    if (body.sto_name_en !== undefined) data.sto_name_en = body.sto_name_en;
+
+    if (Object.keys(data).length === 0) {
+      throw new BadRequestException('업데이트할 필드가 없습니다.');
+    }
+
+    const updated = await this.prisma.store.update({
+      where: { sto_id: body.sto_id },
+      data,
+      select: {
+        sto_id: true,
+        sto_name: true,
+        sto_phone: true,
+        sto_name_en: true,
+      },
+    });
+
+    return {
+      message: '매장 정보가 업데이트되었습니다.',
+      status: 'success',
+      store: updated,
+    };
+  }
+
+  // 음식 삭제
+  // 나중에 음식 사진 삭제도 추가할지 논의 필요
+  async deleteOneFood(sa_id: number, foo_id: number) {
+    await this.assertOwner(sa_id);
+
+    const food = await this.prisma.food.findUnique({
+      where: { foo_id },
+      select: { foo_id: true, foo_sa_id: true, foo_status: true },
+    });
+    if (!food) throw new BadRequestException('음식을 찾을 수 없습니다.');
+    if (food.foo_sa_id !== sa_id)
+      throw new ForbiddenException('권한이 없습니다.');
+
+    if (food.foo_status === 2) {
+      return { message: '이미 삭제된 음식입니다.', status: 'success', foo_id };
+    }
+
+    await this.prisma.food.update({
+      where: { foo_id },
+      data: { foo_status: 2 },
+    });
+
+    return {
+      message: '음식이 삭제(비활성)되었습니다.',
+      status: 'success',
+      foo_id,
+    };
+  }
+
+  //----------- 사장 홈 화면
   // sajang.service.ts
   async sajangHome(ld_log_id: string) {
     // 로그인 정보 → 사장 ID 찾기

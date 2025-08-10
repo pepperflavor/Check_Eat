@@ -56,7 +56,7 @@ model LoginData{
 model Sajang{
   sa_id Int @id @default(autoincrement())
 
-  sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
+  // sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
   sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
 
@@ -70,8 +70,8 @@ model Sajang{
 // 다른 언어는 테이블을 나누는게 맞다고하심
 model Food {
   foo_id Int @id @default(autoincrement())
-  foo_name String // 음식이름
-  foo_material String? // 재료
+  foo_name String? // 음식이름
+  foo_material String[] // 재료
   foo_price Int // 가격
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
   foo_status Int @default(0) // 0: 정상판매중, 1: 사장 요청으로 판매 일시중지, 2: 삭제된 음식
@@ -79,7 +79,7 @@ model Food {
   foo_sa_id Int // 업주 사장아이디
   Sajang Sajang @relation(fields: [foo_sa_id], references: [sa_id])
   
-  foo_vegan Int? // 비건 단계, 0: 비건아님, 1: 비건단계1, 2: 비건단계2, 3: 비건단계3
+  foo_vegan Int? // 비건 단계,  1: 비건단계1, 2: 비건단계2, 3: 비건단계3
   foo_vegan_data Vegan? @relation(fields: [foo_vegan], references: [veg_id])
 
   // 알러지 다대다
@@ -97,7 +97,7 @@ model Food {
 model FoodTranslateEN{
   ft_id Int @id @default(autoincrement())
   ft_en_name String? // 음식 이름 영어
-  ft_en_mt String? // 재료 영어
+  ft_en_mt String[] @default([]) // 재료 영어
   ft_en_price String? // 가격 영어
 
   food_id Int @unique
@@ -107,7 +107,7 @@ model FoodTranslateEN{
 model FoodTranslateAR{
   ft_ar_id Int @id @default(autoincrement())
   ft_ar_name String? // 아랍어 이름
-  ft_ar_mt String? // 재료 아랍어
+  ft_ar_mt String[] @default([])// 재료 아랍어
   ft_ar_price String? // 가격 아랍어
 
   food_id Int   @unique

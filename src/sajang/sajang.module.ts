@@ -8,6 +8,7 @@ import { TranslateModule } from 'src/translate/translate.module';
 import { BullModule } from '@nestjs/bull';
 import { CheckBusinessProcessor } from './processor/check-business.processor';
 import { AzureStorageModule } from 'src/azure-storage/azure-storage.module';
+import { TranslateService } from 'src/translate/translate.service';
 
 @Module({
   imports: [
@@ -15,12 +16,18 @@ import { AzureStorageModule } from 'src/azure-storage/azure-storage.module';
     EmailModule,
     TranslateModule,
     AzureStorageModule,
+
     BullModule.registerQueue({
       name: 'check-business',
     }),
   ],
   controllers: [SajangController],
-  providers: [SajangService, PrismaService, CheckBusinessProcessor],
+  providers: [
+    SajangService,
+    PrismaService,
+    CheckBusinessProcessor,
+    TranslateService,
+  ],
   exports: [SajangService],
 })
 export class SajangModule {}
