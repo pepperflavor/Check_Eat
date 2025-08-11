@@ -21,4 +21,8 @@ export class CreateSajangDTO {
   @ApiProperty({ example: 'test@example.com', description: '이메일 주소' })
   @IsEmail()
   email: string;
+
+  @ApiProperty({ example: '010~', description: '전화번호' })
+  @IsString()
+  phone: string;
 }

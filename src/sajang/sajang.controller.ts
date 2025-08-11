@@ -131,4 +131,8 @@ export class SajangController {
   // 가게 메뉴 관리
   @Post('update-food')
   async updateFoodStatus() {}
+
+
+  // 사업자 등록증 관리 페이지
+  
 }

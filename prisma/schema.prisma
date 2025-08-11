@@ -55,7 +55,7 @@ model LoginData{
 
 model Sajang{
   sa_id Int @id @default(autoincrement())
-
+  sa_phone String // 사장님 연락처
   // sa_img String? // 가게 이미지 - storage에서 받아와야 함, 지정안하면 기본 이미지
   sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
   sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
@@ -132,7 +132,8 @@ model Holiday{
   holi_sajang_id Int
   // sajang Sajang @relation(fields: [holi_sajang_id], references: [sa_id])
 
-  Store Store[]
+  store_id      Int     @unique
+  store         Store   @relation(fields: [store_id], references: [sto_id])
 }
 
 // 19가지 보편적인 알러지
@@ -227,7 +228,7 @@ model Store{
   sto_sa_id Int
   sajang Sajang @relation("SajangStore", fields: [sto_sa_id], references: [sa_id])
 
-  holiday Holiday[] 
+  holiday Holiday?
 
   Food Food[]
   favoriteUsers FavoriteStore[] // 1:N 
@@ -257,3 +258,19 @@ model FoodMeterialSeed{
   foo_seed_name        String   // 음식 이름 (RCP_NM)
   foo_seed_ingredients String[] // 재료 목록 (RCP_PARTS_DTLS 분리 후 저장)
 }
+
+
+// // 본인인증
+// model IdentityVerification {
+//   iv_id          String   @id
+//   iv_status      String   // READY | VERIFIED | FAILED
+//   iv_phoneNumber String?
+//   iv_name        String?
+//   iv_birthDate   DateTime?
+//   iv_gender      String?  // M/F 등
+//   iv_ci          String?
+//   iv_verifiedAt  DateTime?
+//   iv_payload     String?
+//   iv_createdAt   DateTime @default(now())
+//   iv_updatedAt   DateTime @updatedAt
+// }

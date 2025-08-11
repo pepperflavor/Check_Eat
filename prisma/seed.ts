@@ -66,7 +66,8 @@ async function main() {
       // 사장 생성
       const sajang = await prisma.sajang.create({
         data: {
-          sa_img: null, // 프로필 이미지 null
+          // sa_img: null, // 프로필 이미지 null
+          sa_phone: "010-1234-5678",
           sa_certification: 0,
           sa_certi_status: i % 2, // 짝수: 인증 완료(1), 홀수: 대기(0)
         },

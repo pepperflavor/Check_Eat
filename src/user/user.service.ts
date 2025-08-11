@@ -18,6 +18,12 @@ import dayjs from 'dayjs';
 import { AuthService } from 'src/auth/auth.service';
 import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.tz.setDefault('Asia/Seoul');
+
 @Injectable()
 export class UserService {
   constructor(
@@ -118,7 +124,7 @@ export class UserService {
 
   // 공용 함수 - 조회하는 요일에 일치하는 영업시간, 휴무일 리턴
   private async mergeStoresWithHoliday(stores: any[]): Promise<any[]> {
-    const today = dayjs().day();
+    const today = dayjs().tz().day();
 
     const runtimeKeyMap = {
       0: 'holi_runtime_sun',
@@ -128,32 +134,42 @@ export class UserService {
       4: 'holi_runtime_thu',
       5: 'holi_runtime_fri',
       6: 'holi_runtime_sat',
-    };
+    } as const;
     const runtimeKey = runtimeKeyMap[today];
 
+    if (!stores || stores.length === 0) return [];
+
     const storeIds = stores.map((s) => s.sto_id);
+
+    // ✅ 스키마 변경 반영: store_id 로 바로 찾기
     const holidays = await this.prisma.holiday.findMany({
-      where: {
-        Store: {
-          some: {
-            sto_id: { in: storeIds },
-          },
-        },
-      },
-      include: {
-        Store: true,
+      where: { store_id: { in: storeIds } },
+      select: {
+        store_id: true,
+        holi_break: true,
+        holi_regular: true,
+        holi_public: true,
+        holi_runtime_sun: true,
+        holi_runtime_mon: true,
+        holi_runtime_tue: true,
+        holi_runtime_wed: true,
+        holi_runtime_thu: true,
+        holi_runtime_fri: true,
+        holi_runtime_sat: true,
       },
     });
 
+    const holidayMap = new Map<number, (typeof holidays)[number]>(
+      holidays.map((h) => [h.store_id, h]),
+    );
+
     return stores.map((store) => {
-      const holiday = holidays.find((h) =>
-        h.Store.some((s) => s.sto_id === store.sto_id),
-      );
+      const holiday = holidayMap.get(store.sto_id);
 
       return {
         ...store,
         holi_weekday: today,
-        today_runtime: holiday?.[runtimeKey] ?? null,
+        today_runtime: holiday ? ((holiday as any)[runtimeKey] ?? null) : null,
         holi_break: holiday?.holi_break ?? null,
         holi_regular: holiday?.holi_regular ?? null,
         holi_public: holiday?.holi_public ?? null,
@@ -309,6 +325,8 @@ export class UserService {
         sto_status: { in: [0, 1] },
       },
       select: {
+        sto_id: true,
+        sto_name: true,
         sto_name_en: true,
         sto_img: true,
         sto_address: true,
@@ -316,6 +334,23 @@ export class UserService {
         sto_halal: true,
         sto_latitude: true,
         sto_longitude: true,
+        sto_phone: true,
+        holiday: {
+          select: {
+            holi_id: true,
+            holi_weekday: true,
+            holi_break: true,
+            holi_runtime_sun: true,
+            holi_runtime_mon: true,
+            holi_runtime_tue: true,
+            holi_runtime_wed: true,
+            holi_runtime_thu: true,
+            holi_runtime_fri: true,
+            holi_runtime_sat: true,
+            holi_regular: true,
+            holi_public: true,
+          },
+        },
         Food: {
           where: {
             foo_status: { not: 2 },
@@ -323,6 +358,7 @@ export class UserService {
           select: {
             foo_id: true,
             foo_img: true,
+            foo_vegan: true,
             foo_status: true,
             foo_material: true,
             CommonAl: {
@@ -440,7 +476,25 @@ export class UserService {
       };
     });
 
+    // 오늘 날짜 계산
+    const today = dayjs().tz().day();
+    const runtimeKeyMap = {
+      0: 'holi_runtime_sun',
+      1: 'holi_runtime_mon',
+      2: 'holi_runtime_tue',
+      3: 'holi_runtime_wed',
+      4: 'holi_runtime_thu',
+      5: 'holi_runtime_fri',
+      6: 'holi_runtime_sat',
+    } as const;
+    const todayKey = runtimeKeyMap[today];
+    const h = store.holiday; // Holiday | null
+
+    const todayRuntime = h ? ((h as any)[todayKey] ?? null) : null;
+
     return {
+      sto_id: store.sto_id,
+      sto_name: store.sto_name,
       sto_name_en: store.sto_name_en,
       sto_img: store.sto_img,
       sto_address: store.sto_address,
@@ -449,6 +503,22 @@ export class UserService {
       sto_latitude: store.sto_latitude,
       sto_longitude: store.sto_longitude,
       food_list: transformedFoods,
+      holiday: h
+        ? {
+            holi_weekday: today, // 오늘 요일(0~6)
+            today: todayRuntime, // 예: "11:30~21:00"
+            holi_break: h.holi_break,
+            holi_regular: h.holi_regular,
+            holi_public: h.holi_public,
+            holi_runtime_sun: h.holi_runtime_sun,
+            holi_runtime_mon: h.holi_runtime_mon,
+            holi_runtime_tue: h.holi_runtime_tue,
+            holi_runtime_wed: h.holi_runtime_wed,
+            holi_runtime_thu: h.holi_runtime_thu,
+            holi_runtime_fri: h.holi_runtime_fri,
+            holi_runtime_sat: h.holi_runtime_sat,
+          }
+        : null,
     };
   }
 
@@ -774,6 +844,7 @@ export class UserService {
       take: limit,
       orderBy: { revi_create: 'desc' },
       select: {
+        revi_id: true,
         store: {
           select: {
             sto_id: true,
@@ -892,7 +963,7 @@ export class UserService {
       throw new Error('유저를 찾을 수 없습니다.');
     }
 
-    const today = dayjs().day();
+    const today = dayjs().tz().day();
     const runtimeKeyMap = {
       0: 'holi_runtime_sun',
       1: 'holi_runtime_mon',
@@ -901,7 +972,7 @@ export class UserService {
       4: 'holi_runtime_thu',
       5: 'holi_runtime_fri',
       6: 'holi_runtime_sat',
-    };
+    } as const;
     const runtimeKey = runtimeKeyMap[today];
 
     const favorites = await this.prisma.favoriteStore.findMany({
@@ -923,14 +994,14 @@ export class UserService {
 
     const storesWithTodayRuntime = favorites.map((f) => {
       const store = f.store;
-      const holiday = store.holiday?.[0];
+      const holiday = store.holiday;
 
       return {
         sto_id: store.sto_id,
         sto_name: store.sto_name,
         sto_img: store.sto_img,
         sto_address: store.sto_address,
-        today_runtime: holiday?.[runtimeKey] ?? null,
+        today_runtime: holiday ? ((holiday as any)[runtimeKey] ?? null) : null,
         holi_break: holiday?.holi_break ?? null,
         holi_regular: holiday?.holi_regular ?? null,
         holi_public: holiday?.holi_public ?? null,

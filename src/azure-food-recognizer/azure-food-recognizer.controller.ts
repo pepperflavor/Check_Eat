@@ -54,18 +54,18 @@ export class AzureFoodRecognizerController {
     @Req() req, //: ReqUser,
     @UploadedFile() file: Express.Multer.File,
   ) {
-    // this.ensureUser(req);
+    const sa_id = Number(req.user.sa_id);
     if (!file) throw new BadRequestException('file is required');
-    return this.azureFoodRecognizerService.inferAndCache(file, req.user);
+    return this.azureFoodRecognizerService.inferAndCache(file, sa_id);
   }
 
-  // 추론한 음식명 확정 및 음식사진 저장하기,
+  // 추론한 음식명 확정 및 음식사진 저장하기, -> 여기서 ocr에 요청 보내서 재료 리텅해주기
   @Post('confirm-cached')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '추론 결과 확정 및 저장',
     description:
-      'ok="ok"이면 추론값으로 저장, 아니면 foodName으로 저장. 저장 시 Food 생성 + 이미지 업로드 + 이름 번역(EN/AR) upsert',
+      'ok="ok"이면 추론값으로 저장, 아니면 foodName으로 저장. 저장 시 Food 생성 + 이미지 업로드 + 이름 번역(EN/AR) upsert, 이후 재료들 추출해줌',
   })
   async confirmCached(
     @Req() req, //: ReqUser,
@@ -75,10 +75,20 @@ export class AzureFoodRecognizerController {
     const sa_id = Number(req.user.sa_id);
     if (!body?.cacheId) throw new BadRequestException('cacheId is required');
 
-    return this.azureFoodRecognizerService.saveFromCache(body.cacheId, sa_id, {
-      ok: body.ok,
-      foodName: body.foodName,
-    });
+    const foodName = await this.azureFoodRecognizerService.saveFromCache(
+      body.cacheId,
+      sa_id,
+      {
+        ok: body.ok,
+        foodName: body.foodName,
+      },
+    );
+
+    const meterial = await this.azureFoodRecognizerService.predictMaterials(
+      foodName.record.foo_id,
+      sa_id,
+    );
+    return meterial;
   }
 
   @Post('predict-mt')

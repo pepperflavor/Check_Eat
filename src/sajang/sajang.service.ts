@@ -249,6 +249,7 @@ export class SajangService {
       const result = await this.prisma.$transaction(async (tx) => {
         const sajang = await tx.sajang.create({
           data: {
+            sa_phone: data.phone,
             sa_certi_status: 0,
             sa_certification: 0,
           },

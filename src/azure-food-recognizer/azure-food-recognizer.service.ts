@@ -136,7 +136,7 @@ export class AzureFoodRecognizerService {
   //======================================
 
   /** 1~6단계: 이미지 추론만 수행 (저장은 프론트 '확인' 시) */
-  async inferAndCache(file: Express.Multer.File, sa_id: any) {
+  async inferAndCache(file: Express.Multer.File, sa_id: number) {
     const { saId } = await this.assertOwner(sa_id);
     if (!file?.buffer?.length)
       throw new BadRequestException('file is required');
