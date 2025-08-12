@@ -143,13 +143,33 @@ print_success "Environment configuration created"
 print_step "Nginx configuration is ready for summer-jin.store domain"
 
 # Create initial certificate (HTTP-01 challenge)
-print_step "Creating initial SSL certificate..."
-docker-compose run --rm certbot certonly --webroot --webroot-path /var/www/certbot/ -d $DOMAIN --email $EMAIL --agree-tos --no-eff-email
+print_step "Setting up SSL certificate..."
+
+# First start nginx without SSL for certificate challenge
+print_step "Starting nginx for certificate challenge..."
+docker-compose up -d nginx
+
+# Wait for nginx to be ready
+sleep 10
+
+# Create initial certificate
+print_step "Requesting SSL certificate from Let's Encrypt..."
+docker-compose run --rm certbot certonly \
+    --webroot \
+    --webroot-path /var/www/certbot/ \
+    -d $DOMAIN \
+    --email $EMAIL \
+    --agree-tos \
+    --no-eff-email \
+    --non-interactive
 
 if [ $? -eq 0 ]; then
     print_success "SSL certificate created successfully"
+    # Restart nginx to load SSL certificate
+    docker-compose restart nginx
 else
-    print_warning "SSL certificate creation failed. Will use HTTP only for now."
+    print_warning "SSL certificate creation failed. Continuing with HTTP only."
+    print_warning "You can manually setup SSL later with: ./scripts/ssl-setup.sh init"
 fi
 
 # Start services
