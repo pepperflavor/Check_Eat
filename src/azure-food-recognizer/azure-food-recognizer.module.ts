@@ -6,8 +6,10 @@ import { FoodStorageService } from 'src/azure-storage/food-storage.service';
 import { CacheService } from 'src/cache/cache.service';
 import { TranslateService } from 'src/translate/translate.service';
 import { PrismaService } from 'src/prisma.service';
+import { AzureFoodClassifierModule } from 'src/azure-food-classifier/azure-food-classifier.module';
 
 @Module({
+  imports: [AzureFoodClassifierModule],
   controllers: [AzureFoodRecognizerController],
   providers: [
     AzureFoodRecognizerService,

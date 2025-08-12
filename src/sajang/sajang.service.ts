@@ -19,6 +19,9 @@ import Decimal from 'decimal.js';
 import { StoreStorageService } from 'src/azure-storage/store-storage.service';
 import { RegistFoodInput } from './types/regist-food';
 import { normalizeBusinessInput } from './util/normalizeBusiness';
+import { SearchFoodByNameDto } from './sajang_dto/search-food-by-name.dto';
+import { UpdateFoodDataDto } from './sajang_dto/update-food-data.dto';
+import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food-recognizer.service';
 
 @Injectable()
 export class SajangService {
@@ -28,6 +31,7 @@ export class SajangService {
     private readonly config: ConfigService,
     private readonly storeStorageService: StoreStorageService,
     private readonly translate: TranslateService,
+    private readonly azureFoodRecognizerService: AzureFoodRecognizerService,
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {}
 
@@ -492,13 +496,14 @@ export class SajangService {
     });
 
     return {
-      message: '업체 삭제 성공',
+      message: '업체 상태 변경 성공',
       status: 'success',
     };
   }
 
-  //-------------  사장 마이페이지 입장
+  //-------------  사장 마이페이지 관련
 
+  // 마이페이지 입장
   async sajangEnterMypage(sa_id: number, email: string) {
     // 사장 존재 확인
     const sajang = await this.prisma.sajang.findUnique({
@@ -638,6 +643,414 @@ export class SajangService {
     };
   }
 
+  // 사장님 마이페이지 모달창
+  async storeModal(sa_id: number) {
+    return await this.prisma.store.findMany({
+      where: {
+        sto_sa_id: sa_id,
+      },
+      select: {
+        sto_id: true,
+        sto_name: true,
+      },
+    });
+  }
+
+  //  사업자 등록증 업데이트 하기전 뿌려줄 데이터
+  async updateBusiness(sa_id: number, sto_id?: number) {
+    await this.assertOwner(sa_id);
+
+    // 1) 사장 인증 상태 체크(둘 다 1이어야 조회 진행)
+    const sajangStatus = await this.prisma.sajang.findUnique({
+      where: { sa_id },
+      select: { sa_certification: true, sa_certi_status: true },
+    });
+    if (!sajangStatus) {
+      throw new ForbiddenException('업주 권한이 필요합니다.');
+    }
+    const { sa_certification, sa_certi_status } = sajangStatus;
+    if (sa_certification !== 1 || sa_certi_status !== 1) {
+      return {
+        status: 'pending',
+        message: '사업자 등록증 인증이 완료되지 않았습니다.',
+        sa_certification,
+        sa_certi_status,
+      };
+    }
+
+    if (sto_id !== undefined) {
+      // 단일 가게
+      const store = await this.prisma.store.findFirst({
+        where: { sto_id, sto_sa_id: sa_id },
+        select: { sto_id: true, sto_name: true, sto_bs_id: true },
+      });
+      if (!store) {
+        throw new NotFoundException(
+          '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
+        );
+      }
+
+      if (!store.sto_bs_id) {
+        return {
+          status: 'success',
+          message: '해당 가게는 아직 BusinessCerti와 연결되어 있지 않습니다.',
+          store: { sto_id: store.sto_id, sto_name: store.sto_name },
+          businessCerti: null,
+        };
+      }
+
+      const cert = await this.prisma.businessCerti.findUnique({
+        where: { bs_id: store.sto_bs_id },
+        select: {
+          bs_id: true,
+          bs_no: true,
+          bs_name: true,
+          bs_type: true,
+          bs_address: true,
+          bs_sa_id: true,
+          stores: {
+            select: { sto_id: true, sto_name: true },
+            orderBy: { sto_id: 'asc' },
+          },
+        },
+      });
+      if (!cert || cert.bs_sa_id !== sa_id) {
+        throw new ForbiddenException('이 사업자증 정보에 접근할 수 없습니다.');
+      }
+
+      return {
+        status: 'success',
+        store: { sto_id: store.sto_id, sto_name: store.sto_name },
+        businessCerti: cert,
+      };
+    }
+
+    // 목록 모드
+    const certs = await this.prisma.businessCerti.findMany({
+      where: { bs_sa_id: sa_id },
+      select: {
+        bs_id: true,
+        bs_no: true,
+        bs_name: true,
+        bs_type: true,
+        bs_address: true,
+        stores: {
+          select: { sto_id: true, sto_name: true },
+          orderBy: { sto_id: 'asc' },
+        },
+        _count: { select: { stores: true } },
+      },
+      orderBy: { bs_id: 'desc' },
+    });
+
+    return {
+      status: 'success',
+      count: certs.length,
+      businessCertis: certs,
+    };
+  }
+
+  // 음식 수정 페이지 진입시 뿌려줄 음식 데이터
+  async getFoodListUpdatePage(sa_id: number, sto_id?: number) {
+    // 0) 사장 존재/권한 검증
+    await this.assertOwner(sa_id);
+
+    // 1) 대상 매장 결정: sto_id가 없으면 사장의 첫 매장 사용
+    const storeWhere =
+      sto_id !== undefined
+        ? { sto_id, sto_sa_id: sa_id }
+        : { sto_sa_id: sa_id };
+
+    const targetStore = await this.prisma.store.findFirst({
+      where: storeWhere,
+      ...(sto_id !== undefined ? {} : { orderBy: { sto_id: 'asc' } }),
+      select: { sto_id: true, sto_name: true },
+    });
+
+    if (!targetStore) {
+      throw new NotFoundException('해당 사장님의 매장을 찾을 수 없습니다.');
+    }
+
+    // 2) 해당 매장에 속한 음식들 조회 (삭제된 음식 제외: 0,1만 노출)
+    const foods = await this.prisma.food.findMany({
+      where: {
+        foo_sa_id: sa_id,
+        foo_status: { in: [0, 1] }, // 0: 정상, 1: 일시중지
+        Store: { some: { sto_id: targetStore.sto_id } }, // 매장 연결
+      },
+      orderBy: { foo_id: 'asc' },
+      select: {
+        foo_id: true,
+        foo_name: true,
+        foo_price: true,
+        foo_img: true,
+        foo_status: true,
+        foo_vegan: true,
+        foo_material: true,
+        // 번역 필드
+        food_translate_en: {
+          select: { ft_en_name: true, ft_en_price: true, ft_en_mt: true },
+        },
+        food_translate_ar: {
+          select: { ft_ar_name: true, ft_ar_price: true, ft_ar_mt: true },
+        },
+        // 알러지(공통) 선택 여부가 필요하면 주석 해제
+        // CommonAl: { select: { coal_id: true, coal_name: true } },
+      },
+    });
+
+    return {
+      status: 'success',
+      store: {
+        sto_id: targetStore.sto_id,
+        sto_name: targetStore.sto_name,
+      },
+      count: foods.length,
+      foods,
+    };
+  }
+
+  // 음식 수정 페이지
+  // 음식 이름 검색
+  async searchByFoodName(sa_id: number, data: SearchFoodByNameDto) {
+    await this.assertOwner(sa_id);
+
+    const stoId = data.sto_id;
+    const keyword = data.foo_name.trim();
+    const store = await this.prisma.store.findUnique({
+      where: { sto_id: stoId },
+      select: { sto_id: true, sto_sa_id: true },
+    });
+
+    // 소유 가게인지 확인
+    if (!store) throw new BadRequestException('해당 매장을 찾을 수 없습니다.');
+    if (store.sto_sa_id !== sa_id) {
+      throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
+    }
+    const foods = await this.prisma.food.findMany({
+      where: {
+        foo_sa_id: sa_id,
+        foo_status: { in: [0, 1] },
+        foo_name: { contains: keyword, mode: 'insensitive' },
+        // Food–Store (M:N) 관계에서 해당 sto_id에 연결된 Food만
+        Store: { some: { sto_id: stoId } },
+      },
+      select: {
+        foo_id: true,
+        foo_name: true,
+        foo_material: true,
+        foo_price: true,
+        foo_img: true,
+        foo_vegan: true,
+      },
+      orderBy: { foo_name: 'asc' },
+    });
+
+    return {
+      status: 'success',
+      count: foods.length,
+      foods,
+    };
+  }
+
+  // 음식 정보 수정
+  async updateFoodData(sa_id: number, data: UpdateFoodDataDto) {
+    await this.assertOwner(sa_id);
+
+    const store = await this.prisma.store.findFirst({
+      where: { sto_id: data.sto_id, sto_sa_id: sa_id },
+      select: { sto_id: true },
+    });
+
+    if (!store) {
+      throw new ForbiddenException('해당 가게에 대한 권한이 없습니다.');
+    }
+
+    const fooId = Number(data.foo_id);
+    if (!fooId || Number.isNaN(fooId)) {
+      throw new BadRequestException('유효하지 않은 foo_id 입니다.');
+    }
+
+    // 2) 해당 가게의 메뉴인지 확인 (가게-음식 M:N 연결 확인 + 소유자 일치 보조 확인)
+    const food = await this.prisma.food.findUnique({
+      where: { foo_id: fooId },
+      select: { foo_id: true, foo_sa_id: true, foo_name: true },
+    });
+    if (!food) throw new NotFoundException('음식을 찾을 수 없습니다.');
+    if (food.foo_sa_id !== sa_id) {
+      throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
+    }
+
+    // 업데이트 데이터 구성하기
+    const updateData: any = {};
+    let nameChanged = false;
+    let materialsChanged = false;
+
+    if (typeof data.foo_name === 'string' && data.foo_name.trim().length > 0) {
+      const newName = data.foo_name.trim();
+      if (newName !== food.foo_name) {
+        updateData.foo_name = newName;
+        nameChanged = true;
+      }
+    }
+
+    // 가격
+    if (data.foo_price !== undefined) {
+      const priceNum = Number(data.foo_price);
+      if (Number.isNaN(priceNum) || priceNum < 0) {
+        throw new BadRequestException('가격이 유효한 숫자가 아닙니다.');
+      }
+      updateData.foo_price = priceNum;
+    }
+
+    // 재료 (foo_material 또는 오타 foo_meterial 둘 다 지원)
+    const incomingMaterials =
+      (data as any).foo_material ?? (data as any).foo_meterial;
+    if (incomingMaterials !== undefined) {
+      if (!Array.isArray(incomingMaterials)) {
+        throw new BadRequestException(
+          'foo_material은 문자열 배열이어야 합니다.',
+        );
+      }
+      const normalized = Array.from(
+        new Set(
+          incomingMaterials
+            .map((s: string) => String(s).trim())
+            .filter(Boolean),
+        ),
+      );
+      updateData.foo_material = normalized;
+      materialsChanged = true;
+    }
+
+    // 비건 단계 (1~6만 저장, 그 외/0/null/undefined => null 저장)
+    if (data.foo_vegan !== undefined) {
+      const v = Number(data.foo_vegan);
+      if (!Number.isInteger(v) || v < 1 || v > 6) {
+        updateData.foo_vegan = null;
+      } else {
+        // 존재하는 veg_id만 저장
+        const exists = await this.prisma.vegan.findUnique({
+          where: { veg_id: v },
+          select: { veg_id: true },
+        });
+        updateData.foo_vegan = exists ? v : null;
+      }
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return { message: '변경할 데이터가 없습니다.', status: 'skip' };
+    }
+    const updated = await this.prisma.$transaction(async (tx) => {
+      const updatedFood = await tx.food.update({
+        where: { foo_id: fooId },
+        data: updateData,
+        select: {
+          foo_id: true,
+          foo_name: true,
+          foo_price: true,
+          foo_material: true,
+          foo_img: true,
+          foo_vegan: true,
+        },
+      });
+
+      // 이름 변경 시: EN/AR 이름 번역 upsert
+      if (nameChanged && updatedFood.foo_name) {
+        try {
+          const resp = await this.translate.translateMany(
+            updatedFood.foo_name,
+            ['en', 'ar'],
+            'ko',
+          );
+          const translations: Array<{ text: string; to: string }> =
+            resp?.[0]?.translations ?? [];
+          const enName =
+            translations.find((t) => t.to === 'en')?.text?.trim() || null;
+          const arName =
+            translations.find((t) => t.to === 'ar')?.text?.trim() || null;
+
+          await tx.foodTranslateEN.upsert({
+            where: { food_id: fooId },
+            update: { ...(enName ? { ft_en_name: enName } : {}) },
+            create: {
+              food_id: fooId,
+              ft_en_name: enName,
+              ft_en_mt: [],
+              ft_en_price: null,
+            },
+          });
+
+          await tx.foodTranslateAR.upsert({
+            where: { food_id: fooId },
+            update: { ...(arName ? { ft_ar_name: arName } : {}) },
+            create: {
+              food_id: fooId,
+              ft_ar_name: arName,
+              ft_ar_mt: [],
+              ft_ar_price: null,
+            },
+          });
+        } catch (trErr) {
+          console.error(
+            '[manageFood] name translate failed',
+            trErr?.response?.data || trErr?.message,
+          );
+        }
+      }
+
+      // 재료 변경 시: EN/AR 재료 번역 upsert
+      if (materialsChanged && Array.isArray(updatedFood.foo_material)) {
+        try {
+          const translated = await this.translate.translateArray(
+            updatedFood.foo_material,
+            ['en', 'ar'] as any,
+            'ko',
+          );
+          const enList =
+            translated['en']?.map((s) => s.trim()).filter(Boolean) ?? [];
+          const arList =
+            translated['ar']?.map((s) => s.trim()).filter(Boolean) ?? [];
+
+          await tx.foodTranslateEN.upsert({
+            where: { food_id: fooId },
+            update: { ft_en_mt: enList },
+            create: {
+              food_id: fooId,
+              ft_en_name: null,
+              ft_en_mt: enList,
+              ft_en_price: null,
+            },
+          });
+
+          await tx.foodTranslateAR.upsert({
+            where: { food_id: fooId },
+            update: { ft_ar_mt: arList },
+            create: {
+              food_id: fooId,
+              ft_ar_name: null,
+              ft_ar_mt: arList,
+              ft_ar_price: null,
+            },
+          });
+        } catch (trErr) {
+          console.error(
+            '[manageFood] materials translate failed',
+            trErr?.response?.data || trErr?.message,
+          );
+        }
+      }
+
+      return updatedFood;
+    });
+
+    return {
+      message: '음식 데이터가 업데이트되었습니다.',
+      status: 'success',
+      food: updated,
+    };
+  }
+
   // 음식 삭제
   // 나중에 음식 사진 삭제도 추가할지 논의 필요
   async deleteOneFood(sa_id: number, foo_id: number) {
@@ -719,111 +1132,6 @@ export class SajangService {
         created_at: r.revi_create,
         images: r.ReviewImage.map((img) => img.revi_img_url),
       })),
-    };
-  }
-
-  async storeModal(sa_id: number) {
-    return await this.prisma.store.findMany({
-      where: {
-        sto_sa_id: sa_id,
-      },
-      select: {
-        sto_id: true,
-        sto_name: true,
-      },
-    });
-  }
-
-  //  사업자 등록증 업데이트 하기전 뿌려줄 데이터
-  async updateBusiness(sa_id: number, sto_id?: number) {
-    await this.assertOwner(sa_id);
-  
-    // 1) 사장 인증 상태 체크(둘 다 1이어야 조회 진행)
-    const sajangStatus = await this.prisma.sajang.findUnique({
-      where: { sa_id },
-      select: { sa_certification: true, sa_certi_status: true },
-    });
-    if (!sajangStatus) {
-      throw new ForbiddenException('업주 권한이 필요합니다.');
-    }
-    const { sa_certification, sa_certi_status } = sajangStatus;
-    if (sa_certification !== 1 || sa_certi_status !== 1) {
-      return {
-        status: 'pending',
-        message: '사업자 등록증 인증이 완료되지 않았습니다.',
-        sa_certification,
-        sa_certi_status,
-      };
-    }
-  
-  
-    if (sto_id !== undefined) {
-      // 단일 가게
-      const store = await this.prisma.store.findFirst({
-        where: { sto_id, sto_sa_id: sa_id },
-        select: { sto_id: true, sto_name: true, sto_bs_id: true },
-      });
-      if (!store) {
-        throw new NotFoundException('해당 사장님의 가게가 아니거나 존재하지 않습니다.');
-      }
-  
-      if (!store.sto_bs_id) {
-        return {
-          status: 'success',
-          message: '해당 가게는 아직 BusinessCerti와 연결되어 있지 않습니다.',
-          store: { sto_id: store.sto_id, sto_name: store.sto_name },
-          businessCerti: null,
-        };
-      }
-  
-      const cert = await this.prisma.businessCerti.findUnique({
-        where: { bs_id: store.sto_bs_id },
-        select: {
-          bs_id: true,
-          bs_no: true,
-          bs_name: true,
-          bs_type: true,
-          bs_address: true,
-          bs_sa_id: true,
-          stores: {
-            select: { sto_id: true, sto_name: true },
-            orderBy: { sto_id: 'asc' },
-          },
-        },
-      });
-      if (!cert || cert.bs_sa_id !== sa_id) {
-        throw new ForbiddenException('이 사업자증 정보에 접근할 수 없습니다.');
-      }
-  
-      return {
-        status: 'success',
-        store: { sto_id: store.sto_id, sto_name: store.sto_name },
-        businessCerti: cert,
-      };
-    }
-  
-    // 목록 모드
-    const certs = await this.prisma.businessCerti.findMany({
-      where: { bs_sa_id: sa_id },
-      select: {
-        bs_id: true,
-        bs_no: true,
-        bs_name: true,
-        bs_type: true,
-        bs_address: true,
-        stores: {
-          select: { sto_id: true, sto_name: true },
-          orderBy: { sto_id: 'asc' },
-        },
-        _count: { select: { stores: true } },
-      },
-      orderBy: { bs_id: 'desc' },
-    });
-  
-    return {
-      status: 'success',
-      count: certs.length,
-      businessCertis: certs,
     };
   }
 }

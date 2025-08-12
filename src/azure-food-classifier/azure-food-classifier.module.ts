@@ -5,5 +5,6 @@ import { AzureFoodClassifierController } from './azure-food-classifier.controlle
 @Module({
   controllers: [AzureFoodClassifierController],
   providers: [AzureFoodClassifierService],
+  exports: [AzureFoodClassifierService],
 })
 export class AzureFoodClassifierModule {}

@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsInt, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class updateStoreDataDto {
-  @IsInt()
+  @IsNumber()
   @ApiProperty({ description: '수정할 가게 id' })
   sto_id: number;
 
@@ -19,5 +19,5 @@ export class updateStoreDataDto {
   @ApiProperty({ description: '가게 영어이름' })
   @IsString()
   @IsOptional()
-  sto_name_en: string;
+  sto_name_en?: string;
 }

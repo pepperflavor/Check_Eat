@@ -127,4 +127,11 @@ export class AzureFoodRecognizerController {
       sa_id,
     );
   }
+
+  // 음식 담은 배열 데이터로 비건단계 추론 해주는 엔드포인트
+  @Post('judge-vegan')
+  async judgeVeganWithIngredient(@Req() req, @Body() body) {
+    const sa_id = Number(req.user.sa_id)
+    return await this.azureFoodRecognizerService.judgeVeganByIngredients(body)
+  }
 }

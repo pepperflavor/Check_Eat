@@ -10,12 +10,12 @@ import { ConfigService } from '@nestjs/config';
 import { AzureOpenAI } from 'openai';
 import { AzureFoodClassifierService } from '../azure-food-classifier/azure-food-classifier.service';
 import { FoodStorageService } from '../azure-storage/food-storage.service';
-import { PrismaClient } from '@prisma/client';
 import { CacheService } from 'src/cache/cache.service';
 import { v4 as uuidv4 } from 'uuid';
 import { TranslateService } from 'src/translate/translate.service';
 import { PrismaService } from 'src/prisma.service';
 import { Candidate, LlmResult } from './types/llm-types';
+import { VeganJudgeResult } from './types/vegan-judge-type';
 
 @Injectable()
 export class AzureFoodRecognizerService {
@@ -556,8 +556,15 @@ export class AzureFoodRecognizerService {
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
       throw new BadRequestException('ingredients must be a non-empty array');
     }
+    // 항목 수/ 길이 제한
     const normalized = Array.from(
-      new Set(ingredients.map((s) => s.trim()).filter(Boolean)),
+      new Set(
+        ingredients
+          .map((s) => String(s).trim())
+          .filter(Boolean)
+          .slice(0, 50) // 최대 50개
+          .map((s) => (s.length > 50 ? s.slice(0, 50) : s)),
+      ),
     );
 
     // 소유 검증
@@ -569,11 +576,25 @@ export class AzureFoodRecognizerService {
     if (food.foo_sa_id !== saId)
       throw new ForbiddenException('권한이 없습니다.');
 
+    // 1) 비건 단계 LLM 판정
+    const veganJudgment = await this.classifyVeganByIngredientsLLM(normalized);
+    let dbVegId: number | null = null;
+
+    if (veganJudgment?.veg_id && veganJudgment.veg_id > 0) {
+      const exists = await this.prisma.vegan.findUnique({
+        where: { veg_id: veganJudgment.veg_id },
+        select: { veg_id: true },
+      });
+      if (exists) {
+        dbVegId = veganJudgment.veg_id;
+      }
+    }
+
     // 트랜잭션으로 업데이트 + 번역 upsert
     await this.prisma.$transaction(async (tx) => {
       await tx.food.update({
         where: { foo_id },
-        data: { foo_material: normalized },
+        data: { foo_material: normalized, foo_vegan: dbVegId },
       });
 
       // 번역
@@ -611,21 +632,119 @@ export class AzureFoodRecognizerService {
       });
     });
 
-    // ✅ DB에서 바로 재조회해서 확정값 리턴
-    const confirmed = await this.prisma.food.findUnique({
-      where: { foo_id },
-      select: {
-        foo_id: true,
-        foo_name: true,
-        foo_material: true,
-        foo_sa_id: true,
-      },
-    });
-
     return {
-      message: '음식 재료 저장 성공', // 이제 실제 DB에 저장된 값
+      message: '음식 재료 저장 성공',
       status: 'success',
-      foo_id: foo_id,
+      foo_id,
+      vegan: {
+        judged: veganJudgment?.veg_id == 0 ? '비건이 아닙니다' : dbVegId,
+        stored: dbVegId, // null이면 비건 아님으로 저장됨
+      },
     };
+  }
+
+  //======  비건단계 추론
+
+  // 비건 판별 프롬프트
+  private veganSystemPrompt(): string {
+    return `
+        너는 전세계 식재료를 아는 분류 전문가다. 입력되는 "재료 목록(한글)"을 근거로
+        다음 베지테리언 단계(veg_id)를 엄격하게 판정하라.
+        
+        단계 정의(veg_id):
+        0 = 어느 베지테리언 단계도 아님(붉은고기/젤라틴/코치닐/벌꿀 등 비건 불가 재료 포함 시 0)
+        1 = 폴로 베지테리언: 가금류 허용, 어패류/붉은고기 금지. 달걀/유제품 허용 가능.
+        2 = 페스코 베지테리언: 어패류 허용, 가금류 금지. 달걀/유제품 허용 가능. 붉은고기 금지.
+        3 = 락토 오보: 유제품 + 달걀 허용, 가금류/어패류/붉은고기 금지.
+        4 = 오보: 달걀만 허용, 유제품/가금류/어패류/붉은고기 금지.
+        5 = 락토: 유제품만 허용, 달걀/가금류/어패류/붉은고기 금지.
+        6 = 비건: 동물성 유래 전부 금지(유제품/달걀/가금류/어패류/붉은고기/젤라틴/코치닐/벌꿀 등 금지).
+        
+        카테고리별 한글 키워드(부분일치 허용, 예: "닭다리" → "닭"):
+        - red_meat: 소고기, 쇠고기, 돼지고기, 양고기, 사슴고기, 차돌박이, 삼겹살, 갈비, 불고기, 제육, 꼬리곰탕, 육수(소/돼지), 사골, 돈가스
+        - poultry: 닭고기, 닭, 닭다리, 닭발, 닭육수, 오리, 오리고기, 칠면조
+        - seafood: 생선, 고등어, 연어, 참치, 명태, 대구, 멸치, 새우, 오징어, 문어, 낙지, 홍합, 조개, 게, 전복, 굴, 어묵, 액젓, 젓갈, 까나리액젓, 멸치액젓, fish sauce
+        - egg: 달걀, 계란, 메추리알, 마요네즈
+        - dairy: 우유, 치즈, 버터, 크림, 생크림, 연유, 요거트, 유청, 아이스크림, 분유
+        - nonvegan: 꿀, 벌꿀, 젤라틴, 코치닐, 카민, 사향, 어유
+        
+        분류 규칙(우선순위 높은 것부터 적용):
+        1) red_meat 또는 nonvegan 재료가 1개라도 있으면 → veg_id = 0
+        2) poultry 재료가 1개라도 있으면 → veg_id = 1
+        3) seafood 재료가 1개라도 있으면 → veg_id = 2   (단, poultry가 있으면 1이 우선)
+        4) dairy와 egg가 모두 존재 → veg_id = 3
+        5) egg만 존재 → veg_id = 4
+        6) dairy만 존재 → veg_id = 5
+        7) 위 동물성 카테고리에 해당이 전혀 없으면 → veg_id = 6 (완전 비건)
+        
+        반드시 아래 JSON 스키마로만 엄격하게 출력하라.
+          `;
+  }
+
+  // LLM JSON 스키마 (내부 유틸)
+  private veganJudgeSchema() {
+    return {
+      type: 'object',
+      properties: {
+        veg_id: { type: 'integer', enum: [0, 1, 2, 3, 4, 5, 6] },
+        matched: {
+          type: 'object',
+          additionalProperties: {
+            type: 'array',
+            items: { type: 'string' },
+          },
+        },
+        reasoning: { type: 'string' },
+      },
+      required: ['veg_id', 'matched', 'reasoning'],
+      additionalProperties: false,
+    };
+  }
+
+  private async classifyVeganByIngredientsLLM(
+    ingredients: string[],
+  ): Promise<VeganJudgeResult> {
+    const list = Array.isArray(ingredients)
+      ? ingredients.map((s) => String(s).trim()).filter(Boolean)
+      : [];
+
+    const schema = this.veganJudgeSchema();
+    const userPrompt =
+      `재료 목록(JSON 배열): ${JSON.stringify(list)}\n` +
+      `위 정의/규칙을 적용해 veg_id를 하나로 결정하라.`;
+
+    const call = async (client: AzureOpenAI, model: string) => {
+      const resp = await client.chat.completions.create({
+        messages: [
+          { role: 'system', content: this.veganSystemPrompt() },
+          { role: 'user', content: userPrompt },
+        ],
+        model,
+        temperature: 0.0,
+        max_tokens: 400,
+        response_format: {
+          type: 'json_schema',
+          json_schema: { name: 'VeganJudge', schema, strict: true },
+        } as any,
+      });
+      const content = resp.choices?.[0]?.message?.content ?? '{}';
+      return JSON.parse(content) as VeganJudgeResult;
+    };
+
+    try {
+      return await call(this.miniClient, this.miniModel);
+    } catch {
+      try {
+        return await call(this.fourOClient, 'gpt-4o');
+      } catch {
+        return { veg_id: 0, matched: {}, reasoning: 'LLM 판정 실패' };
+      }
+    }
+  }
+
+  public async judgeVeganByIngredients(
+    ingredients: string[],
+  ): Promise<VeganJudgeResult> {
+    return this.classifyVeganByIngredientsLLM(ingredients);
   }
 }

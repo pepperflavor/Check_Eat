@@ -17,6 +17,8 @@ import { updateStoreDataDto } from './sajang_dto/update-store-data.dto';
 import { DeleteFoodDto } from './sajang_dto/delete-food-dto';
 import { SajangStoDto } from './sajang_dto/mypage.dto';
 import { HolidayDto } from './sajang_dto/regist-holiday.sto';
+import { SearchFoodByNameDto } from './sajang_dto/search-food-by-name.dto';
+import { UpdateFoodDataDto } from './sajang_dto/update-food-data.dto';
 
 @Controller('sajang')
 export class SajangController {
@@ -84,7 +86,7 @@ export class SajangController {
   @Post('delete-store')
   @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
   @UseGuards(JwtAuthGuard)
-  async deleteStore(@Req() req, @Body() body:SajangStoDto) {
+  async deleteStore(@Req() req, @Body() body: SajangStoDto) {
     const sa_id = req.user.sa_id;
     const result = await this.sajangService.editStoreState(sa_id, 2);
     return result;
@@ -113,8 +115,8 @@ export class SajangController {
   })
   async sajangMyPage(@Req() req) {
     const sa_id = Number(req.user.sa_id);
-    const eamil = req.user.email
-    return await this.sajangService.sajangEnterMypage(sa_id, eamil);
+    const email = req.user.email;
+    return await this.sajangService.sajangEnterMypage(sa_id, email);
   }
 
   // 가게 대표 이미지 수정
@@ -150,6 +152,7 @@ export class SajangController {
   }
 
   // 휴무일 데이터 입력받기
+  // // 프론트 협의중이라고 함
   @Post('regist-holiday')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '휴무 데이터 입력받기' })
@@ -159,19 +162,36 @@ export class SajangController {
   @Post('enter-update-food')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '가게 메뉴관리 페이지 입장' })
-  async updateFoodStatus(@Req() req, @Body() body) {}
+  async updateFoodStatus(@Req() req, @Body() body: SajangStoDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.getFoodListUpdatePage(sa_id, body?.sto_id);
+  }
 
   // 가게 메뉴 수정
   @Post('manage-food')
   @UseGuards(JwtAuthGuard)
-  async manageFood() {}
+  @ApiOperation({ description: '음식 데이터 수정시 요청보낼곳' })
+  async manageFood(@Req() req, @Body() body: UpdateFoodDataDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.updateFoodData(sa_id, body);
+  }
+
+  // 음식 수정 페이지에
+  // 메뉴 이름으로 검색하기
+  @Post('search-food')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '음식 이름으로 검색' })
+  async findFoodByName(@Req() req, @Body() body: SearchFoodByNameDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.searchByFoodName(sa_id, body);
+  }
 
   // 사업자 등록증 관리 페이지 입장
   @Post('update-business')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '사업자 등록증 수정 페이지 입장' })
-  async updateBusiness(@Req() req, @Body() body:SajangStoDto) {
-    const sa_id = Number(req.user.sa_id)
-    return await this.sajangService.updateBusiness(sa_id, body?.sto_id)
+  async updateBusiness(@Req() req, @Body() body: SajangStoDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.updateBusiness(sa_id, body?.sto_id);
   }
 }

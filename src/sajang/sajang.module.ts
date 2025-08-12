@@ -9,6 +9,9 @@ import { BullModule } from '@nestjs/bull';
 import { CheckBusinessProcessor } from './processor/check-business.processor';
 import { AzureStorageModule } from 'src/azure-storage/azure-storage.module';
 import { TranslateService } from 'src/translate/translate.service';
+import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food-recognizer.service';
+import { AzureFoodRecognizerModule } from 'src/azure-food-recognizer/azure-food-recognizer.module';
+import { AzureFoodClassifierService } from 'src/azure-food-classifier/azure-food-classifier.service';
 
 @Module({
   imports: [
@@ -16,7 +19,7 @@ import { TranslateService } from 'src/translate/translate.service';
     EmailModule,
     TranslateModule,
     AzureStorageModule,
-
+    AzureFoodRecognizerModule,
     BullModule.registerQueue({
       name: 'check-business',
     }),
@@ -27,6 +30,8 @@ import { TranslateService } from 'src/translate/translate.service';
     PrismaService,
     CheckBusinessProcessor,
     TranslateService,
+    AzureFoodRecognizerService,
+    AzureFoodClassifierService,
   ],
   exports: [SajangService],
 })
