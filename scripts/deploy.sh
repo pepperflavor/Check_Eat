@@ -139,8 +139,8 @@ EOF
 
 print_success "Environment configuration created"
 
-# Nginx configuration already set for summer-jin.store domain
-print_step "Nginx configuration is ready for summer-jin.store domain"
+# Nginx configuration already set for api.summer-jin.store domain
+print_step "Nginx configuration is ready for api.summer-jin.store domain"
 
 # Create initial certificate (HTTP-01 challenge)
 print_step "Setting up SSL certificate..."

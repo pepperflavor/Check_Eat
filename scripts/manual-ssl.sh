@@ -28,7 +28,7 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-DOMAIN="summer-jin.store"
+DOMAIN="api.summer-jin.store"
 EMAIL=""
 
 while [[ $# -gt 0 ]]; do
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         -h|--help)
-            echo "Manual SSL Certificate Setup for summer-jin.store"
+            echo "Manual SSL Certificate Setup for api.summer-jin.store"
             echo "Usage: $0 -e EMAIL"
             echo ""
             echo "This script manually creates SSL certificate when main deployment fails"
@@ -53,12 +53,12 @@ done
 
 if [ -z "$EMAIL" ]; then
     print_error "Email is required!"
-    echo "Usage: $0 -e your-email@summer-jin.store"
+    echo "Usage: $0 -e your-email@api.summer-jin.store"
     exit 1
 fi
 
 echo "========================================"
-echo -e "${GREEN}Manual SSL Setup for summer-jin.store${NC}"
+echo -e "${GREEN}Manual SSL Setup for api.summer-jin.store${NC}"
 echo "========================================"
 
 # Check if services are running
@@ -81,7 +81,7 @@ upstream check_eat_backend {
 
 server {
     listen 80;
-    server_name summer-jin.store www.summer-jin.store;
+    server_name api.summer-jin.store;
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -109,7 +109,6 @@ docker-compose run --rm certbot certonly \
     --webroot \
     --webroot-path /var/www/certbot/ \
     -d $DOMAIN \
-    -d www.$DOMAIN \
     --email $EMAIL \
     --agree-tos \
     --no-eff-email \
@@ -130,8 +129,7 @@ if [ $? -eq 0 ]; then
     
     echo ""
     echo "✅ Your site should now be accessible at:"
-    echo "   https://summer-jin.store"
-    echo "   https://www.summer-jin.store"
+    echo "   https://api.summer-jin.store"
     
 else
     print_error "SSL certificate request failed!"
@@ -141,12 +139,12 @@ else
     
     echo ""
     echo "❌ SSL setup failed. Your site is still accessible via HTTP:"
-    echo "   http://summer-jin.store"
+    echo "   http://api.summer-jin.store"
     echo ""
     echo "Common issues:"
     echo "1. Domain not pointing to this server"
     echo "2. Port 80 blocked by firewall"
     echo "3. Another service using port 80"
     echo ""
-    echo "Check with: curl -I http://summer-jin.store/.well-known/acme-challenge/test"
+    echo "Check with: curl -I http://api.summer-jin.store/.well-known/acme-challenge/test"
 fi

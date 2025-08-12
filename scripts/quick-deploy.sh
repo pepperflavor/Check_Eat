@@ -28,8 +28,8 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Pre-configured for summer-jin.store
-DOMAIN="summer-jin.store"
+# Pre-configured for api.summer-jin.store
+DOMAIN="api.summer-jin.store"
 EMAIL=""
 
 # Parse email argument
@@ -41,14 +41,14 @@ while [[ $# -gt 0 ]]; do
             ;;
         -h|--help)
             echo "Usage: $0 -e EMAIL"
-            echo "Quick deployment script for summer-jin.store domain"
+            echo "Quick deployment script for api.summer-jin.store domain"
             echo ""
             echo "Options:"
             echo "  -e, --email    Email for Let's Encrypt SSL certificate"
             echo "  -h, --help     Show this help message"
             echo ""
             echo "Example:"
-            echo "  $0 -e admin@summer-jin.store"
+            echo "  $0 -e admin@api.summer-jin.store"
             exit 0
             ;;
         *)
@@ -61,14 +61,14 @@ done
 
 if [ -z "$EMAIL" ]; then
     print_error "Email is required for SSL certificate!"
-    echo "Usage: $0 -e your-email@summer-jin.store"
+    echo "Usage: $0 -e your-email@api.summer-jin.store"
     exit 1
 fi
 
 echo ""
 echo "========================================"
 echo -e "${GREEN}Check Eat! Quick Deployment${NC}"
-echo -e "${BLUE}Domain: summer-jin.store${NC}"
+echo -e "${BLUE}Domain: api.summer-jin.store${NC}"
 echo -e "${BLUE}Email: $EMAIL${NC}"
 echo "========================================"
 echo ""

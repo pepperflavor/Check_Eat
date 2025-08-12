@@ -43,7 +43,7 @@ case "$1" in
         cat > docker/nginx/conf.d/default.conf << 'EOF'
 server {
     listen 80;
-    server_name summer-jin.store www.summer-jin.store;
+    server_name api.summer-jin.store;
     
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -59,7 +59,7 @@ server {
 }
 EOF
         
-        # Domain already set to summer-jin.store
+        # Domain already set to api.summer-jin.store
         
         # Start services without SSL
         docker-compose up -d nginx
