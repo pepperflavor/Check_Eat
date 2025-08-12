@@ -496,38 +496,31 @@ export class SajangService {
     file: Express.Multer.File,
     sto_id?: number,
   ) {
-    // 로그인 정보 조회 → 사장 ID → 첫 번째 가게 찾기
-    const loginData = await this.prisma.loginData.findUnique({
+    const login = await this.prisma.loginData.findUnique({
       where: { ld_log_id },
-      select: {
-        sajang: {
-          select: {
-            Store: {
-              orderBy: { sto_id: 'asc' },
-              take: 1,
-              select: {
-                sto_id: true,
-                sto_img: true,
-              },
-            },
-          },
-        },
-      },
+      select: { sajang: { select: { sa_id: true } } },
+    });
+    const saId = login?.sajang?.sa_id;
+    if (!saId)
+      return { message: '사장님의 가게가 존재하지 않습니다.', status: 'false' };
+
+    const where =
+      typeof sto_id === 'number'
+        ? { sto_id, sto_sa_id: saId }
+        : { sto_sa_id: saId };
+
+    const targetStore = await this.prisma.store.findFirst({
+      where,
+      ...(typeof sto_id === 'number' ? {} : { orderBy: { sto_id: 'asc' } }),
+      select: { sto_id: true, sto_img: true },
     });
 
-    const targetStore = loginData?.sajang?.Store?.[0];
-
     if (!targetStore) {
-      return {
-        message: '사장님의 가게가 존재하지 않습니다.',
-        status: 'false',
-      };
+      return { message: '사장님의 가게가 존재하지 않습니다.', status: 'false' };
     }
 
-    const storeId = targetStore.sto_id;
-    const existingImageUrl = targetStore.sto_img;
+    const { sto_id: storeId, sto_img: existingImageUrl } = targetStore;
 
-    // ✅ 기존 이미지 삭제 (기본값 "0" 이 아닌 경우만)
     if (existingImageUrl && existingImageUrl !== '0') {
       try {
         await this.storeStorageService.deleteStoreImage(existingImageUrl);
@@ -536,10 +529,8 @@ export class SajangService {
       }
     }
 
-    // 새로운 이미지 업로드
     const uploaded = await this.storeStorageService.uploadStoreImage(file);
 
-    // DB에 반영
     await this.prisma.store.update({
       where: { sto_id: storeId },
       data: { sto_img: uploaded.url },
@@ -549,6 +540,7 @@ export class SajangService {
       message: '가게 대표 이미지가 성공적으로 업데이트되었습니다.',
       imageUrl: uploaded.url,
       status: 'success',
+      sto_id: storeId,
     };
   }
 
@@ -631,50 +623,46 @@ export class SajangService {
 
   //----------- 사장 홈 화면
   // sajang.service.ts
-  async sajangHome(ld_log_id: string) {
-    // 로그인 정보 → 사장 ID 찾기
+  //----------- 사장 홈 화면
+  async sajangHome(ld_log_id: string, sto_id?: number) {
     const login = await this.prisma.loginData.findUnique({
       where: { ld_log_id },
+      select: { sajang: { select: { sa_id: true } } },
+    });
+    const saId = login?.sajang?.sa_id;
+    if (!saId)
+      return { message: '가게정보를 찾을 수 없습니다.', status: 'false' };
+
+    const where =
+      typeof sto_id === 'number'
+        ? { sto_id, sto_sa_id: saId }
+        : { sto_sa_id: saId };
+
+    const store = await this.prisma.store.findFirst({
+      where,
+      ...(typeof sto_id === 'number' ? {} : { orderBy: { sto_id: 'asc' } }),
       select: {
-        sajang: {
+        sto_id: true,
+        sto_name: true,
+        sto_halal: true,
+        review: {
+          orderBy: { revi_create: 'desc' },
           select: {
-            sa_id: true,
-            Store: {
-              orderBy: { sto_id: 'asc' }, // 여러 가게 중 첫 번째
-              take: 1,
-              select: {
-                sto_id: true,
-                sto_name: true,
-                sto_halal: true,
-                review: {
-                  orderBy: { revi_create: 'desc' },
-                  select: {
-                    revi_id: true,
-                    revi_content: true,
-                    revi_reco_step: true,
-                    revi_create: true,
-                    ReviewImage: {
-                      select: { revi_img_url: true },
-                    },
-                  },
-                },
-              },
-            },
+            revi_id: true,
+            revi_content: true,
+            revi_reco_step: true,
+            revi_create: true,
+            ReviewImage: { select: { revi_img_url: true } },
           },
         },
       },
     });
 
-    if (!login || !login.sajang?.Store?.length) {
-      return {
-        message: '가게정보를 찾을 수 없습니다.',
-        status: 'false',
-      };
-    }
-
-    const store = login.sajang.Store[0];
+    if (!store)
+      return { message: '가게정보를 찾을 수 없습니다.', status: 'false' };
 
     return {
+      status: 'success',
       sto_id: store.sto_id,
       sto_name: store.sto_name,
       sto_halal: store.sto_halal,

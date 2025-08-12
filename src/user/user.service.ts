@@ -470,7 +470,9 @@ export class UserService {
         foo_material,
         foo_price,
         foo_img: food.foo_img,
+        foo_vegan: food.foo_vegan,
         foo_status: food.foo_status,
+        CommonAl: food.CommonAl,
         ...(foo_warning && { foo_warning }),
         ...(foo_warning_coal.length > 0 && { foo_warning_coal }),
       };
@@ -502,6 +504,7 @@ export class UserService {
       sto_halal: store.sto_halal,
       sto_latitude: store.sto_latitude,
       sto_longitude: store.sto_longitude,
+      sto_phone: store.sto_phone,
       food_list: transformedFoods,
       holiday: h
         ? {

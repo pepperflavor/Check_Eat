@@ -93,9 +93,9 @@ export class SajangController {
     summary: '사장님 홈 화면 진입',
     description: '사장님 홈 리뷰, 할랄여부',
   })
-  async sajangHome(@Req() req) {
+  async sajangHome(@Req() req, @Body() body: SajangStoDto) {
     const ld_log_id = req.user.sub;
-    return await this.sajangService.sajangHome(ld_log_id);
+    return await this.sajangService.sajangHome(ld_log_id, body?.sto_id);
   }
 
   //------------ 사장님 마이페이지 관련
@@ -130,7 +130,7 @@ export class SajangController {
     return await this.sajangService.updateStoreImg(
       ld_log_id,
       file,
-      body.sto_id,
+      body?.sto_id,
     );
   }
 
