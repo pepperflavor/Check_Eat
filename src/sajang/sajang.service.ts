@@ -18,6 +18,7 @@ import * as bcrypt from 'bcrypt';
 import Decimal from 'decimal.js';
 import { StoreStorageService } from 'src/azure-storage/store-storage.service';
 import { RegistFoodInput } from './types/regist-food';
+import { normalizeBusinessInput } from './util/normalizeBusiness';
 
 @Injectable()
 export class SajangService {
@@ -40,105 +41,151 @@ export class SajangService {
     return { saId: Number(saId) };
   }
 
+  /*
+  sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
+  sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
+  */
   // 사업자 등록진위여부, 재시도 포함
   async checkBusinessRegistration(data: BusinessRegistrationDTO) {
-    try {
-      const result = await this.callAPI(data);
-      const saID = Number(data.sa_id);
-      /*
-    sa_certification Int? // 0: 인증 대기 중 || 회원가입 진행중, 1: 사업자 인증 받음, 2: 인증 재시도 필요함
-    sa_certi_status Int @default(0) // 0: 인증 대기중, 1: 인증 완료, 2: 인증 실패 - 유저가 데이터 잘못입력함, 3: 서버문제로 실패 -> 내부적으로 재 인증해줘야 함
-      */
+    // 재시도 jobId 등에 쓸 수 있도록 최소 전처리값을 try 바깥에서 준비
+    const saID = Number(data.sa_id);
+    const rawBsNo = String(data.b_no || '')
+      .replace(/-/g, '')
+      .trim();
 
-      // 사업자 등록증 확인했는지 여부
-      if (!result || result == null) {
-        await this.prisma.sajang.update({
-          where: {
-            sa_id: saID,
-          },
+    try {
+      // 0) 국세청 API 진위 확인
+      const result = await this.callAPI(data);
+
+      // 정상 흐름에서 사용할 정규화(좌표/주소/이름 등)
+      const { bsNo, bs_name, bs_type, bs_address, lat, lon } =
+        normalizeBusinessInput(data);
+
+      const created = await this.prisma.$transaction(async (tx) => {
+        // 1) 사장 인증 상태 갱신
+        await tx.sajang.update({
+          where: { sa_id: saID },
           data: {
-            sa_certi_status: 2,
-            sa_certification: 2,
+            sa_certi_status: 1,
+            sa_certification: 1,
           },
         });
-        return {
-          message: '사업자 등록증 재인증 필요',
-          status: 'false',
-        };
-      }
 
-      await this.prisma.sajang.update({
-        where: {
-          sa_id: saID,
-        },
-        data: {
-          sa_certi_status: 1,
-          sa_certification: 1,
-        },
-      });
+        // 2) 사업자번호 소유자 충돌 방지
+        const existing = await tx.businessCerti.findUnique({
+          where: { bs_no: bsNo },
+          select: { bs_sa_id: true },
+        });
+        if (existing && existing.bs_sa_id !== saID) {
+          throw new ConflictException(
+            '이미 다른 사장에게 등록된 사업자번호입니다.',
+          );
+        }
 
-      // 여기에서 가게 데이터 생성
-      const storeData = {
-        sa_id: data.sa_id,
-        sto_name:
-          data.sto_name && data.sto_name.length > 0 ? data.sto_name : data.b_nm,
-        sto_name_en: data.sto_name_en,
-        sto_address: data.b_adr,
-        sto_phone: data.sto_phone,
-        sto_latitude: new Decimal(data.sto_latitude),
-        sto_longitude: new Decimal(data.sto_longitude),
-      };
+        // 3) BusinessCerti upsert
+        const cert = await tx.businessCerti.upsert({
+          where: { bs_no: bsNo },
+          update: {
+            bs_name: bs_name || undefined,
+            bs_type: bs_type || undefined,
+            bs_address: bs_address || undefined,
+            // 정책에 따라 bs_sa_id는 기존 주인이 있으면 변경하지 않는 것도 안전
+            bs_sa_id: saID,
+          },
+          create: {
+            bs_no: bsNo,
+            bs_name: bs_name || '상호미기재',
+            bs_type: bs_type || '업태미기재',
+            bs_address: bs_address || '',
+            bs_sa_id: saID,
+          },
+          select: { bs_id: true, bs_no: true },
+        });
 
-      await this.prisma.store.create({
-        data: {
-          sto_name: storeData.sto_name ?? '',
-          sto_name_en: storeData.sto_name_en ?? storeData.sto_name ?? '',
-          sto_address: storeData.sto_address ?? '',
-          sto_phone: storeData.sto_phone ? String(storeData.sto_phone) : null,
-          sto_latitude: parseFloat(storeData.sto_latitude.toFixed(6)),
-          sto_longitude: parseFloat(storeData.sto_longitude.toFixed(6)),
-          sto_sa_id: storeData.sa_id,
-        },
+        // 4) Store upsert (복합 유니크로 멱등성 보장)
+        const baseName = data.sto_name?.trim() || bs_name || '';
+        const baseNameEn =
+          data.sto_name_en?.trim() || data.sto_name || bs_name || '';
+
+        const store = await tx.store.upsert({
+          where: {
+            uniq_store_owner_cert_name_geo: {
+              sto_sa_id: saID,
+              sto_bs_id: cert.bs_id,
+              sto_name: baseName,
+              sto_latitude: lat,
+              sto_longitude: lon,
+            },
+          },
+          update: {
+            sto_phone: data.sto_phone ? String(data.sto_phone) : null,
+          },
+          create: {
+            sto_name: baseName,
+            sto_name_en: baseNameEn,
+            sto_address: bs_address || '',
+            sto_phone: data.sto_phone ? String(data.sto_phone) : null,
+            sto_latitude: lat,
+            sto_longitude: lon,
+            sto_sa_id: saID,
+            sto_bs_id: cert.bs_id,
+          },
+          select: { sto_id: true, sto_name: true, sto_bs_id: true },
+        });
+
+        return { cert, store };
       });
 
       return {
-        message: '사업자 진위여부 확인 성공, store 데이터 생성',
+        message:
+          '사업자 진위여부 확인 성공, BusinessCerti/Store 생성 또는 갱신',
         status: 'success',
         result,
+        bs_no: created.cert.bs_no,
+        sto_id: created.store.sto_id,
       };
     } catch (error) {
-      console.log('IRS 서버 오류', error.message);
+      console.log('IRS 서버 오류', (error as any)?.message);
       console.log('사업자 등록증 인증 시도를 등록합니다.');
-      const saID = data.sa_id;
 
       await this.prisma.sajang.update({
-        where: {
-          sa_id: saID,
-        },
+        where: { sa_id: saID },
         data: {
           sa_certification: 2, // 인증 재시도 필요
           sa_certi_status: 3, // 서버오류
         },
       });
 
-      // 10 초후 재시도
-      await this.checkQueue.add(
-        'retry-check',
-        { data },
-        {
-          delay: 10_000, // 10초 후 재시도
-          attempts: 5, // 최대 5번 시도
-          backoff: {
-            type: 'fixed',
-            delay: 10_000, // 10초 간격으로 고정 재시도
+      const axiosResp = (error as any)?.response;
+      const axiosCode = (error as any)?.code;
+
+      const isBadInput =
+        error instanceof BadRequestException ||
+        axiosResp?.status === 400 ||
+        axiosResp?.status === 422;
+
+      const isRetryable =
+        axiosResp?.status >= 500 ||
+        !axiosResp /* 네트워크 오류 */ ||
+        ['ECONNABORTED', 'ENOTFOUND', 'ETIMEDOUT'].includes(String(axiosCode));
+
+      if (isRetryable && !isBadInput) {
+        await this.checkQueue.add(
+          'retry-check',
+          { data },
+          {
+            jobId: `check:${rawBsNo}`, // ← try 바깥에서 만든 rawBsNo 사용
+            delay: 10_000,
+            attempts: 5,
+            backoff: { type: 'fixed', delay: 10_000 },
+            removeOnComplete: true,
+            removeOnFail: false,
           },
-          removeOnComplete: true,
-          removeOnFail: false, // 실패 로그 남기고 싶으면 false
-        },
-      );
+        );
+      }
 
       return {
-        message: 'IRS 서버오류로 인한 실패',
+        message: isBadInput ? '입력값 오류로 실패' : 'IRS 서버오류로 인한 실패',
         status: 'false',
       };
     }
@@ -452,7 +499,7 @@ export class SajangService {
 
   //-------------  사장 마이페이지 입장
 
-  async sajangEnterMypage(sa_id: number) {
+  async sajangEnterMypage(sa_id: number, email: string) {
     // 사장 존재 확인
     const sajang = await this.prisma.sajang.findUnique({
       where: { sa_id },
@@ -484,7 +531,8 @@ export class SajangService {
       sa_id: sajang.sa_id,
       sa_certification: sajang.sa_certification, // 0/1/2
       sa_certi_status: sajang.sa_certi_status, // 0/1/2/3
-      stores, // 
+      email: email,
+      stores, //
     };
   }
 
@@ -684,6 +732,10 @@ export class SajangService {
         sto_name: true,
       },
     });
+  }
+
+  async updateBusiness(sa_id: number) {
+    // const
   }
 }
 

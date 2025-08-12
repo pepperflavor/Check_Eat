@@ -39,6 +39,10 @@ export class SajangController {
 
   @Post('update-store-data')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: '가게 정보 업데이트',
+    description: '가게 정보 업데이트',
+  })
   async updateStoreData(@Req() req, @Body() body: updateStoreDataDto) {
     const sa_id = Number(req.user.sa_id);
     return await this.sajangService.updateStoreData(sa_id, body);
@@ -47,6 +51,7 @@ export class SajangController {
   // 음식 삭제
   @Post('delete-food')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '음식 삭제', description: '음식삭제' })
   async deleteFood(@Req() req, @Body() body: DeleteFoodDto) {
     const sa_id = Number(req.user.sa_id); // 사장 아이디 추출, 본인 업장인지 확인후 데이터 처리
 
@@ -79,7 +84,7 @@ export class SajangController {
   @Post('delete-store')
   @ApiOperation({ summary: '가게 삭제', description: '가게삭제' })
   @UseGuards(JwtAuthGuard)
-  async deleteStore(@Req() req) {
+  async deleteStore(@Req() req, @Body() body:SajangStoDto) {
     const sa_id = req.user.sa_id;
     const result = await this.sajangService.editStoreState(sa_id, 2);
     return result;
@@ -104,11 +109,12 @@ export class SajangController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님 마이페이지 진입',
-    description: '인증 상태 + 본인 소유 가게 ID +  목록',
+    description: '인증 상태 + 본인 소유 가게 ID, 가게 이름 + 목록',
   })
   async sajangMyPage(@Req() req) {
     const sa_id = Number(req.user.sa_id);
-    return await this.sajangService.sajangEnterMypage(sa_id);
+    const eamil = req.user.email
+    return await this.sajangService.sajangEnterMypage(sa_id, eamil);
   }
 
   // 가게 대표 이미지 수정
@@ -117,7 +123,7 @@ export class SajangController {
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(FileInterceptor('file'))
   @ApiOperation({
-    description: '가게 대표이미지 업데이트, 이미지 하나만 업로드함',
+    description: '가게 대표이미지 업데이트, 이미지 하나만 업로드 함',
   })
   @ApiBody({ type: 'multipart/form-data' })
   @ApiConsumes('multipart/form-data')
@@ -134,6 +140,7 @@ export class SajangController {
     );
   }
 
+  // 모달창에 띄워줄 가게 리스트 데이터
   @Post('sto-modal')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '사장님 마이페이지 모달창에 나올 가게 리스트' })
@@ -145,15 +152,25 @@ export class SajangController {
   // 휴무일 데이터 입력받기
   @Post('regist-holiday')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '휴무 데이터 입력받기' })
   async registHoli(@Req() req, @Body() body: HolidayDto) {}
 
-  // 가게 메뉴 관리
-  @Post('update-food')
+  // 가게 메뉴 관리 입장
+  @Post('enter-update-food')
   @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '가게 메뉴관리 페이지 입장' })
   async updateFoodStatus(@Req() req, @Body() body) {}
 
-  // 사업자 등록증 관리 페이지
+  // 가게 메뉴 수정
+  @Post('manage-food')
+  @UseGuards(JwtAuthGuard)
+  async manageFood() {}
+
+  // 사업자 등록증 관리 페이지 입장
   @Post('update-business')
   @UseGuards(JwtAuthGuard)
-  async updateBusiness(@Req() req, @Body() body) {}
+  async updateBusiness(@Req() req, @Body() body) {
+    const sa_id = Number(req.user.sa_id)
+    return await this.sajangService.updateBusiness(sa_id)
+  }
 }

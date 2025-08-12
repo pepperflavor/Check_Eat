@@ -68,7 +68,22 @@ model Sajang{
   Store Store[] @relation("SajangStore") // 사장이 가게 여러개 가질 수 있다고 함 수정필요
 
 
-  IdentityVerification IdentityVerification?
+  businessCertis BusinessCerti[]
+}
+
+model BusinessCerti{
+  bs_id Int @id @default(autoincrement())
+  bs_no String @unique // 사업자 등록증 번호
+  bs_name String // 업체명
+  bs_type String // 업태
+  bs_address String // 주소
+
+  bs_sa_id Int
+  sajang   Sajang @relation(fields: [bs_sa_id], references: [sa_id], onDelete: Cascade, onUpdate: Cascade)
+
+  stores   Store[]
+
+  @@index([bs_sa_id])
 }
 
 // 다른 언어는 테이블을 나누는게 맞다고하심
@@ -237,8 +252,17 @@ model Store{
   Food Food[]
   favoriteUsers FavoriteStore[] // 1:N 
 
-// 리뷰 관계
+  // 리뷰 관계
   review Review[] // 1:n 가게 리뷰
+
+
+  // 사업자 등록증이랑  다대 1 관계
+  sto_bs_id     Int? // 필수로 하려면 Int 로
+  businessCerti BusinessCerti? @relation(fields: [sto_bs_id], references: [bs_id], onDelete: SetNull, onUpdate: Cascade)
+
+  //같은 데이터로 요청들어오면 중복 차단 처리
+  @@unique([sto_sa_id, sto_bs_id, sto_name, sto_latitude, sto_longitude], name: "uniq_store_owner_cert_name_geo")
+  @@index([sto_bs_id])
 }
 
 // 즐겨찾기 한 가게
@@ -264,6 +288,8 @@ model FoodMeterialSeed{
 }
 
 
+
+// 본인인증 관련..
 model IdentityVerification {
   // PortOne에 보낸 identityVerificationId(상점이 생성)
   iv_id              String   @id
@@ -288,11 +314,12 @@ model IdentityVerification {
   login_data_id   Int?     @unique
   loginData       LoginData? @relation(fields: [login_data_id], references: [ld_id])
 
-  sajang_id       Int?     @unique
-  sajang          Sajang?    @relation(fields: [sajang_id], references: [sa_id])
+  // sajang_id       Int?     @unique
+  // sajang          Sajang?    @relation(fields: [sajang_id], references: [sa_id])
 
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   @@index([iv_phoneNumber])
 }
+
