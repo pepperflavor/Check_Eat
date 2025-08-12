@@ -736,22 +736,37 @@ export class SajangService {
 
   //  사업자 등록증 업데이트 하기전 뿌려줄 데이터
   async updateBusiness(sa_id: number, sto_id?: number) {
-    // 사장 유효성
     await this.assertOwner(sa_id);
-
-    // sto_id가 들어온 경우: 해당 가게가 이 사장 소유인지 확인 후 연결된 사업자증 1건 반환
-    if (typeof sto_id === 'number') {
+  
+    // 1) 사장 인증 상태 체크(둘 다 1이어야 조회 진행)
+    const sajangStatus = await this.prisma.sajang.findUnique({
+      where: { sa_id },
+      select: { sa_certification: true, sa_certi_status: true },
+    });
+    if (!sajangStatus) {
+      throw new ForbiddenException('업주 권한이 필요합니다.');
+    }
+    const { sa_certification, sa_certi_status } = sajangStatus;
+    if (sa_certification !== 1 || sa_certi_status !== 1) {
+      return {
+        status: 'pending',
+        message: '사업자 등록증 인증이 완료되지 않았습니다.',
+        sa_certification,
+        sa_certi_status,
+      };
+    }
+  
+  
+    if (sto_id !== undefined) {
+      // 단일 가게
       const store = await this.prisma.store.findFirst({
         where: { sto_id, sto_sa_id: sa_id },
         select: { sto_id: true, sto_name: true, sto_bs_id: true },
       });
-
       if (!store) {
-        throw new NotFoundException(
-          '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
-        );
+        throw new NotFoundException('해당 사장님의 가게가 아니거나 존재하지 않습니다.');
       }
-
+  
       if (!store.sto_bs_id) {
         return {
           status: 'success',
@@ -760,7 +775,7 @@ export class SajangService {
           businessCerti: null,
         };
       }
-
+  
       const cert = await this.prisma.businessCerti.findUnique({
         where: { bs_id: store.sto_bs_id },
         select: {
@@ -770,27 +785,24 @@ export class SajangService {
           bs_type: true,
           bs_address: true,
           bs_sa_id: true,
-          // 이 사업자증에 연결된 가게들(요약 정보)
           stores: {
             select: { sto_id: true, sto_name: true },
             orderBy: { sto_id: 'asc' },
           },
         },
       });
-
-      // 방어적으로 사장 소유 여부 한 번 더 체크
       if (!cert || cert.bs_sa_id !== sa_id) {
         throw new ForbiddenException('이 사업자증 정보에 접근할 수 없습니다.');
       }
-
+  
       return {
         status: 'success',
         store: { sto_id: store.sto_id, sto_name: store.sto_name },
         businessCerti: cert,
       };
     }
-
-    // sto_id가 없는 경우: 이 사장의 모든 BusinessCerti 목록 반환
+  
+    // 목록 모드
     const certs = await this.prisma.businessCerti.findMany({
       where: { bs_sa_id: sa_id },
       select: {
@@ -799,16 +811,15 @@ export class SajangService {
         bs_name: true,
         bs_type: true,
         bs_address: true,
-        // 연결 가게 요약
         stores: {
           select: { sto_id: true, sto_name: true },
           orderBy: { sto_id: 'asc' },
         },
-        _count: { select: { stores: true } }, // 연결 가게 수
+        _count: { select: { stores: true } },
       },
       orderBy: { bs_id: 'desc' },
     });
-
+  
     return {
       status: 'success',
       count: certs.length,
