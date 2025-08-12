@@ -126,7 +126,10 @@ export class UserController {
   })
   @Post('search-store-nm')
   @UseGuards(OptionalJwtAuthGuard)
-  async searchStoreByName(@OptionalUser() user: any, @Body() body:SearchStoreByNameDto) {
+  async searchStoreByName(
+    @OptionalUser() user: any,
+    @Body() body: SearchStoreByNameDto,
+  ) {
     // 유저가 쓰는 언어 추출
     const lang = user?.lang || body.lang || 'ko'; // 언어값 입력안되면 'ko'
     // store 아이디랑 이름 같이 보내줘야할듯
@@ -141,7 +144,10 @@ export class UserController {
   })
   @UseGuards(OptionalJwtAuthGuard)
   @Post('search-store-vegan')
-  async searchStoreByVegan(@OptionalUser() user: any, @Body() body: SearchStoreByVeganDto) {
+  async searchStoreByVegan(
+    @OptionalUser() user: any,
+    @Body() body: SearchStoreByVeganDto,
+  ) {
     const lang = user?.lang || body.lang || 'ko'; // 언어값 입력안되면 'ko'
     const result = await this.userService.getStoreByVegan(body);
     return result;
@@ -192,7 +198,7 @@ export class UserController {
   async deleteFavoriteStore(@Req() req, @Body() body: FavoritStoreDto) {
     const sto_id = Number(body.sto_id);
     const log_id = req.user.sub;
-    return await this.userService.registFavoriteStore(log_id, sto_id);
+    return await this.userService.deleteFavoriteStore(log_id, sto_id);
   }
 
   // 즐겨찾기한 가게 목록조회

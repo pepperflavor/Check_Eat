@@ -102,7 +102,7 @@ export class SajangController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님 마이페이지 진입',
-    description: '인증 상태 + 본인 소유 가게 ID 목록',
+    description: '인증 상태 + 본인 소유 가게 ID +  목록',
   })
   async sajangMyPage(@Req() req) {
     const sa_id = Number(req.user.sa_id);
@@ -126,13 +126,13 @@ export class SajangController {
 
   // 휴무일 데이터 입력받기
   @Post('regist-holiday')
-  async registHoli() {}
+  async registHoli(@Req() req, @Body() body) {}
 
   // 가게 메뉴 관리
   @Post('update-food')
-  async updateFoodStatus() {}
-
+  async updateFoodStatus(@Req() req, @Body() body) {}
 
   // 사업자 등록증 관리 페이지
-  
+  @Post('update-business')
+  async updateBusiness(@Req() req, @Body() body) {}
 }

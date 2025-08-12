@@ -51,6 +51,8 @@ model LoginData{
 
   ld_sajang_id Int? // 사장 테이블에 저장되어있는 id 인덱스
   sajang Sajang? @relation(fields: [ld_sajang_id], references: [sa_id])
+
+  IdentityVerification IdentityVerification?
 }
 
 model Sajang{
@@ -65,6 +67,8 @@ model Sajang{
 
   Store Store[] @relation("SajangStore") // 사장이 가게 여러개 가질 수 있다고 함 수정필요
 
+
+  IdentityVerification IdentityVerification?
 }
 
 // 다른 언어는 테이블을 나누는게 맞다고하심
@@ -260,17 +264,35 @@ model FoodMeterialSeed{
 }
 
 
-// // 본인인증
-// model IdentityVerification {
-//   iv_id          String   @id
-//   iv_status      String   // READY | VERIFIED | FAILED
-//   iv_phoneNumber String?
-//   iv_name        String?
-//   iv_birthDate   DateTime?
-//   iv_gender      String?  // M/F 등
-//   iv_ci          String?
-//   iv_verifiedAt  DateTime?
-//   iv_payload     String?
-//   iv_createdAt   DateTime @default(now())
-//   iv_updatedAt   DateTime @updatedAt
-// }
+model IdentityVerification {
+  // PortOne에 보낸 identityVerificationId(상점이 생성)
+  iv_id              String   @id
+  iv_status          String   // READY | VERIFIED | FAILED
+  iv_method          String?  // SMS | APP
+  iv_operator        String?  // SKT | KT | LGT | MVNO
+
+  // 결과(필요한 것만)
+  iv_name            String?
+  iv_phoneNumber     String?  @db.VarChar(20)
+  iv_birthDate       DateTime? @db.Date
+  iv_gender          String?  // "M" | "F" 등
+  iv_ci              String?  @db.Text // 필요할 때만
+  iv_di              String?  @db.Text // 필요할 때만
+  iv_verifiedAt      DateTime?
+  iv_payload         Json?    // 원본 응답 일부(진짜 필요한 경우에만 저장)
+
+  // 가입 전 임시 연결 키(앱에서 들고 다님, 1회성/짧은 TTL)
+  iv_pre_signup_key  String?  @unique
+
+  // 가입 후 연결 (아래 중 하나만 채우는 1:1 구조 권장)
+  login_data_id   Int?     @unique
+  loginData       LoginData? @relation(fields: [login_data_id], references: [ld_id])
+
+  sajang_id       Int?     @unique
+  sajang          Sajang?    @relation(fields: [sajang_id], references: [sa_id])
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([iv_phoneNumber])
+}

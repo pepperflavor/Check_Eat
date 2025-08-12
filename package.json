@@ -37,6 +37,7 @@
     "@nestjs/platform-express": "^11.1.5",
     "@nestjs/schedule": "^6.0.0",
     "@nestjs/swagger": "^11.2.0",
+    "@portone/browser-sdk": "^0.0.24",
     "@prisma/client": "^6.10.1",
     "@sendgrid/mail": "^8.1.5",
     "axios": "^1.11.0",

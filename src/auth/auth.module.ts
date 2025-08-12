@@ -10,6 +10,7 @@ import { CommonAccountModule } from 'src/common-account/common-account.module';
 import { SajangModule } from 'src/sajang/sajang.module';
 import { JwtStrategy } from './jwt.strategy';
 import { LocalStrategy } from './local.strategy';
+import { JwtIdvStrategy } from './jwt-idv.strategy';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { LocalStrategy } from './local.strategy';
     SajangModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, LocalStrategy],
+  providers: [AuthService, JwtStrategy, LocalStrategy, JwtIdvStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}
