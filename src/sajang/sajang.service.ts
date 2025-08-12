@@ -461,32 +461,41 @@ export class SajangService {
         sa_certification: true,
         sa_certi_status: true,
         Store: {
-          select: { sto_id: true },
+          select: { sto_id: true, sto_name: true },
           orderBy: { sto_id: 'asc' },
         },
       },
     });
-  
+
     if (!sajang) {
       return {
         message: '사장님 정보를 찾을 수 없습니다.',
         status: 'false',
       };
     }
-  
-    const storeIds = (sajang.Store ?? []).map((s) => s.sto_id);
-  
+
+    const stores = (sajang.Store ?? []).map((s) => ({
+      sto_id: s.sto_id,
+      sto_name: s.sto_name,
+    }));
+    const storeIds = stores.map((s) => s.sto_id);
+
     return {
       status: 'success',
       sa_id: sajang.sa_id,
       sa_certification: sajang.sa_certification, // 0/1/2
-      sa_certi_status: sajang.sa_certi_status,   // 0/1/2/3
-      store_ids: storeIds,                       // 예: [12, 34, 56]
+      sa_certi_status: sajang.sa_certi_status, // 0/1/2/3
+      store_ids: storeIds,
+      stores, // 예: [12, 34, 56]
     };
   }
 
   // 마이페이지에서 가게 간판 이미지 수정하기
-  async updateStoreImg(ld_log_id: string, file: Express.Multer.File) {
+  async updateStoreImg(
+    ld_log_id: string,
+    file: Express.Multer.File,
+    sto_id?: number,
+  ) {
     // 로그인 정보 조회 → 사장 ID → 첫 번째 가게 찾기
     const loginData = await this.prisma.loginData.findUnique({
       where: { ld_log_id },

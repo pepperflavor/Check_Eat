@@ -15,6 +15,8 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { RegistFoodDto } from './sajang_dto/regist-food.dto';
 import { updateStoreDataDto } from './sajang_dto/update-store-data.dto';
 import { DeleteFoodDto } from './sajang_dto/delete-food-dto';
+import { SajangStoDto } from './sajang_dto/mypage.dto';
+import { HolidayDto } from './sajang_dto/regist-holiday.sto';
 
 @Controller('sajang')
 export class SajangController {
@@ -119,14 +121,22 @@ export class SajangController {
   })
   @ApiBody({ type: 'multipart/form-data' })
   @ApiConsumes('multipart/form-data')
-  async updateBoard(@Req() req, @UploadedFile() file: Express.Multer.File) {
+  async updateBoard(
+    @Req() req,
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: SajangStoDto,
+  ) {
     const ld_log_id = req.user.sub;
-    return await this.sajangService.updateStoreImg(ld_log_id, file);
+    return await this.sajangService.updateStoreImg(
+      ld_log_id,
+      file,
+      body.sto_id,
+    );
   }
 
   // 휴무일 데이터 입력받기
   @Post('regist-holiday')
-  async registHoli(@Req() req, @Body() body) {}
+  async registHoli(@Req() req, @Body() body: HolidayDto) {}
 
   // 가게 메뉴 관리
   @Post('update-food')
