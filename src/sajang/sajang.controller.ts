@@ -134,15 +134,26 @@ export class SajangController {
     );
   }
 
+  @Post('sto-modal')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '사장님 마이페이지 모달창에 나올 가게 리스트' })
+  async storeModalList(@Req() req) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.storeModal(sa_id);
+  }
+
   // 휴무일 데이터 입력받기
   @Post('regist-holiday')
+  @UseGuards(JwtAuthGuard)
   async registHoli(@Req() req, @Body() body: HolidayDto) {}
 
   // 가게 메뉴 관리
   @Post('update-food')
+  @UseGuards(JwtAuthGuard)
   async updateFoodStatus(@Req() req, @Body() body) {}
 
   // 사업자 등록증 관리 페이지
   @Post('update-business')
+  @UseGuards(JwtAuthGuard)
   async updateBusiness(@Req() req, @Body() body) {}
 }

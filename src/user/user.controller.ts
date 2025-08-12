@@ -209,4 +209,6 @@ export class UserController {
     const log_id = req.user.sub;
     return await this.userService.getListFavoriteStore(log_id);
   }
+
+
 }

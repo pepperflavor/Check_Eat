@@ -478,15 +478,13 @@ export class SajangService {
       sto_id: s.sto_id,
       sto_name: s.sto_name,
     }));
-    const storeIds = stores.map((s) => s.sto_id);
 
     return {
       status: 'success',
       sa_id: sajang.sa_id,
       sa_certification: sajang.sa_certification, // 0/1/2
       sa_certi_status: sajang.sa_certi_status, // 0/1/2/3
-      store_ids: storeIds,
-      stores, // 예: [12, 34, 56]
+      stores, // 
     };
   }
 
@@ -674,6 +672,18 @@ export class SajangService {
         images: r.ReviewImage.map((img) => img.revi_img_url),
       })),
     };
+  }
+
+  async storeModal(sa_id: number) {
+    return await this.prisma.store.findMany({
+      where: {
+        sto_sa_id: sa_id,
+      },
+      select: {
+        sto_id: true,
+        sto_name: true,
+      },
+    });
   }
 }
 
