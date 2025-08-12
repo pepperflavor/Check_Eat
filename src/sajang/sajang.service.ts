@@ -734,8 +734,86 @@ export class SajangService {
     });
   }
 
-  async updateBusiness(sa_id: number) {
-    // const
+  //  사업자 등록증 업데이트 하기전 뿌려줄 데이터
+  async updateBusiness(sa_id: number, sto_id?: number) {
+    // 사장 유효성
+    await this.assertOwner(sa_id);
+
+    // sto_id가 들어온 경우: 해당 가게가 이 사장 소유인지 확인 후 연결된 사업자증 1건 반환
+    if (typeof sto_id === 'number') {
+      const store = await this.prisma.store.findFirst({
+        where: { sto_id, sto_sa_id: sa_id },
+        select: { sto_id: true, sto_name: true, sto_bs_id: true },
+      });
+
+      if (!store) {
+        throw new NotFoundException(
+          '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
+        );
+      }
+
+      if (!store.sto_bs_id) {
+        return {
+          status: 'success',
+          message: '해당 가게는 아직 BusinessCerti와 연결되어 있지 않습니다.',
+          store: { sto_id: store.sto_id, sto_name: store.sto_name },
+          businessCerti: null,
+        };
+      }
+
+      const cert = await this.prisma.businessCerti.findUnique({
+        where: { bs_id: store.sto_bs_id },
+        select: {
+          bs_id: true,
+          bs_no: true,
+          bs_name: true,
+          bs_type: true,
+          bs_address: true,
+          bs_sa_id: true,
+          // 이 사업자증에 연결된 가게들(요약 정보)
+          stores: {
+            select: { sto_id: true, sto_name: true },
+            orderBy: { sto_id: 'asc' },
+          },
+        },
+      });
+
+      // 방어적으로 사장 소유 여부 한 번 더 체크
+      if (!cert || cert.bs_sa_id !== sa_id) {
+        throw new ForbiddenException('이 사업자증 정보에 접근할 수 없습니다.');
+      }
+
+      return {
+        status: 'success',
+        store: { sto_id: store.sto_id, sto_name: store.sto_name },
+        businessCerti: cert,
+      };
+    }
+
+    // sto_id가 없는 경우: 이 사장의 모든 BusinessCerti 목록 반환
+    const certs = await this.prisma.businessCerti.findMany({
+      where: { bs_sa_id: sa_id },
+      select: {
+        bs_id: true,
+        bs_no: true,
+        bs_name: true,
+        bs_type: true,
+        bs_address: true,
+        // 연결 가게 요약
+        stores: {
+          select: { sto_id: true, sto_name: true },
+          orderBy: { sto_id: 'asc' },
+        },
+        _count: { select: { stores: true } }, // 연결 가게 수
+      },
+      orderBy: { bs_id: 'desc' },
+    });
+
+    return {
+      status: 'success',
+      count: certs.length,
+      businessCertis: certs,
+    };
   }
 }
 

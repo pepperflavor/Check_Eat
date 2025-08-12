@@ -169,8 +169,9 @@ export class SajangController {
   // 사업자 등록증 관리 페이지 입장
   @Post('update-business')
   @UseGuards(JwtAuthGuard)
-  async updateBusiness(@Req() req, @Body() body) {
+  @ApiOperation({ description: '사업자 등록증 수정 페이지 입장' })
+  async updateBusiness(@Req() req, @Body() body:SajangStoDto) {
     const sa_id = Number(req.user.sa_id)
-    return await this.sajangService.updateBusiness(sa_id)
+    return await this.sajangService.updateBusiness(sa_id, body?.sto_id)
   }
 }
