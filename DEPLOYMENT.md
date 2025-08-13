@@ -1,56 +1,87 @@
-# Check Eat! Backend - Ubuntu Deployment Guide
+# Azure VM 배포 가이드
 
-Complete Docker deployment setup with Nginx, SSL, PostgreSQL with PostGIS, and Redis.
+Check Eat Backend를 Azure VM에 Docker를 통해 배포하는 방법을 안내합니다.
 
-## Prerequisites
+## 사전 요구사항
 
-### System Requirements
-- Ubuntu 20.04 LTS or later
-- 2+ GB RAM
-- 20+ GB disk space
-- Domain name pointing to your server IP
+- Azure VM (Ubuntu 20.04 LTS 권장)
+- SSH 접근 권한
+- 도메인 (선택사항, SSL 인증서용)
 
-### Software Requirements
+## 1. Azure VM 준비
+
+### VM 생성 및 기본 설정
+
 ```bash
-# Update system
+# VM에 SSH 접속
+ssh azureuser@your-vm-ip
+
+# 시스템 업데이트
 sudo apt update && sudo apt upgrade -y
 
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-sudo usermod -aG docker $USER
-
-# Install Docker Compose
-sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-
-# Logout and login again to apply docker group membership
+# 필수 패키지 설치
+sudo apt install -y git curl wget unzip
 ```
 
-## Quick Deployment
+### 방화벽 설정
 
-### 1. Clone and Setup
 ```bash
-git clone <your-repo-url> check-eat-backend
+# HTTP, HTTPS 포트 열기
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw allow 22  # SSH
+sudo ufw enable
+```
+
+## 2. 프로젝트 설정
+
+### 소스 코드 클론
+
+```bash
+git clone https://github.com/your-username/check-eat-backend.git
 cd check-eat-backend
 ```
 
-### 2. Configure Environment
+### 환경변수 설정
+
 ```bash
-# Copy environment example
+# .env 파일 생성
 cp .env.example .env
 
-# Edit .env file with your values
+# 환경변수 편집 (필수!)
 nano .env
 ```
 
-### 3. Deploy with SSL
-```bash
-# Make scripts executable
-chmod +x scripts/*.sh
+**중요한 환경변수:**
+- `DB_NAME`: 데이터베이스 이름 (기본값: checkeat)
+- `DB_PASSWORD`: PostgreSQL 비밀번호
+- `REDIS_PASSWORD`: Redis 비밀번호
+- `JWT_SECRET`: JWT 시크릿 키
+- Azure 서비스 관련 키들
+- 도메인 설정
 
-# Run deployment for summer-jin.store
-./scripts/deploy.sh -d summer-jin.store -e your-email@summer-jin.store
+## 3. 배포 실행
+
+### 자동 배포 스크립트 실행
+
+```bash
+# 배포 스크립트 실행
+./deploy.sh
+```
+
+이 스크립트는 다음을 수행합니다:
+- Docker 및 Docker Compose 설치
+- 필요한 디렉토리 생성
+- 서비스 빌드 및 시작
+- 데이터베이스 마이그레이션 실행
+
+## 4. SSL 인증서 설정 (선택사항)
+
+도메인이 있는 경우 SSL 인증서를 설정할 수 있습니다:
+
+```bash
+# SSL 설정 스크립트 실행
+./ssl-setup.sh your-domain.com your-email@example.com
 ```
 
 ## Manual Setup
