@@ -88,7 +88,8 @@ export class ReviewController {
   @UseGuards(JwtAuthGuard)
   async reviewWritePage(@Req() req, @Body() body: GetReviewFoodsPageDto) {
     const lang = req.user.ld_lang;
-    return await this.reviewService.oneStoreFoodsList(body.sto_id, lang);
+    const result = await this.reviewService.oneStoreFoodsList(body.sto_id, lang);
+    return result
   }
 
   // 유저가 리뷰 등록
