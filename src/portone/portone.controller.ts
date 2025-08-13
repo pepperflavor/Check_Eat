@@ -39,101 +39,80 @@ export class PortoneController {
     return idv ?? {};
   }
 
+  // controller: GET /portone/idv.html
   @Get('idv.html')
   async idvPage(@Query('id') id: string, @Res() res: Response) {
     const storeId = this.config.get<string>('PORTONE_STORE_ID')!;
     const channelKey = this.config.get<string>('PORTONE_CHANNEL_KEY')!;
     const redirectUrl = this.config.get<string>('IDV_REDIRECT_URL')!;
 
-    // Controller의 idvPage()에서 보내는 HTML 내용을 이걸로 교체
-    const html = `<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8" />
-  <title>Identity Verification</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <style>
-    html,body{height:100%;margin:0;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial,sans-serif}
-    #msg{padding:16px;text-align:center;white-space:pre-line}
-    code{background:#f5f5f5;padding:2px 6px;border-radius:4px}
-  </style>
-</head>
-<body>
-  <div id="msg">인증 화면을 불러오는 중...</div>
-  <script>
-    (function(){
-      const storeId = ${JSON.stringify(storeId)};
-      const channelKey = ${JSON.stringify(channelKey)};
-      const identityVerificationId = ${JSON.stringify(id || '')};
-      const redirectUrl = ${JSON.stringify(redirectUrl)};
-      const $ = id => document.getElementById(id);
-
-      function say(msg){ $('msg').textContent = msg; console.log('[IDV]', msg); }
-      function fail(reason){
-        console.error('[IDV] FAIL:', reason);
-        $('msg').innerHTML =
-          '포트원 SDK를 불러오지 못했습니다.\\n\\n' +
-          '사유: ' + reason + '\\n\\n' +
-          '1) https://cdn.iamport.kr/v1/iamport.js 접근 가능 여부\\n' +
-          '2) HTTPS(ngrok 등)에서 재시도\\n' +
-          '3) 애드블록/보안 확장 잠시 해제';
-      }
-      if(!identityVerificationId) return fail('identityVerificationId 누락');
-
-      const s = document.createElement('script');
-      s.src = 'https://cdn.iamport.kr/v1/iamport.js';
-      s.async = true;
-      s.onload = function(){
-        say('SDK 스크립트 로드됨');
-        try {
-          const hasPortOne = !!(window.PortOne && window.PortOne.requestIdentityVerification);
-          const hasIMP = !!(window.IMP && (window.IMP.requestIdentityVerification || window.IMP.certification));
-          console.log('hasPortOne:', hasPortOne, 'hasIMP:', hasIMP);
-
-          if (hasPortOne) {
-            say('PortOne 네임스페이스 사용');
-            window.PortOne.requestIdentityVerification({
-              storeId, identityVerificationId, channelKey, redirectUrl
-            });
-            say('인증 모듈을 여는 중...');
-          } else if (hasIMP) {
-            say('IMP 네임스페이스 사용');
-            if (window.IMP.init) try { window.IMP.init(storeId); } catch(e){}
-            const fn = window.IMP.requestIdentityVerification || window.IMP.certification;
-            const payload = window.IMP.requestIdentityVerification ? 
-              { storeId, identityVerificationId, channelKey, redirectUrl } :
-              { m_redirect_url: redirectUrl, custom_data: JSON.stringify({ identityVerificationId }) };
-            fn(payload, function(){});
-            say('인증 모듈을 여는 중...');
-          } else {
-            fail('전역 PortOne/IMP API 미정의');
-          }
-        } catch (e) {
-          fail('실행 오류: ' + (e && e.message ? e.message : e));
-        }
-      };
-      s.onerror = function(){ fail('iamport.js 로드 실패'); };
-      document.head.appendChild(s);
-    })();
-  </script>
-</body>
-</html>`;
-
+    // CSP (테스트용 완화. 운영에서는 nonce 기반 권장)
     res.setHeader(
       'Content-Security-Policy',
       [
         "default-src 'self'",
-        "script-src 'self' https://cdn.iamport.kr 'unsafe-inline'",
-        "script-src-elem 'self' https://cdn.iamport.kr 'unsafe-inline'",
+        "script-src 'self' https://cdn.portone.io 'unsafe-inline'",
+        "script-src-elem 'self' https://cdn.portone.io 'unsafe-inline'",
         "script-src-attr 'self' 'unsafe-inline'",
-        "connect-src 'self' https://api.portone.io https://cdn.iamport.kr",
-        "img-src 'self' data: https://cdn.iamport.kr",
+        "connect-src 'self' https://api.portone.io https://cdn.portone.io",
+        "img-src 'self' data: https://cdn.portone.io",
         "style-src 'self' 'unsafe-inline'",
         "frame-src 'self' https://*.portone.io https://*.iamport.kr",
         "frame-ancestors 'self'",
       ].join('; '),
     );
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
+    const html = `<!doctype html><html><head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <title>Identity Verification</title>
+    <script src="https://cdn.portone.io/v2/browser-sdk.js"></script>
+    <style>html,body{height:100%;margin:0;display:flex;align-items:center;justify-content:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans KR',Arial,sans-serif}#msg{padding:16px}</style>
+  </head><body>
+    <div id="msg">인증 화면을 불러오는 중...</div>
+    <script>
+    (function(){
+      const storeId=${JSON.stringify(storeId)};
+      const channelKey=${JSON.stringify(channelKey)};
+      const identityVerificationId=${JSON.stringify(id || '')};
+      const redirectUrl=${JSON.stringify(redirectUrl)};
+      const msg=(t)=>document.getElementById('msg').textContent=t;
+
+      if(!identityVerificationId){ msg('identityVerificationId 누락'); return; }
+      function boot(){
+        if(!window.PortOne||!window.PortOne.requestIdentityVerification){
+          msg('포트원 V2 SDK를 불러오지 못했습니다.'); return;
+        }
+        msg('인증 모듈을 여는 중...');
+        window.PortOne.requestIdentityVerification({
+          storeId, identityVerificationId, channelKey, redirectUrl
+        });
+      }
+      if(document.readyState==='complete') boot();
+      else window.addEventListener('load', boot);
+    })();
+    </script>
+  </body></html>`;
+    res.setHeader(
+      'Content-Security-Policy',
+      [
+        "default-src 'self'",
+        // 브라우저 SDK
+        "script-src 'self' https://cdn.portone.io 'unsafe-inline'",
+        "script-src-elem 'self' https://cdn.portone.io 'unsafe-inline'",
+        "script-src-attr 'self' 'unsafe-inline'",
+
+        // ❗️SDK가 호출/통신하는 도메인들(추가 핵심)
+        "connect-src 'self' https://api.portone.io https://cdn.portone.io https://*.portone.io https://checkout-service.prod.iamport.co",
+
+        // 리소스/프레임
+        "img-src 'self' data: https://cdn.portone.io https://*.portone.io",
+        "style-src 'self' 'unsafe-inline'",
+        "frame-src 'self' https://*.portone.io https://*.iamport.kr https://*.iamport.co https://checkout-service.prod.iamport.co",
+
+        "frame-ancestors 'self'",
+      ].join('; '),
+    );
     return res.send(html);
   }
 
@@ -147,5 +126,10 @@ export class PortoneController {
   @Get('echo')
   echo(@Req() req) {
     return { url: req.url, query: req.query };
+  }
+
+  @Post('complete')
+  async complete(@Body() body: { identityVerificationId: string }) {
+    return this.portoneService.complete(body.identityVerificationId);
   }
 }

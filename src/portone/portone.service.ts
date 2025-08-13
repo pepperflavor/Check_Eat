@@ -98,7 +98,7 @@ export class PortoneService {
     });
 
     const jti = randomUUID();
-    const jwtSecret = this.config.get<string>('JWT_IDV_SECRET', '');
+    const jwtSecret = this.config.get<string>('JWT_IDV_SECRET') ?? '';
     const token = jwt.sign({ idvId: dto.id, jti }, jwtSecret, {
       expiresIn: '5m',
       issuer: 'your-app',
@@ -107,16 +107,11 @@ export class PortoneService {
   }
 
   // src/portone/portone.service.ts  (추가)
+  // service
   async startSdk(dto: { method?: 'SMS' | 'APP' }) {
     const iv_id = `idv_${randomUUID()}`;
-
     await this.prisma.identityVerification.create({
-      data: {
-        iv_id,
-        iv_status: 'READY',
-        iv_method: dto.method ?? 'SMS',
-        // SDK 화면에서 번호/통신사를 입력받으므로 여기선 phone/operator 저장 불필요
-      },
+      data: { iv_id, iv_status: 'READY', iv_method: dto.method ?? 'SMS' },
     });
 
     const baseUrl = this.config.get<string>('PUBLIC_BASE_URL')!;
@@ -135,5 +130,47 @@ export class PortoneService {
       gender: iv.iv_gender ?? null,
       birthDate: iv.iv_birthDate ?? null,
     };
+  }
+
+  async complete(id: string) {
+    // 1) 포트원 V2 단건 조회
+    const res = await axios.get(
+      `https://api.portone.io/identity-verifications/${encodeURIComponent(id)}`,
+      {
+        headers: {
+          Authorization: `PortOne ${this.config.get('PORTONE_V2_SECRET')}`,
+        },
+        timeout: 60000,
+      },
+    );
+    const v = res.data?.identityVerification ?? res.data; // 스키마에 맞춰 안전 파싱
+
+    // 2) 상태/고객정보 반영
+    await this.prisma.identityVerification.update({
+      where: { iv_id: id },
+      data: {
+        iv_status: v.status, // VERIFIED | FAILED | ...
+        iv_verifiedAt: v.verifiedAt ? new Date(v.verifiedAt) : null,
+        iv_name: v.verifiedCustomer?.name ?? null,
+        iv_phoneNumber: v.verifiedCustomer?.phoneNumber ?? null,
+        iv_gender: v.verifiedCustomer?.gender ?? null,
+        iv_birthDate: v.verifiedCustomer?.birthDate
+          ? new Date(v.verifiedCustomer.birthDate + 'T00:00:00Z')
+          : null,
+        iv_ci: v.verifiedCustomer?.ci ?? null,
+        iv_di: v.verifiedCustomer?.di ?? null,
+        iv_payload: v ?? null,
+      },
+    });
+
+    // 3) 회원가입 페이지 진입용 짧은 토큰 발급(동일)
+    const jti = randomUUID();
+    const jwtSecret = this.config.get<string>('JWT_IDV_SECRET') ?? '';
+    const token = jwt.sign({ idvId: id, jti }, jwtSecret, {
+      expiresIn: '5m',
+      issuer: 'your-app',
+    });
+
+    return { token };
   }
 }
