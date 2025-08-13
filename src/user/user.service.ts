@@ -160,7 +160,7 @@ export class UserService {
     });
 
     const holidayMap = new Map<number, (typeof holidays)[number]>(
-      holidays.map((h) => [h.store_id, h]),
+      holidays.filter((h) => h.store_id !== null).map((h) => [h.store_id!, h]),
     );
 
     return stores.map((store) => {
