@@ -863,7 +863,10 @@ export class UserService {
       page,
       limit,
       totalPages: Math.ceil(totalCount / limit),
-      stores: pending.map((p) => p.store),
+      reviews: pending.map((p) => ({
+        revi_id: p.revi_id,
+        store: p.store,
+      })),
     };
   }
 

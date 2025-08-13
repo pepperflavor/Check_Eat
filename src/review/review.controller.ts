@@ -144,6 +144,7 @@ export class ReviewController {
 
 
   // 나중에 쓰기로 등록한 리뷰들 리스트 조회
+  // t삭제하기
   @Post('one-user-later-list')
   @UseGuards(JwtAuthGuard)
   async getLaterReviewsByUserID(@Req() req, @Body() body) {
