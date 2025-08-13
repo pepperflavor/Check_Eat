@@ -90,7 +90,7 @@ model BusinessCerti{
 model Food {
   foo_id Int @id @default(autoincrement())
   foo_name String? // 음식이름
-  foo_material String[] // 재료
+  foo_material String[] @default([])// 재료
   foo_price Int // 가격
   foo_img String? // 음식 이미지 - storage에서 받아와야 함, 할랄 음식이라면 할랄 테이블에서 받아옴
   foo_status Int @default(0) // 0: 정상판매중, 1: 사장 요청으로 판매 일시중지, 2: 삭제된 음식

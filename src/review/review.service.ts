@@ -20,13 +20,30 @@ export class ReviewService {
   // 우리 어플에 등록된 가게 맞는지 확인
   // 일단 영수증 발급날짜로부터 제한은 아직 없음
   async checkRegistStore(address: string, storeName: string) {
-    // 가게명 또는 주소 일치하는게 있는지 확인
-    const triemAdd = address.trim();
-    const trimStName = storeName.trim();
+    // 공백/중복 공백 정리
+    const normalize = (s: string) => s.trim().replace(/\s+/g, ' ');
+
+    const trimAdd = normalize(address);
+    const trimStName = normalize(storeName);
+
     const result = await this.prisma.store.findFirst({
       where: {
-        // sto_status : { not: 2 }, // 완전 제외할지 말지..?
-        OR: [{ sto_name: trimStName }, { sto_address: triemAdd }],
+        // 폐업은 제외하고 찾고 싶다면 주석 해제
+        sto_status: { not: 2 },
+
+        OR: [
+          // 1) 이름/주소 완전 일치 (대소문자 무시)
+          { sto_name: { equals: trimStName, mode: 'insensitive' } },
+          { sto_address: { equals: trimAdd, mode: 'insensitive' } },
+
+          // 2) 이름/주소 시작 일치
+          { sto_name: { startsWith: trimStName, mode: 'insensitive' } },
+          { sto_address: { startsWith: trimAdd, mode: 'insensitive' } },
+
+          // 3) 이름/주소 부분 포함
+          { sto_name: { contains: trimStName, mode: 'insensitive' } },
+          { sto_address: { contains: trimAdd, mode: 'insensitive' } },
+        ],
       },
       select: {
         sto_status: true,
@@ -41,7 +58,7 @@ export class ReviewService {
       };
     }
 
-    if (result?.sto_status == 2) {
+    if (result.sto_status === 2) {
       return {
         message: '폐업한 가게입니다. 리뷰를 작성할 수 없습니다',
         status: 'false',
@@ -153,6 +170,22 @@ export class ReviewService {
       ? Number(reviData.revi_status)
       : 0;
 
+    // 가게에 속한 음식인지 검증
+    const foods = await this.prisma.food.findMany({
+      where: {
+        foo_id: { in: foodIds },
+        Store: { some: { sto_id: parsingStoID } },
+        foo_status: 0,
+      },
+      select: { foo_id: true },
+    });
+    if (foods.length !== foodIds.length) {
+      return {
+        message: '[Review] 가게의 메뉴가 아닌 음식이 포함되어 있습니다.',
+        status: 'false',
+      };
+    }
+
     // ✅ 추천하지 않음인데 이유 없음 → 에러
     if (
       parsingRecoStep === 2 &&
@@ -262,8 +295,6 @@ export class ReviewService {
     };
   }
 
-
-  
   //===== 한 메뉴에 대한 리뷰 조회
   async oneMenuReviews(
     sto_id: number,
@@ -523,13 +554,17 @@ export class ReviewService {
       imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
 
+    const recostep = Number(data.revi_reco_step);
+    const recoVegan =
+      data.revi_reco_vegan != null ? Number(data.revi_reco_vegan) : null;
+
     // 본 리뷰로 업데이트
     await this.prisma.review.update({
       where: { revi_id: data.review_id },
       data: {
         revi_content: data.revi_content ?? null,
-        revi_reco_step: data.revi_reco_step,
-        revi_reco_vegan: data.revi_reco_vegan ?? null,
+        revi_reco_step: recostep,
+        revi_reco_vegan: recoVegan,
         revi_status: 0,
       },
     });
