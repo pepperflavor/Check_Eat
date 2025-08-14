@@ -16,6 +16,7 @@ import { RedisCache, redisStore } from 'cache-manager-ioredis-yet';
         const store = await redisStore({
           host: config.get('REDIS_HOST', 'redis'),
           port: config.get('REDIS_PORT', 6379),
+          password: config.get('REDIS_PASSWORD'),
         });
 
         return {
