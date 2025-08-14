@@ -10,10 +10,13 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379
+
       - JWT_SECRET=${JWT_SECRET}
+      - JWT_ACCESS_SECRET=${JWT_ACCESS_SECRET/}
+      - JWT_RFRESH_SECRET=${JWT_RFRESH_SECRET} # 코드 오타에 맞춤
       - JWT_IDV_SECRET=${JWT_IDV_SECRET}
-      - JWT_RFRESH_SECRET=${JWT_RFRESH_SECRET} # ← 코드에 오타가 있으므로 그대로 맞춰줘야 함
-      - JWT_EXPIRATION=${JWT_EXPIRATION:-1d}
+      - JWT_ACCESS_EXPIRATION_TIME=${JWT_ACCESS_EXPIRATION_TIME:-1h}
+      - JWT_REFRESH_EXPIRATION_TIME=${JWT_REFRESH_EXPIRATION_TIME:-7d}
     depends_on:
       postgres:
         condition: service_healthy
