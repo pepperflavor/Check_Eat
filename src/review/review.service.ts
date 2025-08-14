@@ -95,7 +95,7 @@ export class ReviewService {
     // Prisma 조회
     const foods = (await this.prisma.food.findMany({
       where: {
-        Store: { some: { sto_id } },
+        foo_store_id: sto_id,
         foo_status: 0, // 판매중인 음식만
       },
       select: {
@@ -174,7 +174,7 @@ export class ReviewService {
     const foods = await this.prisma.food.findMany({
       where: {
         foo_id: { in: foodIds },
-        Store: { some: { sto_id: parsingStoID } },
+        foo_store_id: parsingStoID,
         foo_status: 0,
       },
       select: { foo_id: true },
