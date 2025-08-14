@@ -130,8 +130,9 @@ export class AzureFoodRecognizerController {
 
   // 음식 담은 배열 데이터로 비건단계 추론 해주는 엔드포인트
   @Post('judge-vegan')
+  @ApiOperation({ description: '비건 단계 추측 해줌' })
   async judgeVeganWithIngredient(@Req() req, @Body() body) {
-    const sa_id = Number(req.user.sa_id)
-    return await this.azureFoodRecognizerService.judgeVeganByIngredients(body)
+    const sa_id = Number(req.user.sa_id);
+    return await this.azureFoodRecognizerService.judgeVeganByIngredients(body);
   }
 }

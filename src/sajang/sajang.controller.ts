@@ -36,6 +36,7 @@ export class SajangController {
       foo_price: body.foo_price, // string | number 허용
       foo_vegan:
         body.foo_vegan !== undefined ? Number(body.foo_vegan) : undefined,
+      sto_id: Number(body.sto_id),
     });
   }
 
@@ -161,7 +162,9 @@ export class SajangController {
   // 가게 메뉴 관리 입장
   @Post('enter-update-food')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ description: '가게 메뉴관리 페이지 입장' })
+  @ApiOperation({
+    description: '가게 메뉴관리 페이지 입장시 받아올 음식 리스트',
+  })
   async updateFoodStatus(@Req() req, @Body() body: SajangStoDto) {
     const sa_id = Number(req.user.sa_id);
     return await this.sajangService.getFoodListUpdatePage(sa_id, body?.sto_id);

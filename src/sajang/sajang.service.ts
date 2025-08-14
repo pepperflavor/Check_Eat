@@ -339,10 +339,22 @@ export class SajangService {
       throw new BadRequestException('foo_id가 유효하지 않습니다.');
     }
 
+    const targetStore = await this.prisma.store.findUnique({
+      where: { sto_id: Number(input.sto_id), sto_sa_id: saId },
+      select: { sto_id: true },
+    });
+    if (!targetStore)
+      throw new ForbiddenException('해당 사장님의 가게가 아닙니다.');
+
     // 실제 사장님이 등록하던 음식이 맞는지 검증
     const food = await this.prisma.food.findUnique({
       where: { foo_id: fooId },
-      select: { foo_id: true, foo_sa_id: true, foo_name: true },
+      select: {
+        foo_id: true,
+        foo_sa_id: true,
+        foo_name: true,
+        foo_store_id: true,
+      },
     });
 
     if (!food) throw new NotFoundException('해당 음식이 존재하지 않습니다.');
@@ -354,16 +366,14 @@ export class SajangService {
     }
 
     const updateData: any = {};
-    let nameChanged = false;
+    // let nameChanged = false;
+    // let finalName = food.foo_name ?? '';
+
     if (
       typeof input.foo_name === 'string' &&
       input.foo_name.trim().length > 0
     ) {
-      const newName = input.foo_name.trim();
-      if (newName !== food.foo_name) {
-        updateData.foo_name = newName;
-        nameChanged = true;
-      }
+      updateData.foo_name = input.foo_name.trim();
     }
 
     // 가격
@@ -399,6 +409,15 @@ export class SajangService {
       }
     }
 
+    const stoId = Number(input.sto_id);
+    if (food.foo_store_id == null) {
+      updateData.store = { connect: { sto_id: stoId } };
+    } else if (food.foo_store_id !== input.sto_id) {
+      throw new BadRequestException('이미 다른 매장에 연결된 메뉴입니다.'); // 정책에 따라 이동 허용으로 바꿀 수 있음
+      // 이동 허용하려면:
+      // data.store = { connect: { sto_id: stoId } };
+    }
+
     // 업데이트할 필드가 하나도 없으면 패스
     if (Object.keys(updateData).length === 0) {
       return {
@@ -417,10 +436,11 @@ export class SajangService {
           foo_price: true,
           foo_vegan: true,
           foo_img: true,
+          foo_store_id: true,
         },
       });
 
-      if (nameChanged && updatedFood.foo_name) {
+      if (updatedFood.foo_name && updatedFood.foo_name.trim().length > 0) {
         try {
           const resp = await this.translate.translateMany(
             updatedFood.foo_name,
@@ -436,6 +456,7 @@ export class SajangService {
             translations.find((t) => t.to === 'ar')?.text?.trim() || null;
 
           await tx.foodTranslateEN.upsert({
+            // create일때만 mt에 [] 넣음
             where: { food_id: fooId },
             update: { ...(enName ? { ft_en_name: enName } : {}) },
             create: {
@@ -776,7 +797,7 @@ export class SajangService {
       where: {
         foo_sa_id: sa_id,
         foo_status: { in: [0, 1] }, // 0: 정상, 1: 일시중지
-        Store: { some: { sto_id: targetStore.sto_id } }, // 매장 연결
+        foo_store_id: targetStore.sto_id, // 매장 연결
       },
       orderBy: { foo_id: 'asc' },
       select: {
@@ -832,8 +853,8 @@ export class SajangService {
         foo_sa_id: sa_id,
         foo_status: { in: [0, 1] },
         foo_name: { contains: keyword, mode: 'insensitive' },
-        // Food–Store (M:N) 관계에서 해당 sto_id에 연결된 Food만
-        Store: { some: { sto_id: stoId } },
+        // Food–Store (1:N) 관계에서 해당 sto_id에 연결된 Food만
+        foo_store_id: stoId,
       },
       select: {
         foo_id: true,
