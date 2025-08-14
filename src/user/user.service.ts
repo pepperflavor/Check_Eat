@@ -906,7 +906,7 @@ export class UserService {
       data: {
         user_id: user.ld_user_id,
         sto_id,
-        order_index: count,
+        fav_order_index: count,
       },
     });
 
@@ -988,7 +988,7 @@ export class UserService {
           sto_status: { not: 2 }, // ✅ include 안이 아니라 where 절에 위치해야 함
         },
       },
-      orderBy: { order_index: 'asc' },
+      orderBy: { fav_order_index: 'asc' },
       include: {
         store: {
           include: {
