@@ -1,57 +1,53 @@
-# Multi-stage build for NestJS application
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-COPY prisma ./prisma/
-
-# Install all dependencies (including devDependencies for build)
-RUN npm ci && npm cache clean --force
-
-# Copy source code
-COPY . .
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the application
-RUN npm run build
-
-# Production stage
-FROM node:18-alpine AS production
-
-WORKDIR /app
-
-# Install dumb-init for proper signal handling
-RUN apk add --no-cache dumb-init
-
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nestjs -u 1001
-
-# Copy package.json first for production dependencies
-COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
-
-# Install only production dependencies
-RUN npm ci --only=production && npm cache clean --force
-
-# Copy built application and necessary files
-COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
-COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
-COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
-
-# Switch to non-root user
-USER nestjs
-
-# Expose port
-EXPOSE 3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
-
-# Start application with dumb-init
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["node", "dist/main"]
+# ---------- Build stage ----------
+  FROM node:18-alpine AS builder
+  WORKDIR /app
+  
+  # deps + prisma
+  COPY package*.json ./
+  COPY prisma ./prisma/
+  RUN npm ci && npm cache clean --force
+  
+  # app source
+  COPY . .
+  
+  # prisma generate (빌드 전에 반드시!)
+  RUN npx prisma generate
+  
+  # build Nest (dist/main.js 생성)
+  RUN npm run build
+  
+  
+  # ---------- Production (runner) ----------
+  FROM node:18-alpine AS production
+  WORKDIR /app
+  
+  # signal handling
+  RUN apk add --no-cache dumb-init
+  
+  # non-root user
+  RUN addgroup -g 1001 -S nodejs && adduser -S nestjs -u 1001
+  
+  # prod deps만 설치
+  COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
+  RUN npm ci --only=production && npm cache clean --force
+  
+  # ---- 꼭 복사해야 하는 산출물들 ----
+  # 1) 컴파일 산출물
+  COPY --from=builder --chown=nestjs:nodejs /app/dist ./dist
+  # 2) Prisma 스키마 (migrate/generate 등에 필요 시)
+  COPY --from=builder --chown=nestjs:nodejs /app/prisma ./prisma
+  # 3) Prisma 엔진
+  COPY --from=builder --chown=nestjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma
+  # 4) *생성된* Prisma Client (@prisma/client) ← 중요
+  COPY --from=builder --chown=nestjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
+  
+  USER nestjs
+  EXPOSE 3000
+  
+  # healthcheck (원한다면 /health로 교체)
+  HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+  
+  ENTRYPOINT ["dumb-init", "--"]
+  # ★ 확장자 포함!
+  CMD ["node", "dist/main.js"]
