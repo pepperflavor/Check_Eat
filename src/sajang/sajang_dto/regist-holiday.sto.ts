@@ -3,7 +3,7 @@ import { IsNumber, IsOptional, IsString } from 'class-validator';
 export class HolidayDto {
   @IsNumber()
   @IsOptional()
-  holi_weekday?: string;
+  holi_weekday?: number;
 
   @IsString()
   @IsOptional()
@@ -39,12 +39,12 @@ export class HolidayDto {
 
   @IsString()
   @IsOptional()
-  holi_regular?: string; // 정기 휴일
+  holi_regular?: string[]; // 정기 휴일
 
   @IsString()
   @IsOptional()
-  holi_public?: string; // 한국 공휴일들 중에 쉬는날
+  holi_public?: string[]; // 한국 공휴일들 중에 쉬는날
 
   @IsNumber()
-  sto_id:number
+  sto_id: number;
 }

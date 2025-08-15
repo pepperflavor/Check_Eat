@@ -153,11 +153,13 @@ export class SajangController {
   }
 
   // 휴무일 데이터 입력받기
-  // // 프론트 협의중이라고 함
   @Post('regist-holiday')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '휴무 데이터 입력받기' })
-  async registHoli(@Req() req, @Body() body: HolidayDto) {}
+  async registHoli(@Req() req, @Body() body: HolidayDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.registHoliday(sa_id, body)
+  }
 
   // 가게 메뉴 관리 입장
   @Post('enter-update-food')

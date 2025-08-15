@@ -22,6 +22,7 @@ import { normalizeBusinessInput } from './util/normalizeBusiness';
 import { SearchFoodByNameDto } from './sajang_dto/search-food-by-name.dto';
 import { UpdateFoodDataDto } from './sajang_dto/update-food-data.dto';
 import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food-recognizer.service';
+import { HolidayDto } from './sajang_dto/regist-holiday.sto';
 
 @Injectable()
 export class SajangService {
@@ -1092,6 +1093,114 @@ export class SajangService {
       message: '음식이 삭제(비활성)되었습니다.',
       status: 'success',
       foo_id,
+    };
+  }
+
+  // 휴일 데이터 등록
+  async registHoliday(sa_id: number, data: HolidayDto) {
+    await this.assertOwner(sa_id);
+
+    // 1) 기본 검증
+    const sto_id = Number(data?.sto_id);
+    if (!sto_id || Number.isNaN(sto_id)) {
+      throw new BadRequestException('유효한 sto_id가 필요합니다.');
+    }
+
+    // 2) 본인 소유 매장인지 확인
+    const store = await this.prisma.store.findUnique({
+      where: { sto_id },
+      select: { sto_id: true, sto_sa_id: true, sto_status: true },
+    });
+    if (!store) throw new NotFoundException('해당 매장을 찾을 수 없습니다.');
+    if (store.sto_sa_id !== sa_id) {
+      throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
+    }
+    if (store.sto_status === 2) {
+      throw new BadRequestException('영업 종료된 매장입니다.');
+    }
+
+    // 문자열로 들어와도 배열로 변환 처리
+    const toNull = (v?: string) =>
+      typeof v === 'string' && v.trim() !== '' ? v.trim() : null;
+
+    const toStringOrEmpty = (v?: string) =>
+      typeof v === 'string' ? v.trim() : '';
+
+    const toArray = (v?: string[] | string) => {
+      if (Array.isArray(v)) {
+        return v.map((s) => String(s).trim()).filter(Boolean);
+      }
+      if (typeof v === 'string') {
+        return v
+          .split(/[,\n]/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+      return [];
+    };
+
+    const holi_weekday =
+      Number.isInteger(data?.holi_weekday) &&
+      (data!.holi_weekday as number) >= 0
+        ? (data!.holi_weekday as number)
+        : 0; // 기본: 일요일(0)
+
+    // 4) upsert payload (스키마 필수값 보장)
+    const payload = {
+      holi_weekday, // Int (required)
+      holi_break: toStringOrEmpty(data.holi_break), // String (required; 빈문자열 허용)
+      holi_runtime_sun: toNull(data.holi_runtime_sun),
+      holi_runtime_mon: toNull(data.holi_runtime_mon),
+      holi_runtime_tue: toNull(data.holi_runtime_tue),
+      holi_runtime_wed: toNull(data.holi_runtime_wed),
+      holi_runtime_thu: toNull(data.holi_runtime_thu),
+      holi_runtime_fri: toNull(data.holi_runtime_fri),
+      holi_runtime_sat: toNull(data.holi_runtime_sat),
+      holi_regular: toArray(data.holi_regular as any), // String[]
+      holi_public: toArray(data.holi_public as any), // String[]
+      holi_sajang_id: sa_id,
+      store_id: sto_id,
+    };
+
+    // 5) upsert (store_id는 @unique)
+    const saved = await this.prisma.holiday.upsert({
+      where: { store_id: sto_id },
+      create: payload,
+      update: {
+        holi_weekday: payload.holi_weekday,
+        holi_break: payload.holi_break,
+        holi_runtime_sun: payload.holi_runtime_sun,
+        holi_runtime_mon: payload.holi_runtime_mon,
+        holi_runtime_tue: payload.holi_runtime_tue,
+        holi_runtime_wed: payload.holi_runtime_wed,
+        holi_runtime_thu: payload.holi_runtime_thu,
+        holi_runtime_fri: payload.holi_runtime_fri,
+        holi_runtime_sat: payload.holi_runtime_sat,
+        holi_regular: payload.holi_regular,
+        holi_public: payload.holi_public,
+        holi_sajang_id: sa_id, // 소유자 갱신 유지
+      },
+      select: {
+        holi_id: true,
+        store_id: true,
+        holi_weekday: true,
+        holi_break: true,
+        holi_runtime_sun: true,
+        holi_runtime_mon: true,
+        holi_runtime_tue: true,
+        holi_runtime_wed: true,
+        holi_runtime_thu: true,
+        holi_runtime_fri: true,
+        holi_runtime_sat: true,
+        holi_regular: true,
+        holi_public: true,
+      },
+    });
+
+    return {
+      message: '휴무/영업시간이 저장되었습니다.',
+      status: 'success',
+      holiday: saved,
     };
   }
 
