@@ -10,7 +10,12 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
+      - 223.130.162.247
+    extra_hosts:
+      - "api.odcloud.kr:223.130.169.165"
     depends_on:
       postgres:
         condition: service_healthy
