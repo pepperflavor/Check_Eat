@@ -49,4 +49,4 @@
     CMD node -e "require('http').get('http://localhost:3000', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
   
   ENTRYPOINT ["dumb-init", "--"]
-  CMD ["node", "dist/main.js"]
+  CMD ["node", "dist/src/main.js"]
