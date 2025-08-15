@@ -10,9 +10,13 @@ services:
       - .env
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${DB_PASSWORD}@localhost:5432/${DB_NAME}
-      - REDIS_HOST=localhost
-    network_mode: "host"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
     volumes:
       - ./uploads:/app/uploads
     healthcheck:
