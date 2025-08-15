@@ -12,6 +12,7 @@ import { TranslateService } from 'src/translate/translate.service';
 import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food-recognizer.service';
 import { AzureFoodRecognizerModule } from 'src/azure-food-recognizer/azure-food-recognizer.module';
 import { AzureFoodClassifierService } from 'src/azure-food-classifier/azure-food-classifier.service';
+import { FoodStorageService } from 'src/azure-storage/food-storage.service';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { AzureFoodClassifierService } from 'src/azure-food-classifier/azure-food
     TranslateService,
     AzureFoodRecognizerService,
     AzureFoodClassifierService,
+    FoodStorageService
   ],
   exports: [SajangService],
 })

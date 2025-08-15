@@ -158,7 +158,7 @@ export class SajangController {
   @ApiOperation({ description: '휴무 데이터 입력받기' })
   async registHoli(@Req() req, @Body() body: HolidayDto) {
     const sa_id = Number(req.user.sa_id);
-    return await this.sajangService.registHoliday(sa_id, body)
+    return await this.sajangService.registHoliday(sa_id, body);
   }
 
   // 가게 메뉴 관리 입장
@@ -189,6 +189,20 @@ export class SajangController {
   async findFoodByName(@Req() req, @Body() body: SearchFoodByNameDto) {
     const sa_id = Number(req.user.sa_id);
     return await this.sajangService.searchByFoodName(sa_id, body);
+  }
+
+  // 음식 사진 바꾸기
+  @Post('update-food-img')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiOperation({ description: '음식 대표 이미지 업데이트(단일 파일)' })
+  async updateFoodImage(
+    @Req() req,
+    @Body() body: UpdateFoodDataDto,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.updateFoodImg(sa_id, body, file);
   }
 
   // 사업자 등록증 관리 페이지 입장

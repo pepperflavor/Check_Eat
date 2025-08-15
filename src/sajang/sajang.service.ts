@@ -23,9 +23,13 @@ import { SearchFoodByNameDto } from './sajang_dto/search-food-by-name.dto';
 import { UpdateFoodDataDto } from './sajang_dto/update-food-data.dto';
 import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food-recognizer.service';
 import { HolidayDto } from './sajang_dto/regist-holiday.sto';
+import { FoodStorageService } from 'src/azure-storage/food-storage.service';
+import { UpdateFoodImgDto } from './sajang_dto/update-foodimg.dto';
 
 @Injectable()
 export class SajangService {
+  private readonly foodContainer: string;
+
   constructor(
     private readonly prisma: PrismaService,
     private transServcice: TranslateService,
@@ -33,8 +37,12 @@ export class SajangService {
     private readonly storeStorageService: StoreStorageService,
     private readonly translate: TranslateService,
     private readonly azureFoodRecognizerService: AzureFoodRecognizerService,
+    private readonly foodStorageService:FoodStorageService,
     @InjectQueue('check-business') private readonly checkQueue: Queue,
-  ) {}
+  ) {
+    this.foodContainer =
+    this.config.get<string>('FOOD_CONTAINER_NAME') ?? 'foods';
+  }
 
   private async assertOwner(saId: any) {
     const isExist = await this.prisma.sajang.findUnique({
@@ -1203,6 +1211,74 @@ export class SajangService {
       holiday: saved,
     };
   }
+
+
+
+  // sajang.service.ts
+async updateFoodImg(
+  sa_id: number,
+  body: UpdateFoodImgDto,
+  file: Express.Multer.File,
+) {
+  await this.assertOwner(sa_id);
+
+  // 파일 검증
+  if (!file) throw new BadRequestException('업로드할 이미지 파일이 필요합니다.');
+  const MAX_MB = 5;
+  if (file.size > MAX_MB * 1024 * 1024) {
+    throw new BadRequestException(`이미지 용량은 최대 ${MAX_MB}MB입니다.`);
+  }
+  if (!/^image\/(png|jpe?g|webp)$/i.test(file.mimetype)) {
+    throw new BadRequestException('png/jpg/jpeg/webp 형식만 허용됩니다.');
+  }
+
+  const foo_id = Number(body.foo_id);
+  if (!foo_id || Number.isNaN(foo_id)) {
+    throw new BadRequestException('유효한 foo_id가 필요합니다.');
+  }
+
+  // 음식 소유 및 (선택) 매장 일치 검증
+  const food = await this.prisma.food.findUnique({
+    where: { foo_id },
+    select: { foo_id: true, foo_sa_id: true, foo_img: true, foo_store_id: true },
+  });
+  if (!food) throw new NotFoundException('해당 음식을 찾을 수 없습니다.');
+  if (food.foo_sa_id !== sa_id) {
+    throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
+  }
+  if (body.sto_id && food.foo_store_id !== body.sto_id) {
+    throw new ForbiddenException('해당 매장의 메뉴가 아닙니다.');
+  }
+
+  // 기존 이미지 삭제(있으면)
+  if (food.foo_img && food.foo_img !== '0') {
+    try {
+      await this.foodStorageService.delete(food.foo_img, this.foodContainer);
+    } catch (err) {
+      // 실패해도 계속 진행
+      console.warn('[updateFoodImg] 기존 이미지 삭제 실패:', err?.message);
+    }
+  }
+
+  // 새 이미지 업로드
+  const uploaded = await this.foodStorageService.upload(
+    file,
+    this.foodContainer,
+  );
+
+  // DB 반영
+  const updated = await this.prisma.food.update({
+    where: { foo_id },
+    data: { foo_img: uploaded.url },
+    select: { foo_id: true, foo_img: true },
+  });
+
+  return {
+    message: '음식 이미지가 성공적으로 업데이트되었습니다.',
+    status: 'success',
+    food: updated,
+  };
+}
 
   //----------- 사장 홈 화면
   // sajang.service.ts
