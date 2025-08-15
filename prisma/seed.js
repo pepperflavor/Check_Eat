@@ -1,5 +1,6 @@
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcrypt');
+const seedStores = require('./seedStores');
 const seedFoods = require('./seedFoods');
 
 // JSON 파일이 없으면 빈 배열 사용
@@ -99,8 +100,14 @@ async function main() {
     }
   }
 
-  console.log('🌱 시드 데이터 삽입 완료');
-  console.log('음식 시드 데이터 삽입시작');
+  console.log('🌱 기본 시드 데이터 삽입 완료');
+  
+  // Store 데이터 생성
+  console.log('🏪 Store 시드 데이터 삽입 시작');
+  await seedStores();
+  
+  // Food 데이터 생성
+  console.log('🍽️ Food 시드 데이터 삽입 시작');
   await seedFoods();
 }
 
