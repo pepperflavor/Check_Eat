@@ -91,7 +91,7 @@ export class AuthController {
   })
   @Post('check-email-unique')
   async checkEmailUnique(@Body() body: EmailUniqueDto) {
-    console.log(body.email);
+
     return await this.commonService.isExistEmail(body.email);
   }
 

@@ -10,9 +10,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(username: string, password: string): Promise<any> {
-    console.log('로컬 스트레지 안 : ');
-    console.log('✅ 받은 username:', username);
-    console.log('✅ 받은 password:', password);
+
     const user = await this.authService.validateUser(username, password);
 
     if (!user) {

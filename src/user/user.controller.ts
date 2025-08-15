@@ -40,7 +40,7 @@ export class UserController {
   @ApiOperation({ summary: '닉네입 변경하기', description: '닉네임 변경하기' })
   async changeNickName(@Req() req, @Body() body: UpdateNickDto) {
     const log_id = req.user.sub;
-    console.log(log_id);
+ 
     return await this.userService.updateNick(log_id, body.nickname);
   }
 

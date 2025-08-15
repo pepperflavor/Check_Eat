@@ -8,12 +8,10 @@ export class EmailService implements OnModuleInit {
   onModuleInit() {
     const apiKEY = this.config.get<string>('SEND_GRID_MAILER_API_KEY');
     if (apiKEY) {
-      console.log('샌드 그리드 키 값 : ');
-      console.log(apiKEY);
+
       sgMail.setApiKey(apiKEY);
     } else {
-      // console.log('샌드 그리드 키 값 : ');
-      // console.log(apiKEY);
+
       throw new Error('SEND_GRID_MAILER_API_KEY is not defined');
     }
   }
@@ -25,8 +23,7 @@ export class EmailService implements OnModuleInit {
     type: number,
   ) {
     const from = this.config.get<string>('SEND_GRID_SENDER_EMAIL');
-    console.log('샌드그리드 안 : ');
-    console.log(from);
+
     if (!from) {
       throw new Error('SEND_GRID_SENDER_EMAIL is not defined');
     }

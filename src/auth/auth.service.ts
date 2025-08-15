@@ -37,8 +37,6 @@ export class AuthService {
     const isId = await this.commonService.isExistID(data.log_Id);
     const isEmail = await this.commonService.isExistEmail(data.email);
 
-    console.log(isId.status);
-    console.log(isEmail.status);
 
     if (isId.status !== 200 && isEmail.status !== 200) {
       throw new UnauthorizedException(
@@ -48,8 +46,7 @@ export class AuthService {
 
     const result = await this.userService.createUser(data);
 
-    console.log(result);
-    console.log('authSERVICE 안임');
+   
     return result;
   }
 
@@ -94,9 +91,6 @@ export class AuthService {
       data.ld_lang,
     );
 
-    console.log('로그인 함수 안 페이로드리턴 값 확인 : ');
-    console.log(tokenPayload);
-
     const accessToken = await this.jwtService.signAsync(tokenPayload, {
       secret: this.config.get<string>('JWT_ACCESS_SECRET'),
       expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
@@ -110,8 +104,8 @@ export class AuthService {
       },
     );
 
-    console.log('액세스토큰 : ' + accessToken);
-    console.log('리프레시 토큰 : ' + refreshToken);
+    // console.log('액세스토큰 : ' + accessToken);
+    // console.log('리프레시 토큰 : ' + refreshToken);
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
 
@@ -141,12 +135,10 @@ export class AuthService {
         ld_usergrade,
       );
 
-      console.log('유저 데이터 리턴 확인');
-      console.log(user);
 
       // user 가 실제로 객체에 존재하는지 확인
       if (user && 'user' in user && user.user) {
-        console.log('유저 페이로드 설정 들어옴 ');
+   
         payload = {
           ...payload,
           user_vegan: user.user.user_vegan,
@@ -159,15 +151,13 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
-      console.log('사장님 페이로드 설정 들어옴 ');
+    
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,
       )) as SajangLoginToken;
 
-      console.log('데이터 리턴 확인');
-      console.log(sajang);
-
+ 
       payload = {
         ...payload,
         sa_id: sajang.ld_sajang_id,

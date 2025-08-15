@@ -168,14 +168,13 @@ export class CommonAccountService {
   }
 
   async comparePassword(plainPWD: string, hashedPWD): Promise<boolean> {
-    console.log('🧪 입력 비번:', plainPWD);
-    console.log('🧪 해시 비번:', hashedPWD);
+
     if (!hashedPWD || !hashedPWD.startsWith('$2')) {
       throw new Error('저장된 비밀번호 형식이 잘못되었습니다.');
     }
 
     const result = await bcrypt.compare(plainPWD, hashedPWD);
-    console.log('🧪 비교 결과:', result);
+    
     return result;
   }
 
@@ -216,7 +215,6 @@ export class CommonAccountService {
 
     const hashedPWD = await bcrypt.hash(inputpwd, SALT); // 비번 해시화
 
-    console.log(hashedPWD);
 
     const result = await this.prisma.loginData.update({
       where: {
@@ -301,8 +299,8 @@ export class CommonAccountService {
 
     try {
       const savedCode = await this.cache.get(key);
-      console.log(`저장되어있던 코드 : ${savedCode}`);
-      console.log(`입력들어온 코드 : ${inputCode}`);
+      // console.log(`저장되어있던 코드 : ${savedCode}`);
+      // console.log(`입력들어온 코드 : ${inputCode}`);
 
       if (!savedCode) {
         throw new UnauthorizedException(

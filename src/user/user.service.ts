@@ -36,8 +36,7 @@ export class UserService {
   async createUser(createDTO: CreateUserDTO) {
     const SALT = Number(await this.config.get('BCRYPT_SALT_ROUNDS'));
 
-    console.log(SALT);
-
+ 
     let {
       log_Id,
       log_pwd,

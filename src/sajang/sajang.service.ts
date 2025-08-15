@@ -243,12 +243,6 @@ export class SajangService {
       ],
     };
 
-    console.log(
-      '요청 URL:',
-      `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
-    );
-    console.log('요청 Payload:', JSON.stringify(payload, null, 2));
-
     const { data: response } = await axios.post(
       `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
       payload,
