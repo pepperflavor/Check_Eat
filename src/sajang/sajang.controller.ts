@@ -120,6 +120,15 @@ export class SajangController {
     return await this.sajangService.sajangEnterMypage(sa_id, email);
   }
 
+  // 가게 대표 이미지 수정 페이지 진입시 기존 사진리턴
+  @Post('board-img')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '가게 대표이미지 수정 진입시 사진 받아오기' })
+  async getBoardImg(@Req() req, @Body() body:SajangStoDto) {
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.getBoardImg(sa_id, body.sto_id);
+  }
+
   // 가게 대표 이미지 수정
   // 가게 아이디 필요
   @Post('update-board-img')

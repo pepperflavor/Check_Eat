@@ -37,11 +37,11 @@ export class SajangService {
     private readonly storeStorageService: StoreStorageService,
     private readonly translate: TranslateService,
     private readonly azureFoodRecognizerService: AzureFoodRecognizerService,
-    private readonly foodStorageService:FoodStorageService,
+    private readonly foodStorageService: FoodStorageService,
     @InjectQueue('check-business') private readonly checkQueue: Queue,
   ) {
     this.foodContainer =
-    this.config.get<string>('FOOD_CONTAINER_NAME') ?? 'foods';
+      this.config.get<string>('FOOD_CONTAINER_NAME') ?? 'foods';
   }
 
   private async assertOwner(saId: any) {
@@ -252,29 +252,57 @@ export class SajangService {
       ],
     };
 
-    const { data: response } = await axios.post(
-      `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`,
-      payload,
-      {
+    const requestUrl = `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`;
+    
+    console.log('=== 국세청 API 요청 디버깅 ===');
+    console.log('요청 URL:', requestUrl);
+    console.log('요청 Payload:', JSON.stringify(payload, null, 2));
+    console.log('IRS_URL:', IRS_URL);
+    console.log('SERVICE_KEY 존재:', !!SERVICE_KEY);
+    console.log('SERVICE_KEY 앞 10자:', SERVICE_KEY?.substring(0, 10));
+
+    try {
+      const { data: response } = await axios.post(requestUrl, payload, {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
         },
-      },
-    );
+        timeout: 30000, // 30초 타임아웃
+      });
 
-    const result = response?.data?.[0];
+      console.log('=== 국세청 API 응답 ===');
+      console.log('전체 응답:', JSON.stringify(response, null, 2));
+      console.log('응답 데이터:', response?.data);
 
-    if (!result || result.valid !== '01') {
-      throw new BadRequestException(
-        result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
-      );
+      const result = response?.data?.[0];
+
+      if (!result || result.valid !== '01') {
+        console.log('=== 검증 실패 ===');
+        console.log('result:', result);
+        console.log('valid 값:', result?.valid);
+        console.log('valid_msg:', result?.valid_msg);
+        
+        throw new BadRequestException(
+          result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
+        );
+      }
+
+      console.log('=== 검증 성공 ===');
+      return {
+        message: '진위여부 확인 완료',
+        status: 'success',
+      };
+    } catch (axiosError: any) {
+      console.log('=== axios 오류 상세 ===');
+      console.log('오류 메시지:', axiosError.message);
+      console.log('오류 코드:', axiosError.code);
+      console.log('응답 상태:', axiosError.response?.status);
+      console.log('응답 헤더:', axiosError.response?.headers);
+      console.log('응답 데이터:', axiosError.response?.data);
+      console.log('요청 설정:', axiosError.config?.url);
+      
+      throw axiosError;
     }
-
-    return {
-      message: '진위여부 확인 완료',
-      status: 'success',
-    };
   }
 
   // 사장 회원가입
@@ -563,6 +591,30 @@ export class SajangService {
       email: email,
       stores, //
     };
+  }
+
+  // 가게 간판 이미지 수정 페이지 진입
+  async getBoardImg(sa_id: number, sto_id?: number) {
+    if (!sto_id) {
+      const stores = await this.prisma.store.findMany({
+        where: { sto_sa_id: sa_id },
+        select: { sto_id: true, sto_img: true, sto_name: true },
+        orderBy: { sto_id: 'asc' },
+      });
+
+      if (stores.length === 0) {
+        throw new NotFoundException('해당 사장님 소유의 가게가 없습니다.');
+      }
+      if (stores.length > 1) {
+        return {
+          message: '여러 가게가 있어 선택이 필요합니다.',
+          candidates: stores, // [{ sto_id, sto_img, sto_name }, ...]
+        };
+      }
+      // 가게가 1개면 그 가게의 이미지 반환
+      const only = stores[0];
+      return { sto_id: only.sto_id, sto_img: only.sto_img ?? null };
+    }
   }
 
   // 마이페이지에서 가게 간판 이미지 수정하기
@@ -1108,13 +1160,12 @@ export class SajangService {
   async registHoliday(sa_id: number, data: HolidayDto) {
     await this.assertOwner(sa_id);
 
-    // 1) 기본 검증
     const sto_id = Number(data?.sto_id);
     if (!sto_id || Number.isNaN(sto_id)) {
       throw new BadRequestException('유효한 sto_id가 필요합니다.');
     }
 
-    // 2) 본인 소유 매장인지 확인
+    // 본인 소유 매장인지 확인
     const store = await this.prisma.store.findUnique({
       where: { sto_id },
       select: { sto_id: true, sto_sa_id: true, sto_status: true },
@@ -1147,47 +1198,101 @@ export class SajangService {
       return [];
     };
 
-    const holi_weekday =
-      Number.isInteger(data?.holi_weekday) &&
-      (data!.holi_weekday as number) >= 0
-        ? (data!.holi_weekday as number)
-        : 0; // 기본: 일요일(0)
-
-    // 4) upsert payload (스키마 필수값 보장)
-    const payload = {
-      holi_weekday, // Int (required)
-      holi_break: toStringOrEmpty(data.holi_break), // String (required; 빈문자열 허용)
-      holi_runtime_sun: toNull(data.holi_runtime_sun),
-      holi_runtime_mon: toNull(data.holi_runtime_mon),
-      holi_runtime_tue: toNull(data.holi_runtime_tue),
-      holi_runtime_wed: toNull(data.holi_runtime_wed),
-      holi_runtime_thu: toNull(data.holi_runtime_thu),
-      holi_runtime_fri: toNull(data.holi_runtime_fri),
-      holi_runtime_sat: toNull(data.holi_runtime_sat),
-      holi_regular: toArray(data.holi_regular as any), // String[]
-      holi_public: toArray(data.holi_public as any), // String[]
-      holi_sajang_id: sa_id,
-      store_id: sto_id,
-    };
-
-    // 5) upsert (store_id는 @unique)
-    const saved = await this.prisma.holiday.upsert({
+    // 기존 휴무일 존재여부
+    const existing = await this.prisma.holiday.findUnique({
       where: { store_id: sto_id },
-      create: payload,
-      update: {
-        holi_weekday: payload.holi_weekday,
-        holi_break: payload.holi_break,
-        holi_runtime_sun: payload.holi_runtime_sun,
-        holi_runtime_mon: payload.holi_runtime_mon,
-        holi_runtime_tue: payload.holi_runtime_tue,
-        holi_runtime_wed: payload.holi_runtime_wed,
-        holi_runtime_thu: payload.holi_runtime_thu,
-        holi_runtime_fri: payload.holi_runtime_fri,
-        holi_runtime_sat: payload.holi_runtime_sat,
-        holi_regular: payload.holi_regular,
-        holi_public: payload.holi_public,
-        holi_sajang_id: sa_id, // 소유자 갱신 유지
-      },
+      select: { holi_id: true },
+    });
+
+    // 휴무일 없으면 생성
+    if (!existing) {
+      const createPayload = {
+        holi_weekday:
+          Number.isInteger(data?.holi_weekday) &&
+          (data!.holi_weekday as number) >= 0
+            ? (data!.holi_weekday as number)
+            : 0,
+        holi_break: toStringOrEmpty(data.holi_break),
+        holi_runtime_sun: toNull(data.holi_runtime_sun),
+        holi_runtime_mon: toNull(data.holi_runtime_mon),
+        holi_runtime_tue: toNull(data.holi_runtime_tue),
+        holi_runtime_wed: toNull(data.holi_runtime_wed),
+        holi_runtime_thu: toNull(data.holi_runtime_thu),
+        holi_runtime_fri: toNull(data.holi_runtime_fri),
+        holi_runtime_sat: toNull(data.holi_runtime_sat),
+        holi_regular: toArray(data.holi_regular as any),
+        holi_public: toArray(data.holi_public as any),
+        holi_sajang_id: sa_id,
+        store_id: sto_id,
+      };
+
+      const saved = await this.prisma.holiday.create({
+        data: createPayload,
+        select: {
+          holi_id: true,
+          store_id: true,
+          holi_weekday: true,
+          holi_break: true,
+          holi_runtime_sun: true,
+          holi_runtime_mon: true,
+          holi_runtime_tue: true,
+          holi_runtime_wed: true,
+          holi_runtime_thu: true,
+          holi_runtime_fri: true,
+          holi_runtime_sat: true,
+          holi_regular: true,
+          holi_public: true,
+        },
+      });
+
+      return {
+        message: '휴무/영업시간이 생성되었습니다.',
+        status: 'success',
+        holiday: saved,
+      };
+    }
+
+    // 기존 데이터 있으면 업데이트
+    const updateData: Record<string, any> = {};
+
+    if (
+      data.holi_weekday !== undefined &&
+      Number.isInteger(data.holi_weekday)
+    ) {
+      updateData.holi_weekday = Number(data.holi_weekday);
+    }
+
+    if (data.holi_break !== undefined) {
+      updateData.holi_break = toStringOrEmpty(data.holi_break);
+    }
+
+    if (data.holi_runtime_sun !== undefined)
+      updateData.holi_runtime_sun = toNull(data.holi_runtime_sun);
+    if (data.holi_runtime_mon !== undefined)
+      updateData.holi_runtime_mon = toNull(data.holi_runtime_mon);
+    if (data.holi_runtime_tue !== undefined)
+      updateData.holi_runtime_tue = toNull(data.holi_runtime_tue);
+    if (data.holi_runtime_wed !== undefined)
+      updateData.holi_runtime_wed = toNull(data.holi_runtime_wed);
+    if (data.holi_runtime_thu !== undefined)
+      updateData.holi_runtime_thu = toNull(data.holi_runtime_thu);
+    if (data.holi_runtime_fri !== undefined)
+      updateData.holi_runtime_fri = toNull(data.holi_runtime_fri);
+    if (data.holi_runtime_sat !== undefined)
+      updateData.holi_runtime_sat = toNull(data.holi_runtime_sat);
+
+    if (data.holi_regular !== undefined)
+      updateData.holi_regular = toArray(data.holi_regular as any);
+    if (data.holi_public !== undefined)
+      updateData.holi_public = toArray(data.holi_public as any);
+
+    if (Object.keys(updateData).length === 0) {
+      return { message: '변경할 데이터가 없습니다.', status: 'skip' };
+    }
+
+    const saved = await this.prisma.holiday.update({
+      where: { store_id: sto_id },
+      data: updateData,
       select: {
         holi_id: true,
         store_id: true,
@@ -1206,79 +1311,83 @@ export class SajangService {
     });
 
     return {
-      message: '휴무/영업시간이 저장되었습니다.',
+      message: '휴무/영업시간이 업데이트되었습니다.',
       status: 'success',
       holiday: saved,
     };
   }
 
-
-
   // sajang.service.ts
-async updateFoodImg(
-  sa_id: number,
-  body: UpdateFoodImgDto,
-  file: Express.Multer.File,
-) {
-  await this.assertOwner(sa_id);
+  async updateFoodImg(
+    sa_id: number,
+    body: UpdateFoodImgDto,
+    file: Express.Multer.File,
+  ) {
+    await this.assertOwner(sa_id);
 
-  // 파일 검증
-  if (!file) throw new BadRequestException('업로드할 이미지 파일이 필요합니다.');
-  const MAX_MB = 5;
-  if (file.size > MAX_MB * 1024 * 1024) {
-    throw new BadRequestException(`이미지 용량은 최대 ${MAX_MB}MB입니다.`);
-  }
-  if (!/^image\/(png|jpe?g|webp)$/i.test(file.mimetype)) {
-    throw new BadRequestException('png/jpg/jpeg/webp 형식만 허용됩니다.');
-  }
-
-  const foo_id = Number(body.foo_id);
-  if (!foo_id || Number.isNaN(foo_id)) {
-    throw new BadRequestException('유효한 foo_id가 필요합니다.');
-  }
-
-  // 음식 소유 및 (선택) 매장 일치 검증
-  const food = await this.prisma.food.findUnique({
-    where: { foo_id },
-    select: { foo_id: true, foo_sa_id: true, foo_img: true, foo_store_id: true },
-  });
-  if (!food) throw new NotFoundException('해당 음식을 찾을 수 없습니다.');
-  if (food.foo_sa_id !== sa_id) {
-    throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
-  }
-  if (body.sto_id && food.foo_store_id !== body.sto_id) {
-    throw new ForbiddenException('해당 매장의 메뉴가 아닙니다.');
-  }
-
-  // 기존 이미지 삭제(있으면)
-  if (food.foo_img && food.foo_img !== '0') {
-    try {
-      await this.foodStorageService.delete(food.foo_img, this.foodContainer);
-    } catch (err) {
-      // 실패해도 계속 진행
-      console.warn('[updateFoodImg] 기존 이미지 삭제 실패:', err?.message);
+    // 파일 검증
+    if (!file)
+      throw new BadRequestException('업로드할 이미지 파일이 필요합니다.');
+    const MAX_MB = 5;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      throw new BadRequestException(`이미지 용량은 최대 ${MAX_MB}MB입니다.`);
     }
+    if (!/^image\/(png|jpe?g|webp)$/i.test(file.mimetype)) {
+      throw new BadRequestException('png/jpg/jpeg/webp 형식만 허용됩니다.');
+    }
+
+    const foo_id = Number(body.foo_id);
+    if (!foo_id || Number.isNaN(foo_id)) {
+      throw new BadRequestException('유효한 foo_id가 필요합니다.');
+    }
+
+    // 음식 소유 및 (선택) 매장 일치 검증
+    const food = await this.prisma.food.findUnique({
+      where: { foo_id },
+      select: {
+        foo_id: true,
+        foo_sa_id: true,
+        foo_img: true,
+        foo_store_id: true,
+      },
+    });
+    if (!food) throw new NotFoundException('해당 음식을 찾을 수 없습니다.');
+    if (food.foo_sa_id !== sa_id) {
+      throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
+    }
+    if (body.sto_id && food.foo_store_id !== body.sto_id) {
+      throw new ForbiddenException('해당 매장의 메뉴가 아닙니다.');
+    }
+
+    // 기존 이미지 삭제(있으면)
+    if (food.foo_img && food.foo_img !== '0') {
+      try {
+        await this.foodStorageService.delete(food.foo_img, this.foodContainer);
+      } catch (err) {
+        // 실패해도 계속 진행
+        console.warn('[updateFoodImg] 기존 이미지 삭제 실패:', err?.message);
+      }
+    }
+
+    // 새 이미지 업로드
+    const uploaded = await this.foodStorageService.upload(
+      file,
+      this.foodContainer,
+    );
+
+    // DB 반영
+    const updated = await this.prisma.food.update({
+      where: { foo_id },
+      data: { foo_img: uploaded.url },
+      select: { foo_id: true, foo_img: true },
+    });
+
+    return {
+      message: '음식 이미지가 성공적으로 업데이트되었습니다.',
+      status: 'success',
+      food: updated,
+    };
   }
-
-  // 새 이미지 업로드
-  const uploaded = await this.foodStorageService.upload(
-    file,
-    this.foodContainer,
-  );
-
-  // DB 반영
-  const updated = await this.prisma.food.update({
-    where: { foo_id },
-    data: { foo_img: uploaded.url },
-    select: { foo_id: true, foo_img: true },
-  });
-
-  return {
-    message: '음식 이미지가 성공적으로 업데이트되었습니다.',
-    status: 'success',
-    food: updated,
-  };
-}
 
   //----------- 사장 홈 화면
   // sajang.service.ts
