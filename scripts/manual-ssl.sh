@@ -63,9 +63,9 @@ echo "========================================"
 
 # Check if services are running
 print_step "Checking if Docker services are running..."
-if ! docker-compose ps | grep -q "Up"; then
+if ! docker compose ps | grep -q "Up"; then
     print_step "Starting necessary services..."
-    docker-compose up -d postgres redis app
+    docker compose up -d postgres redis app
     sleep 20
 fi
 
@@ -100,12 +100,12 @@ EOF
 
 # Start/restart nginx
 print_step "Starting nginx with HTTP-only configuration..."
-docker-compose up -d nginx
+docker compose up -d nginx
 sleep 5
 
 # Request certificate
 print_step "Requesting SSL certificate from Let's Encrypt..."
-docker-compose run --rm certbot certonly \
+docker compose run --rm certbot certonly \
     --webroot \
     --webroot-path /var/www/certbot/ \
     -d $DOMAIN \
@@ -123,7 +123,7 @@ if [ $? -eq 0 ]; then
     mv docker/nginx/conf.d/default.conf.backup docker/nginx/conf.d/default.conf
     
     # Restart nginx to load SSL
-    docker-compose restart nginx
+    docker compose restart nginx
     
     print_success "SSL setup completed!"
     
@@ -135,7 +135,7 @@ else
     print_error "SSL certificate request failed!"
     print_step "Restoring original configuration..."
     mv docker/nginx/conf.d/default.conf.backup docker/nginx/conf.d/default.conf
-    docker-compose restart nginx
+    docker compose restart nginx
     
     echo ""
     echo "❌ SSL setup failed. Your site is still accessible via HTTP:"
