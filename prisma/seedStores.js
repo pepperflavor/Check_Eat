@@ -33,12 +33,13 @@ async function seedStores() {
       const createdStore = await prisma.store.create({
         data: {
           sto_name: storeData.RSTRNT_NM,
-          sto_addr: storeData.RSTRNT_ROAD_NM_ADDR || storeData.RSTRNT_LNM_ADDR,
+          sto_name_en: storeData.RSTRNT_NM, // 영어명은 일단 한글명과 동일하게
+          sto_address: storeData.RSTRNT_ROAD_NM_ADDR || storeData.RSTRNT_LNM_ADDR,
           sto_phone: storeData.RSTRNT_TEL_NO || '02-0000-0000',
           sto_latitude: parseFloat(storeData.RSTRNT_LA) || 37.5665,
           sto_longitude: parseFloat(storeData.RSTRNT_LO) || 126.9780,
           sto_img: null,
-          sto_category: storeData.RSTRNT_CTGRY_NM || '기타',
+          sto_type: storeData.RSTRNT_CTGRY_NM || '기타',
           sto_status: 0, // 활성화
           sto_sa_id: randomSajangId,
         },
