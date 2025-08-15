@@ -221,7 +221,7 @@ export class AzureFoodRecognizerService {
   async saveFromCache(
     cacheId: string,
     sa_id: number,
-    opts: { ok?: string; foodName?: string }, // ✅ 인터페이스 변경
+    opts: { ok?: string; foodName?: string }, 
   ) {
     const { ok, foodName } = opts;
     if (!cacheId) throw new BadRequestException('cacheId is required');
@@ -496,10 +496,6 @@ export class AzureFoodRecognizerService {
     - Absolutely do not include translations in other languages
     - Example: ["단호박", "설탕", "소금", "버터"]
     `;
-
-    //     `Dish name: "${food.foo_name}".
-    // Return 8~16 generic ingredients (e.g., "rice", "soy sauce", "garlic").
-    // Only JSON per schema.`;
 
     const schema = {
       type: 'object',
