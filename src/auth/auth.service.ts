@@ -218,7 +218,7 @@ export class AuthService {
       payload = {
         ...payload,
         sa_id: sajang.ld_sajang_id,
-        sto_id: sajang.sajang?.Store?.[0].sto_id ?? null, // 일단 처음 등록한 가게로
+        sto_id: sajang.sajang?.Store?.[0]?.sto_id ?? null, // 일단 처음 등록한 가게로
       };
 
       return payload;
