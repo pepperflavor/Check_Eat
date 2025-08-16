@@ -556,7 +556,7 @@ export class SajangService {
   //-------------  사장 마이페이지 관련
 
   // 마이페이지 입장
-  async sajangEnterMypage(sa_id: number, email: string) {
+  async sajangEnterMypage(sa_id: number, email: string, sto_id?: number) {
     // 사장 존재 확인
     const sajang = await this.prisma.sajang.findUnique({
       where: { sa_id },
@@ -565,7 +565,7 @@ export class SajangService {
         sa_certification: true,
         sa_certi_status: true,
         Store: {
-          select: { sto_id: true, sto_name: true },
+          select: { sto_id: true, sto_name: true, sto_img: true },
           orderBy: { sto_id: 'asc' },
         },
       },
@@ -577,19 +577,24 @@ export class SajangService {
         status: 'false',
       };
     }
+    let targetImg: string | null = null;
 
-    const stores = (sajang.Store ?? []).map((s) => ({
-      sto_id: s.sto_id,
-      sto_name: s.sto_name,
-    }));
-
+    if (sto_id !== undefined) {
+      // sto_id 지정 → 해당 가게 이미지
+      const target = sajang.Store.find((s) => s.sto_id === sto_id);
+      targetImg = target?.sto_img ?? null;
+    } else {
+      // sto_id 미지정 → 첫 번째 가게 이미지 (없으면 null)
+      targetImg = sajang.Store.length > 0 ? sajang.Store[0].sto_img ?? null : null;
+    }
+  
     return {
       status: 'success',
       sa_id: sajang.sa_id,
-      sa_certification: sajang.sa_certification, // 0/1/2
-      sa_certi_status: sajang.sa_certi_status, // 0/1/2/3
-      email: email,
-      stores, //
+      sa_certification: sajang.sa_certification,
+      sa_certi_status: sajang.sa_certi_status,
+      email,
+      sto_img: targetImg,
     };
   }
 
@@ -694,7 +699,9 @@ export class SajangService {
     });
 
     if (!targetStore) {
-      throw new NotFoundException('해당 사장님의 가게가 아니거나 존재하지 않습니다.');
+      throw new NotFoundException(
+        '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
+      );
     }
 
     return {
@@ -734,27 +741,48 @@ export class SajangService {
       throw new ForbiddenException('권한이 없습니다.');
 
     const data: Record<string, any> = {};
-    
+
     // 입력받은 값이 있는 필드만 업데이트 (null이나 빈 문자열로 덮어씌우지 않음)
-    if (body.sto_name !== undefined && body.sto_name !== null && body.sto_name.trim() !== '') {
+    if (
+      body.sto_name !== undefined &&
+      body.sto_name !== null &&
+      body.sto_name.trim() !== ''
+    ) {
       data.sto_name = body.sto_name.trim();
     }
     if (body.sto_phone !== undefined && body.sto_phone !== null) {
-      data.sto_phone = body.sto_phone.trim() === '' ? null : body.sto_phone.trim();
+      data.sto_phone =
+        body.sto_phone.trim() === '' ? null : body.sto_phone.trim();
     }
-    if (body.sto_name_en !== undefined && body.sto_name_en !== null && body.sto_name_en.trim() !== '') {
+    if (
+      body.sto_name_en !== undefined &&
+      body.sto_name_en !== null &&
+      body.sto_name_en.trim() !== ''
+    ) {
       data.sto_name_en = body.sto_name_en.trim();
     }
-    if (body.sto_address !== undefined && body.sto_address !== null && body.sto_address.trim() !== '') {
+    if (
+      body.sto_address !== undefined &&
+      body.sto_address !== null &&
+      body.sto_address.trim() !== ''
+    ) {
       data.sto_address = body.sto_address.trim();
     }
-    if (body.sto_latitude !== undefined && body.sto_latitude !== null && body.sto_latitude !== '') {
+    if (
+      body.sto_latitude !== undefined &&
+      body.sto_latitude !== null &&
+      body.sto_latitude !== ''
+    ) {
       const lat = parseFloat(body.sto_latitude);
       if (!isNaN(lat)) {
         data.sto_latitude = lat;
       }
     }
-    if (body.sto_longitude !== undefined && body.sto_longitude !== null && body.sto_longitude !== '') {
+    if (
+      body.sto_longitude !== undefined &&
+      body.sto_longitude !== null &&
+      body.sto_longitude !== ''
+    ) {
       const lng = parseFloat(body.sto_longitude);
       if (!isNaN(lng)) {
         data.sto_longitude = lng;
@@ -960,7 +988,13 @@ export class SajangService {
           bs_address: true,
           bs_sa_id: true,
           stores: {
-            select: { sto_id: true, sto_name: true },
+            select: {
+              sto_id: true,
+              sto_name: true,
+              sto_name_en: true,
+              sto_address: true,
+              sto_phone: true,
+            },
             orderBy: { sto_id: 'asc' },
           },
         },
@@ -986,7 +1020,13 @@ export class SajangService {
         bs_type: true,
         bs_address: true,
         stores: {
-          select: { sto_id: true, sto_name: true },
+          select: {
+            sto_id: true,
+            sto_name: true,
+            sto_name_en: true,
+            sto_address: true,
+            sto_phone: true,
+          },
           orderBy: { sto_id: 'asc' },
         },
         _count: { select: { stores: true } },
