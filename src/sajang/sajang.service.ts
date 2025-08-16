@@ -619,35 +619,28 @@ export class SajangService {
 
   // 마이페이지에서 가게 간판 이미지 수정하기
   async updateStoreImg(
-    ld_log_id: string,
+    sa_id: number,
     file: Express.Multer.File,
     sto_id?: number,
   ) {
-    const login = await this.prisma.loginData.findUnique({
-      where: { ld_log_id },
-      select: { sajang: { select: { sa_id: true } } },
-    });
-    const saId = login?.sajang?.sa_id;
-    if (!saId)
-      return { message: '사장님의 가게가 존재하지 않습니다.', status: 'false' };
-
-    const where =
-      typeof sto_id === 'number'
-        ? { sto_id, sto_sa_id: saId }
-        : { sto_sa_id: saId };
-
+    // 🔹 sto_id가 없으면 에러 반환
+    if (typeof sto_id !== 'number') {
+      return { message: '가게 ID(sto_id)가 필요합니다.', status: 'false' };
+    }
+  
+    // 🔹 사장님의 가게인지 확인
     const targetStore = await this.prisma.store.findFirst({
-      where,
-      ...(typeof sto_id === 'number' ? {} : { orderBy: { sto_id: 'asc' } }),
+      where: { sto_id, sto_sa_id: sa_id },
       select: { sto_id: true, sto_img: true },
     });
-
+  
     if (!targetStore) {
       return { message: '사장님의 가게가 존재하지 않습니다.', status: 'false' };
     }
-
+  
     const { sto_id: storeId, sto_img: existingImageUrl } = targetStore;
-
+  
+    // 🔹 기존 이미지 삭제
     if (existingImageUrl && existingImageUrl !== '0') {
       try {
         await this.storeStorageService.deleteStoreImage(existingImageUrl);
@@ -655,14 +648,15 @@ export class SajangService {
         console.warn('기존 이미지 삭제 실패:', err.message);
       }
     }
-
+  
+    // 🔹 새 이미지 업로드
     const uploaded = await this.storeStorageService.uploadStoreImage(file);
-
+  
     await this.prisma.store.update({
       where: { sto_id: storeId },
       data: { sto_img: uploaded.url },
     });
-
+  
     return {
       message: '가게 대표 이미지가 성공적으로 업데이트되었습니다.',
       imageUrl: uploaded.url,

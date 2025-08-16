@@ -144,9 +144,9 @@ export class SajangController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: SajangStoDto,
   ) {
-    const ld_log_id = req.user.sub;
+    const sa_id = Number(req.user.sa_id);
     return await this.sajangService.updateStoreImg(
-      ld_log_id,
+      sa_id,
       file,
       body?.sto_id,
     );
