@@ -40,6 +40,14 @@ export class SajangController {
     });
   }
 
+  @Post('enter-update-store-data')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ description: '가게정보 업데이트 페이지 입장' })
+  async enterStoreUpdata(@Req() req, @Body() body:SajangStoDto){
+    const sa_id = Number(req.user.sa_id);
+    return await this.sajangService.enterUpdateStoreData(sa_id, body)
+  }
+
   @Post('update-store-data')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
@@ -215,11 +223,23 @@ export class SajangController {
   }
 
   // 사업자 등록증 관리 페이지 입장
-  @Post('update-business')
+  @Post('enter-update-business')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '사업자 등록증 수정 페이지 입장' })
-  async updateBusiness(@Req() req, @Body() body: SajangStoDto) {
+  async enterBusiness(@Req() req, @Body() body: SajangStoDto) {
     const sa_id = Number(req.user.sa_id);
-    return await this.sajangService.updateBusiness(sa_id, body?.sto_id);
+    return await this.sajangService.enterUpdateBusiness(sa_id, body?.sto_id);
   }
+
+  // // 
+  // @Post('update-business')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiOperation({ description: '사업자 등록증 수정 데이터 업데이트' })
+  // async updateBusiness(@Req() req, @Body() body: BusinessRegistrationDTO){
+  //   const sa_id = Number(req.user.sa_id);
+  //   return await this.sajangService.updateBusiness(sa_id, body);
+  // }
+
+
+
 }

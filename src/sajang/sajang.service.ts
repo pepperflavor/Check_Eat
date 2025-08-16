@@ -253,7 +253,7 @@ export class SajangService {
     };
 
     const requestUrl = `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`;
-    
+
     console.log('=== 국세청 API 요청 디버깅 ===');
     console.log('요청 URL:', requestUrl);
     console.log('요청 Payload:', JSON.stringify(payload, null, 2));
@@ -281,7 +281,7 @@ export class SajangService {
         console.log('result:', result);
         console.log('valid 값:', result?.valid);
         console.log('valid_msg:', result?.valid_msg);
-        
+
         throw new BadRequestException(
           result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
         );
@@ -300,7 +300,7 @@ export class SajangService {
       console.log('응답 헤더:', axiosError.response?.headers);
       console.log('응답 데이터:', axiosError.response?.data);
       console.log('요청 설정:', axiosError.config?.url);
-      
+
       throw axiosError;
     }
   }
@@ -627,19 +627,19 @@ export class SajangService {
     if (typeof sto_id !== 'number') {
       return { message: '가게 ID(sto_id)가 필요합니다.', status: 'false' };
     }
-  
+
     // 🔹 사장님의 가게인지 확인
     const targetStore = await this.prisma.store.findFirst({
       where: { sto_id, sto_sa_id: sa_id },
       select: { sto_id: true, sto_img: true },
     });
-  
+
     if (!targetStore) {
       return { message: '사장님의 가게가 존재하지 않습니다.', status: 'false' };
     }
-  
+
     const { sto_id: storeId, sto_img: existingImageUrl } = targetStore;
-  
+
     // 🔹 기존 이미지 삭제
     if (existingImageUrl && existingImageUrl !== '0') {
       try {
@@ -648,20 +648,64 @@ export class SajangService {
         console.warn('기존 이미지 삭제 실패:', err.message);
       }
     }
-  
+
     // 🔹 새 이미지 업로드
     const uploaded = await this.storeStorageService.uploadStoreImage(file);
-  
+
     await this.prisma.store.update({
       where: { sto_id: storeId },
       data: { sto_img: uploaded.url },
     });
-  
+
     return {
       message: '가게 대표 이미지가 성공적으로 업데이트되었습니다.',
       imageUrl: uploaded.url,
       status: 'success',
       sto_id: storeId,
+    };
+  }
+
+  // 가게 정보 업데이트 페이지 진입
+  async enterUpdateStoreData(
+    sa_id: number,
+    body: {
+      sto_id?: number;
+    },
+  ) {
+    await this.assertOwner(sa_id);
+
+    // sto_id가 없으면 에러 반환
+    if (!body.sto_id) {
+      return {
+        message: 'sto_id가 전달되어야 합니다',
+        status: 'false',
+      };
+    }
+
+    const targetStore = await this.prisma.store.findUnique({
+      where: { sto_id: body.sto_id, sto_sa_id: sa_id },
+      select: {
+        sto_id: true,
+        sto_name: true,
+        sto_name_en: true,
+        sto_address: true,
+        sto_phone: true,
+      },
+    });
+
+    if (!targetStore) {
+      throw new NotFoundException('해당 사장님의 가게가 아니거나 존재하지 않습니다.');
+    }
+
+    return {
+      status: 'success',
+      store: {
+        sto_id: targetStore.sto_id,
+        sto_name: targetStore.sto_name,
+        sto_name_en: targetStore.sto_name_en,
+        sto_address: targetStore.sto_address,
+        sto_phone: targetStore.sto_phone,
+      },
     };
   }
 
@@ -673,6 +717,9 @@ export class SajangService {
       sto_name?: string;
       sto_phone?: string;
       sto_name_en?: string;
+      sto_address?: string;
+      sto_latitude?: string;
+      sto_longitude?: string;
     },
   ) {
     await this.assertOwner(sa_id);
@@ -687,12 +734,38 @@ export class SajangService {
       throw new ForbiddenException('권한이 없습니다.');
 
     const data: Record<string, any> = {};
-    if (body.sto_name !== undefined) data.sto_name = body.sto_name;
-    if (body.sto_phone !== undefined) data.sto_phone = body.sto_phone;
-    if (body.sto_name_en !== undefined) data.sto_name_en = body.sto_name_en;
+    
+    // 입력받은 값이 있는 필드만 업데이트 (null이나 빈 문자열로 덮어씌우지 않음)
+    if (body.sto_name !== undefined && body.sto_name !== null && body.sto_name.trim() !== '') {
+      data.sto_name = body.sto_name.trim();
+    }
+    if (body.sto_phone !== undefined && body.sto_phone !== null) {
+      data.sto_phone = body.sto_phone.trim() === '' ? null : body.sto_phone.trim();
+    }
+    if (body.sto_name_en !== undefined && body.sto_name_en !== null && body.sto_name_en.trim() !== '') {
+      data.sto_name_en = body.sto_name_en.trim();
+    }
+    if (body.sto_address !== undefined && body.sto_address !== null && body.sto_address.trim() !== '') {
+      data.sto_address = body.sto_address.trim();
+    }
+    if (body.sto_latitude !== undefined && body.sto_latitude !== null && body.sto_latitude !== '') {
+      const lat = parseFloat(body.sto_latitude);
+      if (!isNaN(lat)) {
+        data.sto_latitude = lat;
+      }
+    }
+    if (body.sto_longitude !== undefined && body.sto_longitude !== null && body.sto_longitude !== '') {
+      const lng = parseFloat(body.sto_longitude);
+      if (!isNaN(lng)) {
+        data.sto_longitude = lng;
+      }
+    }
 
     if (Object.keys(data).length === 0) {
-      throw new BadRequestException('업데이트할 필드가 없습니다.');
+      return {
+        message: '업데이트할 유효한 필드가 없습니다.',
+        status: 'false',
+      };
     }
 
     const updated = await this.prisma.store.update({
@@ -703,6 +776,9 @@ export class SajangService {
         sto_name: true,
         sto_phone: true,
         sto_name_en: true,
+        sto_address: true,
+        sto_latitude: true,
+        sto_longitude: true,
       },
     });
 
@@ -726,8 +802,113 @@ export class SajangService {
     });
   }
 
+  // 사업자 등록증 정보 업데이트
+  async updateBusiness(sa_id: number, data: BusinessRegistrationDTO) {
+    const saID = Number(sa_id);
+
+    try {
+      // 1) 사장 권한 확인
+      await this.assertOwner(saID);
+
+      // 2) 국세청 API 진위 확인
+      const verificationResult = await this.callAPI(data);
+
+      // 3) 정규화된 데이터 준비
+      const { bsNo, bs_name, bs_type, bs_address, lat, lon } =
+        normalizeBusinessInput(data);
+
+      const updated = await this.prisma.$transaction(async (tx) => {
+        // 4) 기존 사업자 등록증 정보 찾기
+        const existingCert = await tx.businessCerti.findFirst({
+          where: { bs_sa_id: saID },
+          select: { bs_id: true, bs_no: true },
+        });
+
+        if (!existingCert) {
+          throw new NotFoundException(
+            '기존 사업자 등록증 정보를 찾을 수 없습니다.',
+          );
+        }
+
+        // 5) 사업자번호가 변경되는 경우 중복 확인
+        if (existingCert.bs_no !== bsNo) {
+          const conflictCert = await tx.businessCerti.findUnique({
+            where: { bs_no: bsNo },
+            select: { bs_sa_id: true },
+          });
+
+          if (conflictCert && conflictCert.bs_sa_id !== saID) {
+            throw new ConflictException(
+              '이미 다른 사장에게 등록된 사업자번호입니다.',
+            );
+          }
+        }
+
+        // 6) BusinessCerti 업데이트
+        const updatedCert = await tx.businessCerti.update({
+          where: { bs_id: existingCert.bs_id },
+          data: {
+            bs_no: bsNo,
+            bs_name: bs_name || undefined,
+            bs_type: bs_type || undefined,
+            bs_address: bs_address || undefined,
+          },
+          select: { bs_id: true, bs_no: true, bs_name: true },
+        });
+
+        // 7) 연결된 Store 정보도 업데이트
+        if (data.sto_name || data.sto_phone) {
+          const baseName = data.sto_name?.trim() || bs_name || '';
+          const baseNameEn =
+            data.sto_name_en?.trim() || data.sto_name || bs_name || '';
+
+          await tx.store.updateMany({
+            where: {
+              sto_sa_id: saID,
+              sto_bs_id: existingCert.bs_id,
+            },
+            data: {
+              ...(baseName ? { sto_name: baseName } : {}),
+              ...(baseNameEn ? { sto_name_en: baseNameEn } : {}),
+              ...(bs_address ? { sto_address: bs_address } : {}),
+              ...(data.sto_phone ? { sto_phone: String(data.sto_phone) } : {}),
+              ...(lat !== undefined ? { sto_latitude: lat } : {}),
+              ...(lon !== undefined ? { sto_longitude: lon } : {}),
+            },
+          });
+        }
+
+        return updatedCert;
+      });
+
+      return {
+        message: '사업자 등록증 정보가 성공적으로 업데이트되었습니다.',
+        status: 'success',
+        result: verificationResult,
+        updatedCert: updated,
+      };
+    } catch (error) {
+      console.log('사업자 등록증 업데이트 오류:', (error as any)?.message);
+
+      // 에러 타입에 따른 적절한 응답
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ConflictException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+
+      return {
+        message: '사업자 등록증 업데이트 중 오류가 발생했습니다.',
+        status: 'false',
+        error: (error as any)?.message,
+      };
+    }
+  }
+
   //  사업자 등록증 업데이트 하기전 뿌려줄 데이터
-  async updateBusiness(sa_id: number, sto_id?: number) {
+  async enterUpdateBusiness(sa_id: number, sto_id?: number) {
     await this.assertOwner(sa_id);
 
     // 1) 사장 인증 상태 체크(둘 다 1이어야 조회 진행)

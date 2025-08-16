@@ -20,4 +20,19 @@ export class updateStoreDataDto {
   @IsString()
   @IsOptional()
   sto_name_en?: string;
+
+  @ApiProperty({ description: '가게 주소' })
+  @IsString()
+  @IsOptional()
+  sto_address?: string;
+
+  @ApiProperty({ description: '위도' })
+  @IsString()
+  @IsOptional()
+  sto_latitude?: string;
+
+  @ApiProperty({ description: '경도' })
+  @IsString()
+  @IsOptional()
+  sto_longitude?: string;
 }
