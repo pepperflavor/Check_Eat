@@ -2,13 +2,14 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtIdvStrategy extends PassportStrategy(Strategy, 'jwt-idv') {
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      secretOrKey: process.env.JWT_IDV_SECRET!,
+      secretOrKey: configService.get<string>('JWT_IDV_SECRET') || 'GET_EAT_APLLE',
       ignoreExpiration: false,
     });
   }
