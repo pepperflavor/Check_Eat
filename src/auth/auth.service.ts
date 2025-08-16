@@ -37,7 +37,6 @@ export class AuthService {
     const isId = await this.commonService.isExistID(data.log_Id);
     const isEmail = await this.commonService.isExistEmail(data.email);
 
-
     if (isId.status !== 200 && isEmail.status !== 200) {
       throw new UnauthorizedException(
         '이미 존재하는 아이디 또는 이메일입니다.',
@@ -46,7 +45,6 @@ export class AuthService {
 
     const result = await this.userService.createUser(data);
 
-   
     return result;
   }
 
@@ -58,7 +56,7 @@ export class AuthService {
   }
 
   // 로그인
-  async login(inputId: string) {
+  async login(inputId: string, inputPwd: string) {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
     if (!data) {
@@ -74,14 +72,14 @@ export class AuthService {
       };
     }
     // // 비밀번호 확인
-    // const isMatch = await this.commonService.comparePassword(
-    //   inputPwd,
-    //   data.ld_pwd,
-    // );
+    const isMatch = await this.commonService.comparePassword(
+      inputPwd,
+      data.ld_pwd,
+    );
 
-    // if (isMatch == false) {
-    //   throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
-    // }
+    if (isMatch == false) {
+      throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+    }
 
     // 토큰 발급
     const tokenPayload = await this.generateToken(
@@ -135,10 +133,8 @@ export class AuthService {
         ld_usergrade,
       );
 
-
       // user 가 실제로 객체에 존재하는지 확인
       if (user && 'user' in user && user.user) {
-   
         payload = {
           ...payload,
           user_vegan: user.user.user_vegan,
@@ -151,13 +147,11 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
-    
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,
       )) as SajangLoginToken;
 
- 
       payload = {
         ...payload,
         sa_id: sajang.ld_sajang_id,

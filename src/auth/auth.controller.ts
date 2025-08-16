@@ -62,7 +62,7 @@ export class AuthController {
   // 로그인
   // status 2 이면 로그인 안됨, 탈퇴한 회원
   @Post('login')
-  @UseGuards(AuthGuard('local'))
+  // @UseGuards(AuthGuard('local'))
   @ApiOperation({ summary: '로그인', description: '로그인' })
   @ApiBody({
     schema: {
@@ -73,9 +73,9 @@ export class AuthController {
       },
     },
   })
-  async signInCommon(@Req() req: any) {
-    const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
-    return await this.authService.login(user.ld_log_id);
+  async signInCommon(@Body() body:CommonLoginDTO) {
+    // const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
+    return await this.authService.login(body.ld_log_id, body.ld_pwd);
   }
 
   /*
