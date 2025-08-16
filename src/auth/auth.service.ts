@@ -37,6 +37,7 @@ export class AuthService {
     const isId = await this.commonService.isExistID(data.log_Id);
     const isEmail = await this.commonService.isExistEmail(data.email);
 
+
     if (isId.status !== 200 && isEmail.status !== 200) {
       throw new UnauthorizedException(
         '이미 존재하는 아이디 또는 이메일입니다.',
@@ -45,6 +46,7 @@ export class AuthService {
 
     const result = await this.userService.createUser(data);
 
+   
     return result;
   }
 
@@ -56,7 +58,64 @@ export class AuthService {
   }
 
   // 로그인
-  async login(inputId: string, inputPwd: string) {
+  async login(inputId: string) {
+    // 가입한 유저인지 확인
+    const data = await this.commonService.findById(inputId);
+    if (!data) {
+      throw new UnauthorizedException('로그인 정보가 존재하지 않습니다.');
+    }
+
+    const isWithdraw = await this.commonService.isWithdraw(inputId);
+
+    if (isWithdraw == 2 || isWithdraw == undefined) {
+      return {
+        message: '탈퇴한 회원입니다.',
+        status: 'false',
+      };
+    }
+    // // 비밀번호 확인
+    // const isMatch = await this.commonService.comparePassword(
+    //   inputPwd,
+    //   data.ld_pwd,
+    // );
+
+    // if (isMatch == false) {
+    //   throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+    // }
+
+    // 토큰 발급
+    const tokenPayload = await this.generateToken(
+      data.ld_log_id,
+      data.ld_usergrade,
+      data.ld_email,
+      data.ld_lang,
+    );
+
+    const accessToken = await this.jwtService.signAsync(tokenPayload, {
+      secret: this.config.get<string>('JWT_ACCESS_SECRET'),
+      expiresIn: this.config.get<string>('JWT_ACCESS_EXPIRATION_TIME'),
+    });
+
+    const refreshToken = await this.jwtService.signAsync(
+      { sub: data.ld_id },
+      {
+        secret: this.config.get<string>('JWT_RFRESH_SECRET'),
+        expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
+      },
+    );
+
+    // console.log('액세스토큰 : ' + accessToken);
+    // console.log('리프레시 토큰 : ' + refreshToken);
+    // 리프레시 토큰 저장해주기~
+    await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
+
+    return {
+      accessToken,
+      refreshToken,
+    };
+  }
+
+  async loginSajang(inputId: string, inputPwd:string) {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
     if (!data) {
@@ -133,8 +192,10 @@ export class AuthService {
         ld_usergrade,
       );
 
+
       // user 가 실제로 객체에 존재하는지 확인
       if (user && 'user' in user && user.user) {
+   
         payload = {
           ...payload,
           user_vegan: user.user.user_vegan,
@@ -147,11 +208,13 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
+      console.log('사장님 페이로드 설정 들어옴 ');
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,
       )) as SajangLoginToken;
 
+ 
       payload = {
         ...payload,
         sa_id: sajang.ld_sajang_id,

@@ -62,8 +62,8 @@ export class AuthController {
   // 로그인
   // status 2 이면 로그인 안됨, 탈퇴한 회원
   @Post('login')
-  // @UseGuards(AuthGuard('local'))
-  @ApiOperation({ summary: '로그인', description: '로그인' })
+  @UseGuards(AuthGuard('local'))
+  @ApiOperation({ summary: '로그인', description: '일반 유저 로그인' })
   @ApiBody({
     schema: {
       type: 'object',
@@ -73,9 +73,15 @@ export class AuthController {
       },
     },
   })
-  async signInCommon(@Body() body:CommonLoginDTO) {
-    // const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
-    return await this.authService.login(body.ld_log_id, body.ld_pwd);
+  async signInCommon(@Req() req: any) {
+    const user = req.user; // LocalStrategy.validate()에서 리턴한 유저
+    return await this.authService.login(user.ld_log_id);
+  }
+
+  @Post('login/sajang')
+  @ApiOperation({ description: '사장님 로그인' })
+  async signInSajang(@Body() body: CommonLoginDTO) {
+    return await this.authService.loginSajang(body.ld_log_id, body.ld_pwd);
   }
 
   /*
@@ -91,7 +97,7 @@ export class AuthController {
   })
   @Post('check-email-unique')
   async checkEmailUnique(@Body() body: EmailUniqueDto) {
-
+    console.log(body.email);
     return await this.commonService.isExistEmail(body.email);
   }
 
@@ -292,6 +298,4 @@ export class AuthController {
   }
 
   // 본인 인증 추가
-
-  
 }
