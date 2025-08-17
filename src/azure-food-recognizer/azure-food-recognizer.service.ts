@@ -16,6 +16,8 @@ import { TranslateService } from 'src/translate/translate.service';
 import { PrismaService } from 'src/prisma.service';
 import { Candidate, LlmResult } from './types/llm-types';
 import { VeganJudgeResult } from './types/vegan-judge-type';
+import { judgeVeganByRules } from './utils/vegan';
+import { reconcileVeganIds } from './utils/vegan-reconcile';
 
 @Injectable()
 export class AzureFoodRecognizerService {
@@ -221,7 +223,7 @@ export class AzureFoodRecognizerService {
   async saveFromCache(
     cacheId: string,
     sa_id: number,
-    opts: { ok?: string; foodName?: string }, 
+    opts: { ok?: string; foodName?: string },
   ) {
     const { ok, foodName } = opts;
     if (!cacheId) throw new BadRequestException('cacheId is required');
@@ -572,25 +574,41 @@ export class AzureFoodRecognizerService {
     if (food.foo_sa_id !== saId)
       throw new ForbiddenException('권한이 없습니다.');
 
-    // 1) 비건 단계 LLM 판정
-    const veganJudgment = await this.classifyVeganByIngredientsLLM(normalized);
-    let dbVegId: number | null = null;
+    // 규칙 기반으로 판단
+    let ruleVegId: number | null = judgeVeganByRules(normalized);
 
-    if (veganJudgment?.veg_id && veganJudgment.veg_id > 0) {
-      const exists = await this.prisma.vegan.findUnique({
-        where: { veg_id: veganJudgment.veg_id },
-        select: { veg_id: true },
-      });
-      if (exists) {
-        dbVegId = veganJudgment.veg_id;
-      }
+    // LLM 으로 추론하기
+    let llmVegId: number | null = null;
+    try {
+      const llm = await this.classifyVeganByIngredientsLLM(normalized);
+      llmVegId = typeof llm?.veg_id === 'number' ? llm.veg_id : null; // 0..6 or null
+    } catch {
+      llmVegId = null; // 실패 시 null 취급
     }
 
-    // 트랜잭션으로 업데이트 + 번역 upsert
+    // 두 추론 값으로 비교결론
+    const finalVegId = reconcileVeganIds(ruleVegId, llmVegId);
+
+    let dbVegId: number | null = null;
+
+    if (typeof finalVegId === 'number' && finalVegId > 0) {
+      const exists = await this.prisma.vegan.findUnique({
+        where: { veg_id: finalVegId },
+        select: { veg_id: true },
+      });
+      dbVegId = exists ? finalVegId : null;
+    } else {
+      dbVegId = null; // 비건 불가 또는 불명 → null
+    }
+
+    // 트랜잭션으로 업데이트 + 번역 해주기
     await this.prisma.$transaction(async (tx) => {
       await tx.food.update({
         where: { foo_id },
-        data: { foo_material: normalized, foo_vegan: dbVegId },
+        data: {
+          foo_material: normalized,
+          foo_vegan: dbVegId, // ✅ 관계 컬럼(nullable)로 저장
+        },
       });
 
       // 번역
@@ -633,8 +651,7 @@ export class AzureFoodRecognizerService {
       status: 'success',
       foo_id,
       vegan: {
-        judged: veganJudgment?.veg_id == 0 ? '비건이 아닙니다' : dbVegId,
-        stored: dbVegId, // null이면 비건 아님으로 저장됨
+        stored: dbVegId, // 저장된 비건단계
       },
     };
   }
@@ -644,37 +661,44 @@ export class AzureFoodRecognizerService {
   // 비건 판별 프롬프트
   private veganSystemPrompt(): string {
     return `
-        너는 전세계 식재료를 아는 분류 전문가다. 입력되는 "재료 목록(한글)"을 근거로
-        다음 베지테리언 단계(veg_id)를 엄격하게 판정하라.
-        
-        단계 정의(veg_id):
-        0 = 어느 베지테리언 단계도 아님(붉은고기/젤라틴/코치닐/벌꿀 등 비건 불가 재료 포함 시 0)
-        1 = 폴로 베지테리언: 가금류 허용, 어패류/붉은고기 금지. 달걀/유제품 허용 가능.
-        2 = 페스코 베지테리언: 어패류 허용, 가금류 금지. 달걀/유제품 허용 가능. 붉은고기 금지.
-        3 = 락토 오보: 유제품 + 달걀 허용, 가금류/어패류/붉은고기 금지.
-        4 = 오보: 달걀만 허용, 유제품/가금류/어패류/붉은고기 금지.
-        5 = 락토: 유제품만 허용, 달걀/가금류/어패류/붉은고기 금지.
-        6 = 비건: 동물성 유래 전부 금지(유제품/달걀/가금류/어패류/붉은고기/젤라틴/코치닐/벌꿀 등 금지).
-        
-        카테고리별 한글 키워드(부분일치 허용, 예: "닭다리" → "닭"):
-        - red_meat: 소고기, 쇠고기, 돼지고기, 양고기, 사슴고기, 차돌박이, 삼겹살, 갈비, 불고기, 제육, 꼬리곰탕, 육수(소/돼지), 사골, 돈가스
-        - poultry: 닭고기, 닭, 닭다리, 닭발, 닭육수, 오리, 오리고기, 칠면조
-        - seafood: 생선, 고등어, 연어, 참치, 명태, 대구, 멸치, 새우, 오징어, 문어, 낙지, 홍합, 조개, 게, 전복, 굴, 어묵, 액젓, 젓갈, 까나리액젓, 멸치액젓, fish sauce
-        - egg: 달걀, 계란, 메추리알, 마요네즈
-        - dairy: 우유, 치즈, 버터, 크림, 생크림, 연유, 요거트, 유청, 아이스크림, 분유
-        - nonvegan: 꿀, 벌꿀, 젤라틴, 코치닐, 카민, 사향, 어유
-        
-        분류 규칙(우선순위 높은 것부터 적용):
-        1) red_meat 또는 nonvegan 재료가 1개라도 있으면 → veg_id = 0
-        2) poultry 재료가 1개라도 있으면 → veg_id = 1
-        3) seafood 재료가 1개라도 있으면 → veg_id = 2   (단, poultry가 있으면 1이 우선)
-        4) dairy와 egg가 모두 존재 → veg_id = 3
-        5) egg만 존재 → veg_id = 4
-        6) dairy만 존재 → veg_id = 5
-        7) 위 동물성 카테고리에 해당이 전혀 없으면 → veg_id = 6 (완전 비건)
-        
-        반드시 아래 JSON 스키마로만 엄격하게 출력하라.
-          `;
+  너는 전세계 식재료를 아는 분류 전문가다. 입력되는 "재료 목록(한글)"을 근거로
+  다음 베지테리언 단계(veg_id)를 엄격하게 판정하라.
+  
+  중요: 
+  - 키워드 매칭은 **명시적 일치** 또는 자명한 상위어에 한해 적용한다.
+  - 다음은 **비건으로 간주되는 예시**이며 비동물성으로 처리한다:
+    [올리브 오일, 카놀라유, 포도씨유, 해바라기유, 참기름, 들기름, 코코넛 오일, 식용유, 후추, 소금, 설탕]
+  - '어유(생선기름, fish oil)'만 동물성 오일로 본다. **'올리브 오일' 등 식물성 오일과 혼동하지 마라.**
+  - 모호하거나 추정이 필요하면 **비동물성으로 간주**하고, 동물성으로 분류하려면 해당 키워드가 **명시적으로** 포함되어야 한다.
+  
+  단계 정의(veg_id):
+  0 = 어느 단계도 아님(붉은고기/젤라틴/코치닐/벌꿀/어유 등 포함 시 0)
+  1 = 폴로(가금류 허용)
+  2 = 페스코(어패류 허용)
+  3 = 락토 오보(유제품+달걀)
+  4 = 오보(달걀만)
+  5 = 락토(유제품만)
+  6 = 비건(동물성 전부 없음)
+  
+  카테고리 예시(명시적 일치 위주):
+  - red_meat: 소고기, 쇠고기, 돼지고기, 양고기, 사슴고기, 사골 등
+  - poultry: 닭, 오리, 칠면조 등
+  - seafood: 생선, 멸치, 새우, 오징어, 액젓, 젓갈 등
+  - egg: 계란, 달걀, 마요네즈 등
+  - dairy: 우유, 치즈, 버터, 크림, 요거트, 유청 등
+  - nonvegan: 꿀, 젤라틴, 코치닐, 카민, 어유
+  
+  분류 규칙(우선순위):
+  1) red_meat 또는 nonvegan 1개라도 있으면 → 0
+  2) poultry 1개라도 있으면 → 1
+  3) seafood 1개라도 있으면 → 2
+  4) dairy+egg → 3
+  5) egg만 → 4
+  6) dairy만 → 5
+  7) 동물성 해당 없음 → 6
+  
+  아래 JSON 스키마로만 출력하라.
+  `;
   }
 
   // LLM JSON 스키마 (내부 유틸)
