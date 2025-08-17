@@ -585,9 +585,10 @@ export class SajangService {
       targetImg = target?.sto_img ?? null;
     } else {
       // sto_id 미지정 → 첫 번째 가게 이미지 (없으면 null)
-      targetImg = sajang.Store.length > 0 ? sajang.Store[0].sto_img ?? null : null;
+      targetImg =
+        sajang.Store.length > 0 ? (sajang.Store[0].sto_img ?? null) : null;
     }
-  
+
     return {
       status: 'success',
       sa_id: sajang.sa_id,
@@ -595,6 +596,7 @@ export class SajangService {
       sa_certi_status: sajang.sa_certi_status,
       email,
       sto_img: targetImg,
+      stores: sajang.Store,
     };
   }
 

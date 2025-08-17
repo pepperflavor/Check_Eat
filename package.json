@@ -18,8 +18,8 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "seed": "npx prisma db seed"
-
+    "seed": "npx prisma db seed",
+    "seed:halal": "node prisma/seedHalal.js"
   },
   "dependencies": {
     "@azure-rest/ai-document-intelligence": "^1.1.0",
@@ -64,9 +64,7 @@
     "swagger-ui-express": "^5.0.1",
     "uuid": "^11.1.0"
   },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
-  },
+
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",

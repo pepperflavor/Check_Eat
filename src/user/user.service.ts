@@ -36,7 +36,6 @@ export class UserService {
   async createUser(createDTO: CreateUserDTO) {
     const SALT = Number(await this.config.get('BCRYPT_SALT_ROUNDS'));
 
- 
     let {
       log_Id,
       log_pwd,
@@ -983,15 +982,32 @@ export class UserService {
     const favorites = await this.prisma.favoriteStore.findMany({
       where: {
         user_id: user.ld_user_id,
-        store: {
-          sto_status: { not: 2 }, // ✅ include 안이 아니라 where 절에 위치해야 함
-        },
+        // 삭제(2)된 가게 제외
+        store: { sto_status: { not: 2 } },
       },
       orderBy: { fav_order_index: 'asc' },
       include: {
         store: {
-          include: {
-            holiday: true,
+          select: {
+            sto_id: true,
+            sto_name: true,
+            sto_img: true,
+            sto_address: true,
+            // 휴무/영업시간 1:1 관계라면 이렇게 선택
+            holiday: {
+              select: {
+                holi_break: true,
+                holi_regular: true,
+                holi_public: true,
+                holi_runtime_sun: true,
+                holi_runtime_mon: true,
+                holi_runtime_tue: true,
+                holi_runtime_wed: true,
+                holi_runtime_thu: true,
+                holi_runtime_fri: true,
+                holi_runtime_sat: true,
+              },
+            },
           },
         },
       },
@@ -999,17 +1015,31 @@ export class UserService {
 
     const storesWithTodayRuntime = favorites.map((f) => {
       const store = f.store;
-      const holiday = store.holiday;
+      const h = store.holiday as {
+        holi_break: string | null;
+        holi_regular: string | null;
+        holi_public: string | null;
+        holi_runtime_sun?: string | null;
+        holi_runtime_mon?: string | null;
+        holi_runtime_tue?: string | null;
+        holi_runtime_wed?: string | null;
+        holi_runtime_thu?: string | null;
+        holi_runtime_fri?: string | null;
+        holi_runtime_sat?: string | null;
+      } | null;
+
+      const today_runtime = h ? ((h as any)[runtimeKey] ?? null) : null;
 
       return {
         sto_id: store.sto_id,
         sto_name: store.sto_name,
         sto_img: store.sto_img,
         sto_address: store.sto_address,
-        today_runtime: holiday ? ((holiday as any)[runtimeKey] ?? null) : null,
-        holi_break: holiday?.holi_break ?? null,
-        holi_regular: holiday?.holi_regular ?? null,
-        holi_public: holiday?.holi_public ?? null,
+
+        today_runtime, // 오늘의 영업시간
+        holi_break: h?.holi_break ?? null,
+        holi_regular: h?.holi_regular ?? null,
+        holi_public: h?.holi_public ?? null,
       };
     });
 
