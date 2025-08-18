@@ -34,8 +34,7 @@ export class SajangController {
       foo_id: Number(body.foo_id),
       foo_name: body.foo_name,
       foo_price: body.foo_price, // string | number 허용
-      foo_vegan:
-        body.foo_vegan !== undefined ? Number(body.foo_vegan) : undefined,
+      foo_vegan: Number(body.foo_vegan), // 필수값이므로 직접 변환
       sto_id: Number(body.sto_id),
     });
   }

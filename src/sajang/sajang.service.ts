@@ -419,26 +419,21 @@ export class SajangService {
       updateData.foo_price = priceNum;
     }
 
-    // 비건 단계
-    if (input.foo_vegan !== undefined) {
-      if (input.foo_vegan === null) {
-        updateData.foo_vegan = null;
-      } else {
-        const veganId = Number(input.foo_vegan);
-        if (Number.isNaN(veganId)) {
-          throw new BadRequestException('비건 단계가 유효하지 않습니다.');
-        }
-        // FK 존재 확인(옵션)
-        const vegan = await this.prisma.vegan.findUnique({
-          where: { veg_id: veganId },
-          select: { veg_id: true },
-        });
-        if (!vegan) {
-          throw new BadRequestException('존재하지 않는 비건 단계입니다.');
-        }
-        updateData.foo_vegan = veganId;
-      }
+    // 비건 단계 (필수값, 1-7 범위)
+    const veganId = Number(input.foo_vegan);
+    if (Number.isNaN(veganId) || veganId < 1 || veganId > 7) {
+      throw new BadRequestException('비건 단계는 1~7 사이의 값이어야 합니다.');
     }
+    
+    // FK 존재 확인
+    const vegan = await this.prisma.vegan.findUnique({
+      where: { veg_id: veganId },
+      select: { veg_id: true },
+    });
+    if (!vegan) {
+      throw new BadRequestException('존재하지 않는 비건 단계입니다.');
+    }
+    updateData.foo_vegan = veganId;
 
     const stoId = Number(input.sto_id);
     if (food.foo_store_id == null) {
