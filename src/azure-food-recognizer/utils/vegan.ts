@@ -147,6 +147,7 @@ export const COMMON_SPICES = [
   '양파가루',
   '오레가노',
   '바질',
+  '소금',
 ];
 
 export function includesAny(target: string, list: string[]) {

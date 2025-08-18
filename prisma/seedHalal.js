@@ -116,6 +116,7 @@ async function ensureVeganSeed() {
       '오보 베지테리언',
       '락토 베지테리언',
       '비건 베지테리언',
+      '비건 아님',
     ].map((veg_name) => ({ veg_name })),
     skipDuplicates: true,
   });
