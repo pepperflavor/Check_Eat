@@ -245,70 +245,314 @@ module.exports = async function seedMenus(prisma) {
     4: '오보 베지테리언',
     5: '락토 베지테리언',
     6: '비건 베지테리언',
+    7: '비건 아님',
   };
 
   const MENU = [
     {
       phone: PHONE.EID,
       items: [
-        { name: '비빔밥 (Bibimbap)', price: 8000,  materials: ['쌀', '계란', '시금치', '콩나물', '애호박', '고사리', '고추장', '참기름'] },
-        { name: '불고기 (Bulgogi)', price: 10000, materials: ['소고기', '간장', '설탕', '마늘', '양파', '버섯', '참기름', '후추'] },
-        { name: '김치볶음밥 소고기 (Kimchi Fried Rice w/ Beef)', price: 8000, materials: ['쌀', '김치', '소고기', '양파', '대파', '식용유', '간장'] },
+        {
+          name: '비빔밥 (Bibimbap)',
+          price: 8000,
+          materials: [
+            '쌀',
+            '계란',
+            '시금치',
+            '콩나물',
+            '애호박',
+            '고사리',
+            '고추장',
+            '참기름',
+          ],
+        },
+        {
+          name: '불고기 (Bulgogi)',
+          price: 10000,
+          materials: [
+            '소고기',
+            '간장',
+            '설탕',
+            '마늘',
+            '양파',
+            '버섯',
+            '참기름',
+            '후추',
+          ],
+        },
+        {
+          name: '김치볶음밥 소고기 (Kimchi Fried Rice w/ Beef)',
+          price: 8000,
+          materials: ['쌀', '김치', '소고기', '양파', '대파', '식용유', '간장'],
+        },
       ],
     },
     {
       phone: PHONE.SULTAN,
       items: [
-        { name: '터키 케밥 치킨 (Chicken Kebab)', price: 10000, materials: ['닭고기', '또띠야', '양상추', '토마토', '양파', '요거트소스', '칠리소스'] },
-        { name: '터키 케밥 램 (Lamb Kebab)', price: 10000, materials: ['양고기', '또띠야', '양상추', '토마토', '양파', '요거트소스'] },
-        { name: '케밥 박스 믹스 (Mixed Doner Box)', price: 10000, materials: ['닭고기', '양고기', '밥', '양파', '샐러드', '요거트소스'] },
+        {
+          name: '터키 케밥 치킨 (Chicken Kebab)',
+          price: 10000,
+          materials: [
+            '닭고기',
+            '또띠야',
+            '양상추',
+            '토마토',
+            '양파',
+            '요거트소스',
+            '칠리소스',
+          ],
+        },
+        {
+          name: '터키 케밥 램 (Lamb Kebab)',
+          price: 10000,
+          materials: [
+            '양고기',
+            '또띠야',
+            '양상추',
+            '토마토',
+            '양파',
+            '요거트소스',
+          ],
+        },
+        {
+          name: '케밥 박스 믹스 (Mixed Doner Box)',
+          price: 10000,
+          materials: ['닭고기', '양고기', '밥', '양파', '샐러드', '요거트소스'],
+        },
       ],
     },
     {
       phone: PHONE.KERVAN_RES,
       items: [
-        { name: '치킨 시쉬 케밥 (Chicken Shish Kebab)', price: 15000, materials: ['닭안심', '올리브오일', '레몬', '파프리카', '양파', '스파이스', '라바쉬'] },
-        { name: '아다나 케밥 (Adana Kebab)', price: 17000, materials: ['양고기', '소고기', '파프리카가루', '고추', '양파', '소금', '후추', '라바쉬'] },
-        { name: '이스켄더 케밥 (Iskender Kebab)', price: 19000, materials: ['슬라이스 케밥', '토마토소스', '요거트', '버터', '피데빵'] },
-        { name: '램 찹 (Lamb Chops)', price: 25000, materials: ['양갈비', '올리브오일', '허브', '소금', '후추'] },
+        {
+          name: '치킨 시쉬 케밥 (Chicken Shish Kebab)',
+          price: 15000,
+          materials: [
+            '닭안심',
+            '올리브오일',
+            '레몬',
+            '파프리카',
+            '양파',
+            '스파이스',
+            '라바쉬',
+          ],
+        },
+        {
+          name: '아다나 케밥 (Adana Kebab)',
+          price: 17000,
+          materials: [
+            '양고기',
+            '소고기',
+            '파프리카가루',
+            '고추',
+            '양파',
+            '소금',
+            '후추',
+            '라바쉬',
+          ],
+        },
+        {
+          name: '이스켄더 케밥 (Iskender Kebab)',
+          price: 19000,
+          materials: [
+            '슬라이스 케밥',
+            '토마토소스',
+            '요거트',
+            '버터',
+            '피데빵',
+          ],
+        },
+        {
+          name: '램 찹 (Lamb Chops)',
+          price: 25000,
+          materials: ['양갈비', '올리브오일', '허브', '소금', '후추'],
+        },
       ],
     },
     {
       phone: PHONE.KERVAN_BAKERY,
       items: [
-        { name: '바클라바 (Baklava)', price: 8000, materials: ['필로', '피스타치오', '호두', '버터', '설탕시럽', '꿀'] },
-        { name: '큐네페 (Künefe)',    price: 14000, materials: ['카다이프', '치즈', '버터', '설탕시럽', '피스타치오'] },
-        { name: '시밋 (Simit)',       price: 4000,  materials: ['밀가루', '참깨', '물엿(몰라세스 유사)', '이스트', '소금'] },
+        {
+          name: '바클라바 (Baklava)',
+          price: 8000,
+          materials: ['필로', '피스타치오', '호두', '버터', '설탕시럽', '꿀'],
+        },
+        {
+          name: '큐네페 (Künefe)',
+          price: 14000,
+          materials: ['카다이프', '치즈', '버터', '설탕시럽', '피스타치오'],
+        },
+        {
+          name: '시밋 (Simit)',
+          price: 4000,
+          materials: [
+            '밀가루',
+            '참깨',
+            '물엿(몰라세스 유사)',
+            '이스트',
+            '소금',
+          ],
+        },
       ],
     },
     {
       phone: PHONE.HOME_KIM,
       items: [
-        { name: '불고기 한상 (Bulgogi Hansang)', price: 15000, materials: ['소고기', '간장', '마늘', '양파', '당근', '쌀', '국', '반찬'] },
-        { name: '불닭 한상 (Buldak Hansang)',   price: 15000, materials: ['닭고기', '고춧가루', '고추장', '간장', '설탕', '마늘', '쌀', '국', '반찬'] },
-        { name: '잡채 (Japchae)',                price: 11000, materials: ['당면', '소고기', '시금치', '당근', '목이버섯', '간장', '설탕', '참기름'] },
-        { name: '떡볶이 (Tteokbokki)',           price: 13000, materials: ['쌀떡', '어묵', '고추장', '고춧가루', '설탕', '대파'] },
+        {
+          name: '불고기 한상 (Bulgogi Hansang)',
+          price: 15000,
+          materials: [
+            '소고기',
+            '간장',
+            '마늘',
+            '양파',
+            '당근',
+            '쌀',
+            '국',
+            '반찬',
+          ],
+        },
+        {
+          name: '불닭 한상 (Buldak Hansang)',
+          price: 15000,
+          materials: [
+            '닭고기',
+            '고춧가루',
+            '고추장',
+            '간장',
+            '설탕',
+            '마늘',
+            '쌀',
+            '국',
+            '반찬',
+          ],
+        },
+        {
+          name: '잡채 (Japchae)',
+          price: 11000,
+          materials: [
+            '당면',
+            '소고기',
+            '시금치',
+            '당근',
+            '목이버섯',
+            '간장',
+            '설탕',
+            '참기름',
+          ],
+        },
+        {
+          name: '떡볶이 (Tteokbokki)',
+          price: 13000,
+          materials: ['쌀떡', '어묵', '고추장', '고춧가루', '설탕', '대파'],
+        },
       ],
     },
     {
       phone: PHONE.MR_KEBAB,
       items: [
-        { name: '치킨 케밥 (Chicken Kebab)',     price: 7900,  materials: ['닭고기', '또띠야', '양상추', '양파', '토마토', '요거트소스'] },
-        { name: '램 케밥 (Lamb Kebab)',          price: 8900,  materials: ['양고기', '또띠야', '양상추', '양파', '토마토', '요거트소스'] },
-        { name: '믹스 케밥 (Mix Kebab)',         price: 9900,  materials: ['닭고기', '양고기', '또띠야', '샐러드', '요거트소스'] },
-        { name: '치킨 라이스볼 (Chicken Rice Bowl)', price: 10500, materials: ['밥', '닭고기', '샐러드', '요거트소스'] },
-        { name: '램 라이스볼 (Lamb Rice Bowl)',     price: 11500, materials: ['밥', '양고기', '샐러드', '요거트소스'] },
+        {
+          name: '치킨 케밥 (Chicken Kebab)',
+          price: 7900,
+          materials: [
+            '닭고기',
+            '또띠야',
+            '양상추',
+            '양파',
+            '토마토',
+            '요거트소스',
+          ],
+        },
+        {
+          name: '램 케밥 (Lamb Kebab)',
+          price: 8900,
+          materials: [
+            '양고기',
+            '또띠야',
+            '양상추',
+            '양파',
+            '토마토',
+            '요거트소스',
+          ],
+        },
+        {
+          name: '믹스 케밥 (Mix Kebab)',
+          price: 9900,
+          materials: ['닭고기', '양고기', '또띠야', '샐러드', '요거트소스'],
+        },
+        {
+          name: '치킨 라이스볼 (Chicken Rice Bowl)',
+          price: 10500,
+          materials: ['밥', '닭고기', '샐러드', '요거트소스'],
+        },
+        {
+          name: '램 라이스볼 (Lamb Rice Bowl)',
+          price: 11500,
+          materials: ['밥', '양고기', '샐러드', '요거트소스'],
+        },
       ],
     },
     {
       phone: PHONE.HALAL_GUYS,
       items: [
-        { name: '샌드위치 치킨 (Chicken Sandwich)', price: 10900, materials: ['피타/빵', '닭고기', '양상추', '토마토', '화이트소스', '핫소스'] },
-        { name: '샌드위치 비프 (Beef Sandwich)',    price: 11900, materials: ['피타/빵', '비프자이로', '양상추', '토마토', '화이트소스'] },
-        { name: '샌드위치 콤보 (Combo Sandwich)',   price: 12900, materials: ['피타/빵', '닭고기', '비프자이로', '양상추', '토마토'] },
-        { name: '플래터 치킨 (Chicken Platter)',     price: 17900, materials: ['밥', '닭고기', '양상추', '토마토', '화이트소스', '핫소스'] },
-        { name: '플래터 비프 (Beef Platter)',       price: 19900, materials: ['밥', '비프자이로', '양상추', '토마토', '화이트소스'] },
-        { name: '플래터 콤보 (Combo Platter)',      price: 20900, materials: ['밥', '닭고기', '비프자이로', '양상추', '토마토', '화이트소스'] },
+        {
+          name: '샌드위치 치킨 (Chicken Sandwich)',
+          price: 10900,
+          materials: [
+            '피타/빵',
+            '닭고기',
+            '양상추',
+            '토마토',
+            '화이트소스',
+            '핫소스',
+          ],
+        },
+        {
+          name: '샌드위치 비프 (Beef Sandwich)',
+          price: 11900,
+          materials: [
+            '피타/빵',
+            '비프자이로',
+            '양상추',
+            '토마토',
+            '화이트소스',
+          ],
+        },
+        {
+          name: '샌드위치 콤보 (Combo Sandwich)',
+          price: 12900,
+          materials: ['피타/빵', '닭고기', '비프자이로', '양상추', '토마토'],
+        },
+        {
+          name: '플래터 치킨 (Chicken Platter)',
+          price: 17900,
+          materials: [
+            '밥',
+            '닭고기',
+            '양상추',
+            '토마토',
+            '화이트소스',
+            '핫소스',
+          ],
+        },
+        {
+          name: '플래터 비프 (Beef Platter)',
+          price: 19900,
+          materials: ['밥', '비프자이로', '양상추', '토마토', '화이트소스'],
+        },
+        {
+          name: '플래터 콤보 (Combo Platter)',
+          price: 20900,
+          materials: [
+            '밥',
+            '닭고기',
+            '비프자이로',
+            '양상추',
+            '토마토',
+            '화이트소스',
+          ],
+        },
       ],
     },
   ];
@@ -339,7 +583,7 @@ module.exports = async function seedMenus(prisma) {
     select: { veg_id: true, veg_name: true },
   });
   const veganMap = Object.fromEntries(
-    veganRows.map(v => [v.veg_name, v.veg_id])
+    veganRows.map((v) => [v.veg_name, v.veg_id]),
   );
 
   for (const block of MENU) {
@@ -366,10 +610,13 @@ module.exports = async function seedMenus(prisma) {
       }
 
       // 1) 비건 판정
-      let veganId = null;
+      let veganId = 7; // 기본값: 비건 아님
       try {
         const judged = await judgeVeganByIngredientsLLM(item.materials);
-        veganId = await veganIdIfExists(judged?.veg_id);
+        const validVeganId = await veganIdIfExists(judged?.veg_id);
+        if (validVeganId) {
+          veganId = validVeganId;
+        }
       } catch {}
 
       // 2) Food 생성

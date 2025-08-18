@@ -203,7 +203,7 @@ export class ReviewService {
       imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
 
-    // ✅ 유저 아이디 조회
+    // ✅ 유저 아이디 조회ld_log_id
     const user = await this.prisma.loginData.findUnique({
       where: { ld_log_id: ld_log_Id },
       select: { ld_user_id: true },

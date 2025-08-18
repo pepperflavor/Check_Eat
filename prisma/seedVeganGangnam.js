@@ -562,10 +562,13 @@ DO UPDATE SET
       }
 
       // 1) 비건 단계 추론
-      let veganId = null;
+      let veganId = 7; // 기본값: 비건 아님
       try {
         const judged = await judgeVeganByIngredientsLLM(item.materials);
-        veganId = await veganIdIfExists(judged?.veg_id);
+        const validVeganId = await veganIdIfExists(judged?.veg_id);
+        if (validVeganId) {
+          veganId = validVeganId;
+        }
       } catch {}
 
       // 2) Food 생성
