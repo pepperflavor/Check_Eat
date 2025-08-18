@@ -4,6 +4,7 @@ export const GANGNAM_VEGAN_STORES = [
     sto_name_en: 'PLANTUDE (COEX)',
     sto_address: '서울 강남구 영동대로 513 코엑스몰 B1',
     sto_phone: '02-551-3933',
+    sto_img: "",
     sto_status: 0,
     sto_halal: 0,
     sto_type: '음식점',

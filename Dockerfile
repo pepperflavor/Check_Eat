@@ -1,5 +1,5 @@
 # ---------- Build stage ----------
-  FROM node:18-alpine AS builder
+  FROM node:22-alpine AS builder
   WORKDIR /app
   
   # deps + prisma
@@ -18,7 +18,7 @@
   
   
   # ---------- Production (runner) ----------
-  FROM node:18-alpine AS production
+  FROM node:22-alpine AS production
   WORKDIR /app
   
   # signal handling
@@ -29,7 +29,7 @@
   
   # prod deps만 설치
   COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
-  RUN npm ci --only=production && npm cache clean --force
+  RUN RUN npm ci --omit=dev && npm cache clean --force
   
   # ---- 꼭 복사해야 하는 산출물들 ----
   # 1) 컴파일 산출물
