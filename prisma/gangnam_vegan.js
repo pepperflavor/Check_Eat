@@ -1,4 +1,4 @@
-export const GANGNAM_VEGAN_STORES = [
+const GANGNAM_VEGAN_STORES = [
   {
     sto_name: '플랜튜드 스타필드 코엑스점',
     sto_name_en: 'PLANTUDE (COEX)',
@@ -121,3 +121,5 @@ export const GANGNAM_VEGAN_STORES = [
     sto_sa_id: 0,
   },
 ];
+
+module.exports = { GANGNAM_VEGAN_STORES };
