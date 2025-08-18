@@ -29,7 +29,7 @@
   
   # prod deps만 설치
   COPY --from=builder --chown=nestjs:nodejs /app/package*.json ./
-  RUN RUN npm ci --omit=dev && npm cache clean --force
+  RUN npm ci --omit=dev && npm cache clean --force
   
   # ---- 꼭 복사해야 하는 산출물들 ----
   # 1) 컴파일 산출물
