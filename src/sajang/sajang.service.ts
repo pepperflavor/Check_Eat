@@ -433,7 +433,8 @@ export class SajangService {
     if (!vegan) {
       throw new BadRequestException('존재하지 않는 비건 단계입니다.');
     }
-    updateData.foo_vegan = veganId;
+    // foo_vegan 필드 직접 업데이트가 안되므로 관계를 통해 업데이트
+    updateData.foo_vegan_data = { connect: { veg_id: veganId } };
 
     const stoId = Number(input.sto_id);
     if (food.foo_store_id == null) {
