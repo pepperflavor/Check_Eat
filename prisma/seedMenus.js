@@ -250,7 +250,7 @@ module.exports = async function seedMenus(prisma) {
 
   const MENU = [
     {
-      phone: PHONE.EID,
+      phone: PHONE.EID, // EID Halal Korean Food
       items: [
         {
           name: '비빔밥 (Bibimbap)',
@@ -281,17 +281,27 @@ module.exports = async function seedMenus(prisma) {
           ],
         },
         {
-          name: '김치볶음밥 소고기 (Kimchi Fried Rice w/ Beef)',
+          name: '김치볶음밥 소고기',
           price: 8000,
           materials: ['쌀', '김치', '소고기', '양파', '대파', '식용유', '간장'],
+        },
+        {
+          name: '삼계탕 (Ginseng Chicken Soup)',
+          price: 12000,
+          materials: ['닭고기', '인삼', '대추', '마늘', '쌀', '소금'],
+        },
+        {
+          name: '생선구이 (Grilled Fish)',
+          price: 8000,
+          materials: ['생선', '소금', '식용유', '레몬'],
         },
       ],
     },
     {
-      phone: PHONE.SULTAN,
+      phone: PHONE.SULTAN, // Sultan Kebab (Itaewon)
       items: [
         {
-          name: '터키 케밥 치킨 (Chicken Kebab)',
+          name: '치킨 케밥 (Chicken Kebab)',
           price: 10000,
           materials: [
             '닭고기',
@@ -304,7 +314,7 @@ module.exports = async function seedMenus(prisma) {
           ],
         },
         {
-          name: '터키 케밥 램 (Lamb Kebab)',
+          name: '램 케밥 (Lamb Kebab)',
           price: 10000,
           materials: [
             '양고기',
@@ -316,117 +326,94 @@ module.exports = async function seedMenus(prisma) {
           ],
         },
         {
-          name: '케밥 박스 믹스 (Mixed Doner Box)',
+          name: '믹스 도네르 박스 (Mixed Doner Box)',
           price: 10000,
           materials: ['닭고기', '양고기', '밥', '양파', '샐러드', '요거트소스'],
         },
+        {
+          name: '이스켄더 케밥 (Iskender Kebab)',
+          price: 13000,
+          materials: ['도네르슬라이스', '토마토소스', '요거트', '피데빵'],
+        },
+        {
+          name: '치킨 필라프 (Chicken Pilaf)',
+          price: 11000,
+          materials: ['밥', '닭고기', '양파', '향신료', '버터대체'],
+        },
       ],
     },
     {
-      phone: PHONE.KERVAN_RES,
+      phone: PHONE.KERVAN_RES, // Kervan Restaurant (Itaewon) — 단품 위주
       items: [
         {
           name: '치킨 시쉬 케밥 (Chicken Shish Kebab)',
-          price: 15000,
-          materials: [
-            '닭안심',
-            '올리브오일',
-            '레몬',
-            '파프리카',
-            '양파',
-            '스파이스',
-            '라바쉬',
-          ],
+          price: 21000,
+          materials: ['닭안심', '올리브오일', '양파', '파프리카', '허브'],
         },
         {
           name: '아다나 케밥 (Adana Kebab)',
-          price: 17000,
-          materials: [
-            '양고기',
-            '소고기',
-            '파프리카가루',
-            '고추',
-            '양파',
-            '소금',
-            '후추',
-            '라바쉬',
-          ],
+          price: 22000,
+          materials: ['다진고기', '파프리카가루', '양파', '향신료'],
         },
         {
           name: '이스켄더 케밥 (Iskender Kebab)',
-          price: 19000,
-          materials: [
-            '슬라이스 케밥',
-            '토마토소스',
-            '요거트',
-            '버터',
-            '피데빵',
-          ],
+          price: 27000,
+          materials: ['도네르', '토마토소스', '비건요거트대체*', '피데빵'],
         },
         {
-          name: '램 찹 (Lamb Chops)',
-          price: 25000,
+          name: '람 칩 (Lamb Chops)',
+          price: 28000,
           materials: ['양갈비', '올리브오일', '허브', '소금', '후추'],
         },
-      ],
-    },
-    {
-      phone: PHONE.KERVAN_BAKERY,
-      items: [
         {
-          name: '바클라바 (Baklava)',
-          price: 8000,
-          materials: ['필로', '피스타치오', '호두', '버터', '설탕시럽', '꿀'],
-        },
-        {
-          name: '큐네페 (Künefe)',
-          price: 14000,
-          materials: ['카다이프', '치즈', '버터', '설탕시럽', '피스타치오'],
-        },
-        {
-          name: '시밋 (Simit)',
-          price: 4000,
-          materials: [
-            '밀가루',
-            '참깨',
-            '물엿(몰라세스 유사)',
-            '이스트',
-            '소금',
-          ],
+          name: '버섯 치즈 피데 (Mushroom Cheese Pide)',
+          price: 17900,
+          materials: ['피데도우', '버섯', '치즈대체*', '올리브오일'],
         },
       ],
     },
     {
-      phone: PHONE.HOME_KIM,
+      phone: PHONE.KERVAN_BAKERY, // Kervan Bakery & Cafe — 디저트(음료 제외)
       items: [
         {
-          name: '불고기 한상 (Bulgogi Hansang)',
-          price: 15000,
-          materials: [
-            '소고기',
-            '간장',
-            '마늘',
-            '양파',
-            '당근',
-            '쌀',
-            '국',
-            '반찬',
-          ],
+          name: '바클라바 (6pcs)',
+          price: 13000,
+          materials: ['필로', '피스타치오/호두', '설탕시럽', '비건마가린'],
         },
         {
-          name: '불닭 한상 (Buldak Hansang)',
+          name: '터키쉬 쿠키 (400g)',
+          price: 11000,
+          materials: ['밀가루', '설탕', '오일', '견과'],
+        },
+        {
+          name: '터키쉬 딜라이트 (Lokum 100g)',
+          price: 7000,
+          materials: ['설탕', '전분', '시럽', '견과'],
+        },
+        {
+          name: '터키쉬 딜라이트 (Lokum 200g)',
+          price: 13000,
+          materials: ['설탕', '전분', '시럽', '견과'],
+        },
+        {
+          name: '바클라바 (1pc)',
+          price: 2500,
+          materials: ['필로', '견과', '시럽'],
+        },
+      ],
+    },
+    {
+      phone: PHONE.HOME_KIM, // Home Cooking Master Kim (Starcatering)
+      items: [
+        {
+          name: '불고기 한상',
           price: 15000,
-          materials: [
-            '닭고기',
-            '고춧가루',
-            '고추장',
-            '간장',
-            '설탕',
-            '마늘',
-            '쌀',
-            '국',
-            '반찬',
-          ],
+          materials: ['소고기', '간장', '마늘', '양파', '당근', '쌀'],
+        },
+        {
+          name: '불닭 한상',
+          price: 15000,
+          materials: ['닭고기', '고춧가루', '고추장', '간장', '마늘', '쌀'],
         },
         {
           name: '잡채 (Japchae)',
@@ -445,12 +432,17 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '떡볶이 (Tteokbokki)',
           price: 13000,
-          materials: ['쌀떡', '어묵', '고추장', '고춧가루', '설탕', '대파'],
+          materials: ['쌀떡', '고추장', '고춧가루', '설탕', '대파'],
+        },
+        {
+          name: '후라이드 치킨',
+          price: 15000,
+          materials: ['닭고기', '밀가루/전분', '소금', '식용유'],
         },
       ],
     },
     {
-      phone: PHONE.MR_KEBAB,
+      phone: PHONE.MR_KEBAB, // Mr. Kebab (Itaewon)
       items: [
         {
           name: '치킨 케밥 (Chicken Kebab)',
@@ -494,7 +486,7 @@ module.exports = async function seedMenus(prisma) {
       ],
     },
     {
-      phone: PHONE.HALAL_GUYS,
+      phone: PHONE.HALAL_GUYS, // The Halal Guys (Itaewon)
       items: [
         {
           name: '샌드위치 치킨 (Chicken Sandwich)',
@@ -542,16 +534,26 @@ module.exports = async function seedMenus(prisma) {
           materials: ['밥', '비프자이로', '양상추', '토마토', '화이트소스'],
         },
         {
-          name: '플래터 콤보 (Combo Platter)',
-          price: 20900,
+          name: '자이로 플래터 (Gyro Platter)',
+          price: 13900,
           materials: [
-            '밥',
-            '닭고기',
-            '비프자이로',
+            '자이로',
+            '시즈닝 라이스',
             '양상추',
             '토마토',
             '화이트소스',
+            '핫소스',
           ],
+        },
+        {
+          name: '자이로 샌드위치 (Gyro Sandwich)',
+          price: 15900,
+          materials: ['자이로', '피타', '양상추', '토마토', '화이트소스'],
+        },
+        {
+          name: '팔라펠 샌드위치 (Falafel Sandwich)',
+          price: 15900,
+          materials: ['팔라펠', '피타', '양상추', '토마토', '화이트소스'],
         },
       ],
     },

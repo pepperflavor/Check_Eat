@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateFoodDataDto {
   @IsNumber()
@@ -20,10 +20,11 @@ export class UpdateFoodDataDto {
   @ApiProperty({ description: '음식 가격' })
   foo_price?: string;
 
-  @IsString()
+  @IsArray()
+  @IsString({ each: true })
   @IsOptional()
   @ApiProperty({ description: '재료들' })
-  foo_meterial?: string[];
+  foo_material?: string[];
 
   @IsNumber()
   @IsOptional()

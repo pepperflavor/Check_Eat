@@ -153,7 +153,7 @@ model Holiday{ //
   holi_regular String[] // 정기 휴일
   holi_public String[] // 한국 공휴일들 중에 쉬는날
 
-  holi_sajang_id Int
+  // holi_sajang_id Int
   // sajang Sajang @relation(fields: [holi_sajang_id], references: [sa_id])
 
   store_id      Int?     @unique

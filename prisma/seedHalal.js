@@ -195,6 +195,36 @@ async function ensureOwnersSeed(total = 10) {
   }
 }
 
+/** (추가) 테스트 일반 유저 계정 시드 */
+async function ensureTestUsers(total = 3) {
+  console.log(`👥 테스트 유저 시드 생성/유지 (총 ${total}명)`);
+  for (let i = 1; i <= total; i++) {
+    const ld_log_id = `test_user${i}`;
+    const exists = await prisma.loginData.findUnique({
+      where: { ld_log_id },
+      select: { ld_id: true },
+    });
+    if (exists) {
+      console.log(`  ↪️ ${ld_log_id} 이미 존재`);
+      continue;
+    }
+
+    const hashedPwd = await bcrypt.hash(`test${i}123`, 12);
+    await prisma.loginData.create({
+      data: {
+        ld_usergrade: 0, // ✅ 일반 유저
+        ld_log_id,
+        ld_email: `test.user${i}@example.com`,
+        ld_pwd: hashedPwd,
+        ld_status: 0,
+        ld_sajang_id: null, // 일반 유저라서 사장님 X
+      },
+    });
+
+    console.log(`  ✅ 생성 완료: ${ld_log_id} / test${i}123`);
+  }
+}
+
 /** 용산 할랄 7개 업장 시드 (트랜잭션) */
 async function runHalalYongsanSeed() {
   console.log('🕌 용산 할랄 7개 업장 시드 시작');
@@ -213,14 +243,14 @@ async function runHalalYongsanSeed() {
 /** 할랄 매장 사장님들에게 LoginData 추가 */
 async function createHalalLoginData() {
   console.log('👤 할랄 매장 사장님 로그인 계정 생성');
-  
+
   // 할랄 매장 사장님들 조회 (Store가 있는 Sajang 전체)
   const halalSajangs = await prisma.sajang.findMany({
     where: {
-      Store: { some: { sto_halal: 1 } }
+      Store: { some: { sto_halal: 1 } },
     },
     select: { sa_id: true, sa_phone: true },
-    orderBy: { sa_id: 'asc' }
+    orderBy: { sa_id: 'asc' },
   });
 
   console.log(`  📊 할랄 매장 사장님 수: ${halalSajangs.length}명`);
@@ -228,13 +258,13 @@ async function createHalalLoginData() {
   for (let i = 0; i < halalSajangs.length; i++) {
     const sajang = halalSajangs[i];
     const ld_log_id = `halal_owner${i + 1}`;
-    
+
     // 이미 존재하는지 확인
     const exists = await prisma.loginData.findUnique({
       where: { ld_log_id },
-      select: { ld_id: true }
+      select: { ld_id: true },
     });
-    
+
     if (!exists) {
       const hashedPwd = await bcrypt.hash(`halal${i + 1}123`, 12);
       await prisma.loginData.create({
@@ -247,7 +277,9 @@ async function createHalalLoginData() {
           ld_sajang_id: sajang.sa_id,
         },
       });
-      console.log(`  ✅ 생성: ${ld_log_id} / halal${i + 1}123 (sa_id=${sajang.sa_id})`);
+      console.log(
+        `  ✅ 생성: ${ld_log_id} / halal${i + 1}123 (sa_id=${sajang.sa_id})`,
+      );
     } else {
       console.log(`  ↪️ 이미 존재: ${ld_log_id}`);
     }
@@ -257,19 +289,19 @@ async function createHalalLoginData() {
 /** 강남 비건 매장 사장님들에게 LoginData 추가 */
 async function createVeganLoginData() {
   console.log('👤 강남 비건 매장 사장님 로그인 계정 생성');
-  
+
   // 강남 비건 매장 사장님들 조회 (Store가 있고 sto_halal=0인 Sajang)
   const veganSajangs = await prisma.sajang.findMany({
     where: {
-      Store: { 
-        some: { 
-          sto_halal: 0,  // 비건 매장 (할랄이 아닌 매장)
-          sto_address: { contains: '강남' }  // 강남구 매장
-        } 
-      }
+      Store: {
+        some: {
+          sto_halal: 0, // 비건 매장 (할랄이 아닌 매장)
+          sto_address: { contains: '강남' }, // 강남구 매장
+        },
+      },
     },
     select: { sa_id: true, sa_phone: true },
-    orderBy: { sa_id: 'asc' }
+    orderBy: { sa_id: 'asc' },
   });
 
   console.log(`  📊 강남 비건 매장 사장님 수: ${veganSajangs.length}명`);
@@ -277,13 +309,13 @@ async function createVeganLoginData() {
   for (let i = 0; i < veganSajangs.length; i++) {
     const sajang = veganSajangs[i];
     const ld_log_id = `vegan_owner${i + 1}`;
-    
+
     // 이미 존재하는지 확인
     const exists = await prisma.loginData.findUnique({
       where: { ld_log_id },
-      select: { ld_id: true }
+      select: { ld_id: true },
     });
-    
+
     if (!exists) {
       const hashedPwd = await bcrypt.hash(`vegan${i + 1}123`, 12);
       await prisma.loginData.create({
@@ -296,12 +328,16 @@ async function createVeganLoginData() {
           ld_sajang_id: sajang.sa_id,
         },
       });
-      console.log(`  ✅ 생성: ${ld_log_id} / vegan${i + 1}123 (sa_id=${sajang.sa_id})`);
+      console.log(
+        `  ✅ 생성: ${ld_log_id} / vegan${i + 1}123 (sa_id=${sajang.sa_id})`,
+      );
     } else {
       console.log(`  ↪️ 이미 존재: ${ld_log_id}`);
     }
   }
 }
+
+const seedHolidays = require('./seedHolidays');
 
 /** ─────────────────────────────────────────────────────────
  *  main() — 실행 엔트리포인트 (VM/Docker/로컬 공통)
@@ -326,6 +362,8 @@ async function main() {
   // const TOTAL_OWNERS = HALAL_COUNT + VEGAN_COUNT;
 
   await ensureOwnersSeed(3); // 테스트용 사장님 계정 3개 생성
+  await ensureTestUsers(3) // 테스트용 유저계정
+
 
   // 1) 7개 업장 upsert (Sajang/BusinessCerti/Store 1:1 관계 + sto_halal=1)
   await runHalalYongsanSeed();
@@ -337,7 +375,7 @@ async function main() {
   try {
     const seedVeganGangnam = require('./seedVeganGangnam');
     await seedVeganGangnam(prisma);
-    
+
     // 강남 비건 매장 사장님들에게 LoginData 추가
     await createVeganLoginData();
   } catch (e) {
@@ -351,6 +389,15 @@ async function main() {
     console.log('🍽️ 할랄 매장 메뉴 시드 완료');
   } catch (e) {
     console.log('⚠️ seedMenus 실행 중 경고:', e?.message || e);
+  }
+
+
+  try {
+    console.log('🗓️ 휴일 데이터 시드 시작');
+    await seedHolidays(prisma);
+    console.log('✅ 휴일 데이터 시드 완료');
+  } catch (error) {
+    console.log('⚠️ seedHolidays 실행 중 경고:', error?.message || error);
   }
 
   console.log('🎉 기본 시드 데이터 완료');
