@@ -16,6 +16,9 @@ try {
   );
 }
 
+// 할랄 매장 데이터 import
+const { YONGSAN_HALAL_STORES } = require('./yongsan_halal');
+
 /** ─────────────────────────────────────────────────────────
  *  용산구 할랄 7개 업장 upsert SQL (sto_halal=1, 1:1 관계 보장)
  *  ───────────────────────────────────────────────────────── */
@@ -23,14 +26,14 @@ const HALAL_SQL = `
 -- 1) seed 원천 데이터
 WITH venues AS (
   SELECT * FROM (VALUES
-    ('PENDING_EID_HALAL'    ,'EID Halal Korean Food'                  ,'이드(EID) 할랄 코리안 푸드'      ,'서울특별시 용산구 우사단로10길 67'           ,'070-8899-8210'  , 37.5323774 , 126.9991854),
-    ('PENDING_SULTAN_KEBAB' ,'Sultan Kebab'                           ,'술탄 케밥'                       ,'서울특별시 용산구 보광로 126'                 ,'02-749-3890'    , 37.5335000 , 126.9941000),
-    ('PENDING_KERVAN_RES'   ,'Kervan Restaurant (Itaewon)'            ,'케르반 레스토랑'                  ,'서울특별시 용산구 이태원로 190'               ,'02-792-4767'    , 37.5343300 , 126.9951800),
-    ('PENDING_KERVAN_BAKERY','Kervan Bakery & Cafe'                   ,'케르반 베이커리&카페'             ,'서울특별시 용산구 이태원로 208'               ,'02-790-5585'    , 37.5342500 , 126.9967000),
-    ('PENDING_HOME_KIM'     ,'Home Cooking Master Kim (Starcatering)' ,'집밥김선생(스타캐터링)'           ,'서울특별시 용산구 녹사평대로46길 28'         ,'02-792-3731'    , 37.5364000 , 126.9879000),
-    ('PENDING_MR_KEBAB'     ,'Mr. Kebab'                              ,'미스터케밥'                       ,'서울특별시 용산구 이태원로 192'               ,'070-7758-1997'  , 37.5343797 , 126.9954240),
-    ('PENDING_HALAL_GUYS'   ,'The Halal Guys (Itaewon)'               ,'할랄가이즈 이태원점'              ,'서울특별시 용산구 이태원로 187, 2층'         ,'02-794-8308'    , 37.5345600 , 126.9940500)
-  ) AS v(bs_no, name_en, name_kor, address_kor, phone, lat, lng)
+    ('PENDING_EID_HALAL'    ,'EID Halal Korean Food'                  ,'이드(EID) 할랄 코리안 푸드'      ,'서울특별시 용산구 우사단로10길 67'           ,'070-8899-8210'  ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/EID_HALAL.jpg', 37.5323774 , 126.9991854),
+    ('PENDING_SULTAN_KEBAB' ,'Sultan Kebab'                           ,'술탄 케밥'                       ,'서울특별시 용산구 보광로 126'                 ,'02-749-3890'    ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/SULTAN_KEBAB.jpg', 37.5335000 , 126.9941000),
+    ('PENDING_KERVAN_RES'   ,'Kervan Restaurant (Itaewon)'            ,'케르반 레스토랑'                  ,'서울특별시 용산구 이태원로 190'               ,'02-792-4767'    ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/KERVAN_RESTAURANT.jpg', 37.5343300 , 126.9951800),
+    ('PENDING_KERVAN_BAKERY','Kervan Bakery & Cafe'                   ,'케르반 베이커리&카페'             ,'서울특별시 용산구 이태원로 208'               ,'02-790-5585'    ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/KERVAN_BAKERY.jpg', 37.5342500 , 126.9967000),
+    ('PENDING_HOME_KIM'     ,'Home Cooking Master Kim (Starcatering)' ,'집밥김선생(스타캐터링)'           ,'서울특별시 용산구 녹사평대로46길 28'         ,'02-792-3731'    ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/HOME_KIM.jpg', 37.5364000 , 126.9879000),
+    ('PENDING_MR_KEBAB'     ,'Mr. Kebab'                              ,'미스터케밥'                       ,'서울특별시 용산구 이태원로 192'               ,'070-7758-1997'  ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/MR_KEBAB.jpg', 37.5343797 , 126.9954240),
+    ('PENDING_HALAL_GUYS'   ,'The Halal Guys (Itaewon)'               ,'할랄가이즈 이태원점'              ,'서울특별시 용산구 이태원로 187, 2층'         ,'02-794-8308'    ,'https://checkeatstoreimg.blob.core.windows.net/dummy-store/HALAL_GUYS.jpg', 37.5345600 , 126.9940500)
+  ) AS v(bs_no, name_en, name_kor, address_kor, phone, img_url, lat, lng)
 ),
 
 -- 2) Sajang upsert (전화번호 자연키) - 인증 완료 상태(1,1)
@@ -79,7 +82,7 @@ INSERT INTO "Store"(
 SELECT
   v.name_kor,
   v.name_en,
-  NULL,
+  v.img_url,        -- ✅ 이미지 URL 추가
   v.address_kor,
   v.phone,
   0,                -- 정상영업
@@ -97,6 +100,7 @@ DO UPDATE SET
   sto_status  = EXCLUDED.sto_status,
   sto_halal   = EXCLUDED.sto_halal,
   sto_type    = '음식점',
+  sto_img     = EXCLUDED.sto_img,   -- ✅ 이미지 업데이트 추가
   sto_address = EXCLUDED.sto_address;
 `;
 

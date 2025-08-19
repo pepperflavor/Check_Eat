@@ -4,7 +4,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_name_en: 'PLANTUDE (COEX)',
     sto_address: '서울 강남구 영동대로 513 코엑스몰 B1',
     sto_phone: '02-551-3933',
-    sto_img: "",
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/PLANTUDE.jpg',
     sto_status: 0,
     sto_halal: 0,
     sto_type: '음식점',
@@ -17,6 +18,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_name_en: 'Mahina Vegan Table',
     sto_address: '서울 강남구 논현로175길 75 2층',
     sto_phone: '0507-1371-5331',
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/mahina_vegan.png',
     sto_status: 0,
     sto_halal: 0,
     sto_type: '음식점',
@@ -29,6 +32,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_name_en: "Monk's Butcher (Dosan)",
     sto_address: '서울 강남구 언주로168길 19 B1',
     sto_phone: '02-795-1108',
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/Monks.png',
     sto_status: 0,
     sto_halal: 0,
     sto_type: '음식점',
@@ -42,6 +47,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 압구정로60길 18',
     sto_phone: '02-2138-1377',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/SUN_THE_BIRD.jpg',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.5261918,
@@ -54,6 +61,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 도산대로37길 36 1층',
     sto_phone: '0507-1420-3320',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/NORDI.jpg',
     sto_halal: 0,
     sto_type: '카페/베이커리',
     sto_latitude: 37.523398889,
@@ -66,6 +75,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 도산대로45길 14 2층',
     sto_phone: '070-4482-0102',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/DALIA.png',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.523234772,
@@ -78,6 +89,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 개포로20길 24-10',
     sto_phone: '02-577-6316',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/VEGGREEN.jpg',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.476974567,
@@ -90,6 +103,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 논현로28길 47 1층',
     sto_phone: '0507-1402-2048',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/UMM.jpeg',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.484675592,
@@ -102,6 +117,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 도곡로99길 31',
     sto_phone: '0507-1370-7861',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/ANSIK.png',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.502599838,
@@ -114,6 +131,8 @@ const GANGNAM_VEGAN_STORES = [
     sto_address: '서울 강남구 강남대로152길 69',
     sto_phone: '02-6956-6780',
     sto_status: 0,
+    sto_img:
+      'https://checkeatstoreimg.blob.core.windows.net/dummy-store/CHICK.png',
     sto_halal: 0,
     sto_type: '음식점',
     sto_latitude: 37.51912937,

@@ -251,6 +251,7 @@ model Store{ //
   sto_type String? // 업종 지금은 일단, 음식점 / 카페
   sto_latitude Float // 위도
   sto_longitude Float // 경도 -> 프론트에서 처리해서 줄거임~
+  location Unsupported("geography(Point,4326)")? // PostGIS geography 타입 (성능 최적화용)
 
   sto_sa_id Int
   sajang Sajang @relation("SajangStore", fields: [sto_sa_id], references: [sa_id])

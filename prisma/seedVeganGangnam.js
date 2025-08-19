@@ -31,22 +31,23 @@ module.exports = async function seedVeganGangnam(prisma) {
     const name_kor = esc(s.sto_name);
     const addr = esc(s.sto_address);
     const phone = esc(s.sto_phone || '');
+    const img_url = esc(s.sto_img || ''); // ✅ 이미지 URL 추가
     const lat = Number(s.sto_latitude || 0);
     const lng = Number(s.sto_longitude || 0);
     const typ = esc(s.sto_type || '레스토랑');
-    return `('${bs_no}','${name_en}','${name_kor}','${addr}','${phone}',${lat},${lng},'${typ}')`;
+    return `('${bs_no}','${name_en}','${name_kor}','${addr}','${phone}','${img_url}',${lat},${lng},'${typ}')`;
   }).join(',\n    ');
 
   const UPSERT_SQL = `
 WITH venues_raw AS (
   SELECT * FROM (VALUES
     ${rows}
-  ) AS v(bs_no, name_en, name_kor, address_kor, phone, lat, lng, typ)
+  ) AS v(bs_no, name_en, name_kor, address_kor, phone, img_url, lat, lng, typ)
 ),
 -- ⚠️ 같은 가게가 rows에 중복 들어와도 여기서 1차 정리
 venues AS (
   SELECT DISTINCT ON (bs_no)
-         bs_no, name_en, name_kor, address_kor, phone, lat, lng, typ
+         bs_no, name_en, name_kor, address_kor, phone, img_url, lat, lng, typ
   FROM venues_raw
   WHERE COALESCE(phone, '') <> ''  -- (선택) 빈 전화번호 제거
   ORDER BY bs_no
@@ -90,7 +91,7 @@ INSERT INTO "Store"(
   sto_sa_id, sto_bs_id
 )
 SELECT
-  v.name_kor, v.name_en, NULL, v.address_kor, v.phone,
+  v.name_kor, v.name_en, v.img_url, v.address_kor, v.phone, -- ✅ img_url 사용
   0,  -- 정상
   0,  -- 비건(할랄 아님)
   v.typ,
@@ -104,6 +105,7 @@ DO UPDATE SET
   sto_phone   = EXCLUDED.sto_phone,
   sto_status  = EXCLUDED.sto_status,
   sto_type    = EXCLUDED.sto_type,
+  sto_img     = EXCLUDED.sto_img,     -- ✅ 이미지 업데이트 추가
   sto_address = EXCLUDED.sto_address;
 `;
 
@@ -302,121 +304,646 @@ DO UPDATE SET
     {
       phone: PHONE['PLANTUDE_COEX'],
       items: [
-        { name: '페이퍼 두부 라자냐 (Paper Tofu Lasagna)', price: 16900, materials: ['두부','토마토소스','양파','마늘','바질','올리브오일'] },
-        { name: '헬시 업 가지 볼 (Healthy UP Eggplant Bowl)', price: 15900, materials: ['가지','현미밥','토마토','루꼴라','발사믹','올리브오일','소금','후추'] },
-        { name: '두부 가라아게 (Tofu Karaage)', price: 11900, materials: ['두부','전분','간장','마늘','생강','식용유','레몬'] },
-        { name: '라따뚜이 로텔레 파스타', price: 15500, materials: ['로텔레 파스타','토마토','가지','주키니','파프리카','올리브오일','허브'] },
-        { name: '아보카도 스파이시 찹샐러드', price: 13500, materials: ['아보카도','양상추','채소믹스','스파이시드레싱','레몬'] },
-        { name: '콘 시저 샐러드 & 구운채소', price: 13900, materials: ['옥수수','로메인','구운채소','비건시저드레싱','크루통'] },
+        {
+          name: '고사리오일스톡파스타 (Gosari Oil Stock Pasta)',
+          price: 16900,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_GOSARI.jpg',
+          materials: [
+            '마늘향 올리브오일',
+            '고사리',
+            '양파',
+            '채수',
+            '브로콜리',
+            '고구마',
+          ],
+        },
+        {
+          name: '시그니처블랙온면 & 교자만두 (Signature Black Warm Noodles & Gyoza Dumplings)',
+          price: 18900,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_SIG_BLACK.jpg',
+          materials: [
+            '송이버섯',
+            '채소만두',
+            '양파',
+            '파',
+            '건 타이고추',
+            '비건 면',
+          ],
+        },
+        {
+          name: '크럼블 두부비빔밥 & 토마토 순두부 스튜 (Crumbled Tofu Bibimbap & Tomato Soft Tofu Stew)',
+          price: 16900,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_CRUM_STEW.jpg',
+          materials: [
+            '비건 튀김두부',
+            '무생채',
+            '모듬야채',
+            '들기름',
+            '간장소스',
+            '귀리',
+            '율무',
+            '밥',
+            '토마토',
+            '순두부',
+          ],
+        },
+        {
+          name: '모둠 버섯 두부 강정 (Assorted Mushroom & Tofu Gangjeong)',
+          price: 13500,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_TOFU_GANG.jpg',
+          materials: ['두부', '표고버섯', '새송이', '연근', '비건 간장 소스'],
+        },
+        {
+          name: '두부가라아게 메밀면 & 교자 만두 (Tofu Karaage Soba Noodles & Gyoza Dumplings)',
+          price: 13500,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_TOFU_MEMIL.png',
+          materials: [
+            '비건두부 튀김',
+            '비건 라유 간장소스',
+            '채소만두',
+            '깻잎',
+            '양파',
+            '오이',
+            '메밀면',
+          ],
+        },
+        {
+          name: '순두부인헬 (Sundubu-in-Hell)',
+          price: 16500,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/PLANT_TOFU_INHELL.png',
+          materials: [
+            '순두부',
+            '토마토',
+            '비건 갈릭 브레드',
+            '병아리콩',
+            '후무스',
+            '양파',
+            '큐민',
+          ],
+        },
       ],
     },
     {
       phone: PHONE['MAHINA_VEGAN_TABLE'],
       items: [
-        { name: '머쉬룸 크림 파스타 (Mushroom Cream Pasta)', price: 26000, materials: ['파스타','버섯','두유크림','올리브오일','마늘','후추'] },
-        { name: '토마토 바질 파스타 (Tomato Basil Pasta)', price: 23000, materials: ['파스타','토마토','바질','올리브오일','마늘','소금'] },
-        { name: '샹트렐 레몬 파슬리 파스타', price: 26000, materials: ['샹트렐버섯','파스타','레몬','파슬리','올리브오일','마늘','소금'] },
-        { name: '그릴드 컬리플라워 스테이크', price: 35000, materials: ['컬리플라워','올리브오일','허브','소금','후추'] },
-        { name: '아보카도 바질 퓌레 구운버섯 샐러드', price: 21500, materials: ['아보카도','바질','구운버섯','채소믹스','드레싱'] },
+        {
+          name: '샹트렐 레몬 파슬리 파스타 (Chanterelle Lemon Parsley Pasta)',
+          price: 26000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/MAHI_LEMON.jpg',
+          materials: [
+            '파스타',
+            '샹트렐 버섯',
+            '비건 오일 소스',
+            '생파슬리',
+            '레몬',
+            '마늘',
+            '비건 파마산 치즈',
+          ],
+        },
+        {
+          name: '그릴드 컬리플라워 스테이크 (Grilled Cauliflower Steak)',
+          price: 35000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/MAHI_GRILED.jpg',
+          materials: [
+            '컬리플라워 구이',
+            '올리브 오일',
+            '새송이버섯',
+            '양송이버섯',
+            '샬롯',
+            '으깬감자',
+            '그린올리브',
+            '오렌지',
+            '피클',
+            '마늘',
+            '생 타임',
+            '레드칠리',
+          ],
+        },
+        {
+          name: '그릴드 파인애플 버거 (Grilled Pineapple Burger)',
+          price: 25000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/MAHI_PINE.jpg',
+          materials: [
+            '비건 미트 패티',
+            '특제 소스',
+            '비건 번',
+            '구운 파인애플',
+            '구운 양송이버섯',
+            '구운 양파',
+            '이자벨',
+            '감자 튀김',
+          ],
+        },
+        {
+          name: '아보카도 바질 퓌레 구운버섯 샐러드 (Avocado Basil Puree Grilled Mushroom Salad)',
+          price: 21000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/MAHI_BASIL_PUREE.png',
+          materials: [
+            '비건 아보카도 퓌레',
+            '비건 바질 퓌레',
+            '구운 새송이 버섯',
+            '방울토마토',
+            '루꼴라',
+            '생바질',
+            '이자벨',
+            '어린 야채 잎',
+          ],
+        },
       ],
     },
     {
       phone: PHONE['MONK_S_BUTCHER_DOSAN'],
       items: [
-        { name: '구운 버섯 스테이크 (Grilled Mushroom Steak)', price: 28000, materials: ['양송이','포토벨로','올리브오일','소금','후추','허브'] },
-        { name: '비건 버거 (Vegan Burger)', price: 24000, materials: ['비건번','식물성패티','토마토','양상추','피클','머스터드'] },
-        { name: '토마토 라구 코티지 파이', price: 28000, materials: ['식물성라구','감자','시금치','오르끼에떼','토마토'] },
-        { name: '머쉬룸 보리 리조또', price: 28000, materials: ['양송이','참송이','찰보리','샬롯','다시마육수','올리브오일'] },
-        { name: '레몬 크림 두부 치킨', price: 19000, materials: ['두부','밀가루/전분','레몬','크림(식물성)','채소'] },
-        { name: '시트러스 엔다이브 샐러드', price: 18000, materials: ['엔다이브','시트러스과일','견과','드레싱'] },
+        {
+          name: '구운 버섯 스테이크 (Grilled Mushroom Steak)',
+          price: 28000,
+          foo_img: '',
+          materials: [
+            '양송이',
+            '포토벨로',
+            '올리브오일',
+            '소금',
+            '후추',
+            '허브',
+          ],
+        },
+        {
+          name: '비건 버거 (Vegan Burger)',
+          price: 24000,
+          foo_img: '',
+          materials: [
+            '비건번',
+            '식물성패티',
+            '토마토',
+            '양상추',
+            '피클',
+            '머스터드',
+          ],
+        },
+        {
+          name: '토마토 라구 코티지 파이',
+          price: 28000,
+          foo_img: '',
+          materials: ['식물성라구', '감자', '시금치', '오르끼에떼', '토마토'],
+        },
+        {
+          name: '머쉬룸 보리 리조또',
+          price: 28000,
+          foo_img: '',
+          materials: [
+            '양송이',
+            '참송이',
+            '찰보리',
+            '샬롯',
+            '다시마육수',
+            '올리브오일',
+          ],
+        },
+        {
+          name: '레몬 크림 두부 치킨',
+          price: 19000,
+          foo_img: '',
+          materials: ['두부', '밀가루/전분', '레몬', '크림(식물성)', '채소'],
+        },
+        {
+          name: '시트러스 엔다이브 샐러드',
+          price: 18000,
+          foo_img: '',
+          materials: ['엔다이브', '시트러스과일', '견과', '드레싱'],
+        },
       ],
     },
     {
       phone: PHONE['SUN_THE_BUD_CHEONGDAM'],
       items: [
-        { name: '현미보울 채소플레이트 (Brown Rice Veggie Plate)', price: 18000, materials: ['현미밥','아보카도','브로콜리','병아리콩','견과','드레싱'] },
-        { name: '팔라펠 샐러드 (Falafel Salad)', price: 16000, materials: ['병아리콩','양파','마늘','파슬리','토마토','양상추','타히니'] },
-        { name: '[비건] 케일 시저 샐러드', price: 17000, materials: ['케일','로메인','비건시저드레싱','크루통','견과'] },
-        { name: '[비건/식단면] 마제소바', price: 20000, materials: ['면','간장소스','파','김','참기름'] },
-        { name: '[비건/식단면] 나폴리탄 파스타', price: 22000, materials: ['파스타','토마토소스','양파','피망','올리브오일'] },
-        { name: '[비건] 그릴 야채 샐러드', price: 18000, materials: ['각종구운채소','올리브오일','허브','소금'] },
-        { name: '[비건] 컬리플라워 스테이크', price: 28000, materials: ['컬리플라워','올리브오일','허브','소금'] },
+        {
+          name: '클린 콥 샐러드 (Clean Cobb Salad )',
+          price: 16000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_BUD_CLEAN_COP.png',
+          materials: [
+            '고구마',
+            '아보카도',
+            '계란',
+            '페타치즈',
+            '올리브',
+            '비건 아일랜드 드레싱',
+          ],
+        },
+        {
+          name: '다시마 숙성 연어덮밥 (Kombu-aged Salmon Rice Bowl)',
+          price: 29000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_BUD_SLAMON.png',
+          materials: [
+            '다시마 숙성 연어',
+            '계란',
+            '아보카도',
+            '현미',
+            '흑현미',
+            '귀리',
+            '퀴노아',
+          ],
+        },
+        {
+          name: '[비건] 케일 시저 샐러드 (Vegan Kale Caesar Salad)',
+          price: 17000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_BUD_KAYLE_SI.png',
+          materials: [
+            '케일',
+            '로메인',
+            '비건시저드레싱',
+            '크루통',
+            '비건 파마산 치즈',
+          ],
+        },
+        {
+          name: '[비건/식단면] 마제소바 (Vegan Low-carb Noodle] Mazesoba)',
+          price: 20000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_BUD_MAJE.png',
+          materials: [
+            '면',
+            '간장소스',
+            '파',
+            '김',
+            '참기름',
+            '비건 고기',
+            '비건 마요네즈',
+          ],
+        },
+        {
+          name: '[비건/식단면] 나폴리탄 파스타 ( Vegan Low-carb Noodles Neapolitan Pasta)',
+          price: 22000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_NAPOL.png',
+          materials: [
+            '비건 파스타',
+            '토마토소스',
+            '양파',
+            '피망',
+            '올리브오일',
+            '비건 미트볼',
+          ],
+        },
+        {
+          name: '[비건] 그릴 야채 샐러드 (Vegan Grilled Vegetable Salad)',
+          price: 18000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/SUN_BUD_GRIL_VEGI_SAL.png',
+          materials: [
+            '두부 버섯볼',
+            '단호박',
+            '아보카도',
+            '방울토마토',
+            '컬리플라워',
+            '미니 양배추',
+            '브로컬리',
+            '비건 오리엔탈 드레싱',
+          ],
+        },
       ],
     },
     {
       phone: PHONE['DAHLIA_DINING'],
       items: [
-        { name: '여러가지 버섯 오일 파스타 (Mushroom Aglio e Olio)', price: 23000, materials: ['파스타','마늘','올리브오일','버섯','페페론치노','파슬리'] },
-        { name: '트러플 버섯 리조또 (Truffle Mushroom Risotto)', price: 29000, materials: ['쌀','버섯','트러플오일','채수','올리브오일','소금'] },
-        { name: '여러가지 채소 토마토 파스타', price: 23000, materials: ['파스타','토마토','각종채소','올리브오일','소금'] },
-        { name: '트러플 크림 뇨끼', price: 29000, materials: ['감자뇨끼','트러플오일','크림(식물성)','버섯','파마산대체'] },
-        { name: '병아리콩 버섯 샐러드', price: 16000, materials: ['병아리콩','버섯','잎채소','드레싱'] },
+        {
+          name: '여러가지 버섯 오일 파스타 (Mushroom Aglio e Olio)',
+          price: 23000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/DALI_TOMA_PA.jpg',
+          materials: [
+            '파스타',
+            '마늘',
+            '올리브오일',
+            '모듬버섯',
+            '브라질넛',
+            '파슬리',
+          ],
+        },
+        {
+          name: '트러플 버섯 리조또 (Truffle Mushroom Risotto)',
+          price: 29000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/DALI_TRUPLE_RISO.jpg',
+          materials: ['쌀', '모듬버섯', '트러플 페이스트', '생 트러플', '소금'],
+        },
+        {
+          name: '여러가지 채소 토마토 파스타 (Spagehetti primavera)',
+          price: 23000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/DALI_TOMA_PA.jpg',
+          materials: [
+            '파스타',
+            '토마토',
+            '모듬 채소',
+            '올리브오일',
+            '비건 수제 토마토 파스타',
+          ],
+        },
+        {
+          name: '트러플 크림 뇨끼 (Gnocchi with truffle cream)',
+          price: 29000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/DALI_NYO.jpg',
+          materials: [
+            '감자',
+            '생 트러플',
+            '트러플 페이스트',
+            '코코넛 크림',
+            '잣',
+            '캐슈넛',
+            '오트밀 우유',
+          ],
+        },
+        {
+          name: '병아리콩 버섯 샐러드 (Chickpea mushroom salad)',
+          price: 16000,
+          foo_img:
+            'https://checkeatfood.blob.core.windows.net/foods-dummy/DALI_B_SAL.png',
+          materials: [
+            '병아리콩',
+            '잎새버섯',
+            '마카다미아',
+            '흑마늘',
+            '백된장',
+            '로메인',
+          ],
+        },
       ],
     },
     {
       phone: PHONE['NORDI'],
       items: [
-        { name: '비건체리쇼콜라타르트 (Vegan Cherry Chocolate Tart)', price: 8000, materials: ['타르트지(글루텐프리)','아몬드크림','체리가나슈','체리','설탕'] },
-        { name: '비건단호박쇼트 (Vegan Pumpkin Shortcake)', price: 7000, materials: ['단호박시트(글루텐프리)','단호박무스','단호박크림'] },
-        { name: '비건피스타치오그린 (Vegan Pistachio Green)', price: 8000, materials: ['피스타치오시트','피스타치오크림','라즈베리잼'] },
-        { name: '비건치즈포테이토베이글 (Vegan Cheese Potato Bagel)', price: 4500, materials: ['밀가루','감자','비건치즈','이스트','소금'] },
-        { name: '비건 라즈베리 타르트 (Vegan Raspberry Tart)', price: 8000, materials: ['피스타치오시트','라즈베리잼','요거트풍크림(식물성)'] },
-        { name: '비건 크루아상', price: 6500, materials: ['밀가루','비건마가린','이스트','설탕','소금'] },
-        { name: '비건 당근 케이크 슬라이스', price: 7500, materials: ['밀가루','당근','설탕','두유','베이킹파우더'] },
-        { name: '두유 크림빵', price: 6000, materials: ['밀가루','두유','이스트','설탕'] },
-        { name: '견과 타르트', price: 8000, materials: ['견과','시럽','밀가루','비건마가린'] },
-        { name: '미니스콘 세트', price: 5500, materials: ['밀가루','베이킹파우더','두유','설탕'] },
+        {
+          name: '비건체리쇼콜라타르트 (Vegan Cherry Chocolate Tart)',
+          price: 8000,
+          foo_img: '',
+          materials: [
+            '타르트지(글루텐프리)',
+            '아몬드크림',
+            '체리가나슈',
+            '체리',
+            '설탕',
+          ],
+        },
+        {
+          name: '비건단호박쇼트 (Vegan Pumpkin Shortcake)',
+          price: 7000,
+          foo_img: '',
+          materials: ['단호박시트(글루텐프리)', '단호박무스', '단호박크림'],
+        },
+        {
+          name: '비건피스타치오그린 (Vegan Pistachio Green)',
+          price: 8000,
+          foo_img: '',
+          materials: ['피스타치오시트', '피스타치오크림', '라즈베리잼'],
+        },
+        // {
+        //   name: '비건치즈포테이토베이글 (Vegan Cheese Potato Bagel)',
+        //   price: 4500,
+        //   foo_img: '',
+        //   materials: ['밀가루', '감자', '비건치즈', '이스트', '소금'],
+        // },
+        // {
+        //   name: '비건 라즈베리 타르트 (Vegan Raspberry Tart)',
+        //   price: 8000,
+        //   foo_img: '',
+        //   materials: ['피스타치오시트', '라즈베리잼', '요거트풍크림(식물성)'],
+        // },
+        // {
+        //   name: '비건 크루아상',
+        //   price: 6500,
+        //   foo_img: '',
+        //   materials: ['밀가루', '비건마가린', '이스트', '설탕', '소금'],
+        // },
+        // {
+        //   name: '비건 당근 케이크 슬라이스',
+        //   price: 7500,
+        //   foo_img: '',
+        //   materials: ['밀가루', '당근', '설탕', '두유', '베이킹파우더'],
+        // },
+        // {
+        //   name: '두유 크림빵',
+        //   price: 6000,
+        //   foo_img: '',
+        //   materials: ['밀가루', '두유', '이스트', '설탕'],
+        // },
+        // {
+        //   name: '견과 타르트',
+        //   price: 8000,
+        //   foo_img: '',
+        //   materials: ['견과', '시럽', '밀가루', '비건마가린'],
+        // },
+        // {
+        //   name: '미니스콘 세트',
+        //   price: 5500,
+        //   foo_img: '',
+        //   materials: ['밀가루', '베이킹파우더', '두유', '설탕'],
+        // },
       ],
     },
     {
       phone: PHONE['VEG_GREEN'],
       items: [
-        { name: '콩불고기 (Soy Bulgogi)', price: 12000, materials: ['콩단백','간장','마늘','설탕','양파','참기름'] },
-        { name: '표고 탕수 (Sweet & Sour Shiitake)', price: 12000, materials: ['표고버섯','전분','식초','설탕','간장','식용유'] },
-        { name: '콩고기 템페 스테이크', price: 12000, materials: ['템페','간장','양파','마늘'] },
-        { name: '두부 초밥(2pcs)', price: 8000, materials: ['두부','밥','김','간장'] },
-        { name: '고구마 디저트 접시', price: 6000, materials: ['고구마','시럽','두유'] },
-        { name: '버섯 튀김', price: 7000, materials: ['버섯','전분','소금','식용유'] },
-        { name: '비건 수프', price: 5000, materials: ['채소','물','소금','후추'] },
+        {
+          name: '콩불고기 (Soy Bulgogi)',
+          price: 12000,
+          foo_img: '',
+          materials: ['콩단백', '간장', '마늘', '설탕', '양파', '참기름'],
+        },
+        {
+          name: '표고 탕수 (Sweet & Sour Shiitake)',
+          price: 12000,
+          foo_img: '',
+          materials: ['표고버섯', '전분', '식초', '설탕', '간장', '식용유'],
+        },
+        {
+          name: '콩고기 템페 스테이크',
+          price: 12000,
+          foo_img: '',
+          materials: ['템페', '간장', '양파', '마늘'],
+        },
+        {
+          name: '두부 초밥(2pcs)',
+          price: 8000,
+          foo_img: '',
+          materials: ['두부', '밥', '김', '간장'],
+        },
+        {
+          name: '고구마 디저트 접시',
+          price: 6000,
+          foo_img: '',
+          materials: ['고구마', '시럽', '두유'],
+        },
+        {
+          name: '버섯 튀김',
+          price: 7000,
+          foo_img: '',
+          materials: ['버섯', '전분', '소금', '식용유'],
+        },
+        {
+          name: '비건 수프',
+          price: 5000,
+          foo_img: '',
+          materials: ['채소', '물', '소금', '후추'],
+        },
       ],
     },
     {
       phone: PHONE['UUUM_EATERY'],
       items: [
-        { name: '머쉬룸 얼티밋 크림 파스타 (Mushroom Ultimate Cream Pasta)', price: 24000, materials: ['파스타','버섯','두유크림','마늘','올리브오일'] },
-        { name: '양배추 피스타치오 파스타 (Cabbage Pistachio Pasta)', price: 21000, materials: ['파스타','양배추','피스타치오','올리브오일','소금'] },
-        { name: '파머스 플랜티풀 커리 (Farmer’s Plentiful Curry)', price: 21500, materials: ['채소','향신료','코코넛밀크','올리브오일','쌀'] },
-        { name: '비트 퀴노아 렌틸 샐러드 (Beet Quinoa Lentil Salad)', price: 0, materials: ['비트','퀴노아','렌틸','채소','발사믹'] }, // 가격 미표기
-        { name: '나의 그리스식 파스타 (My Greek-style Pasta)', price: 28000, materials: ['파스타','허브','올리브오일','마늘'] },
-        { name: '아보카도 샐러드', price: 20000, materials: ['아보카도','루꼴라','체리토마토','올리브오일'] },
-        { name: '비건 파스타', price: 22000, materials: ['파스타','토마토소스','양파','마늘'] },
-        { name: '후무스 & 피타', price: 18000, materials: ['병아리콩','레몬','마늘','피타'] },
-        { name: '채식 수프', price: 12000, materials: ['채소','두유','채수'] },
-        { name: '글루텐프리 브라우니', price: 8000, materials: ['코코아','아몬드가루','설탕','두유'] },
+        {
+          name: '머쉬룸 얼티밋 크림 파스타 (Mushroom Ultimate Cream Pasta)',
+          price: 24000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_MUS_CREAM.jpg',
+          materials: [
+            '비건 파스타',
+            '송화버섯',
+            '평창 송이버섯',
+            '포르치니',
+            '두유크림',
+            '마늘',
+            '올리브오일',
+          ],
+        },
+        {
+          name: '양배추 피스타치오 파스타 (Cabbage Pistachio Pasta)',
+          price: 21000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_CAVI_PISTA.jpg',
+          materials: [
+            '파스타',
+            '양배추 라페',
+            '피스타치오',
+            '올리브오일',
+            '소금',
+            '비건 치즈',
+          ],
+        },
+        {
+          name: '파머스 플랜티풀 커리 (Farmer’s Plentiful Curry)',
+          price: 21500,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_VE_CURRY.jpg',
+          materials: [
+            '모듬 채소',
+            '비건 향신료',
+            '코코넛 밀크',
+            '올리브오일',
+            '쌀',
+            '토마토',
+          ],
+        },
+        {
+          name: '비트 퀴노아 렌틸 샐러드 (Beet Quinoa Lentil Salad)',
+          price: 18500,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_RENTIL_SAL.jpg',
+          materials: [
+            '퀴노아',
+            '렌틸',
+            '채소',
+            '수제 비건 시트러스 드레싱',
+            '비트루트',
+            '제철 과일',
+          ],
+        }, // 가격 미표기
+        {
+          name: '나의 그리스식 파스타 (My Greek-style Pasta)',
+          price: 28000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_MY_PASTA.jpg',
+          materials: [
+            '파스타',
+            '제주 딱새우',
+            '채수',
+            '허브',
+            '올리브오일',
+            '마늘',
+          ],
+        },
+        {
+          name: '아보카도 치킨 버터헤드 레터스',
+          price: 19500,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_AVO_CHI_SAL.jpg',
+          materials: [
+            '수비드 닭가슴살',
+            '아보카도',
+            '사과',
+            '샐러리',
+            '완두콩',
+            '호두',
+            '피스타치오',
+            '버터헤드 레터스',
+            '미니 로메인',
+          ],
+        },
+        {
+          name: '칙피 후무스 아일랜드',
+          price: 17000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/UMM_CHICK_HU.jpg',
+          materials: ['병아리콩', '후무스', '레몬', '마늘', '또띠아 칩'],
+        },
       ],
     },
     {
       phone: PHONE['AN_SIK_RESTAURANT'],
       items: [
-        { name: '세상의 모든 버섯 샐러드', price: 24000, materials: ['각종버섯','채소','올리브오일','발사믹','소금'] },
-        { name: '콩 듬뿍 토마토 라구 파스타', price: 24000, materials: ['파스타','콩단백','토마토소스','마늘','올리브오일'] },
-        { name: '나물 듬뿍 크림 파스타', price: 25000, materials: ['파스타','각종나물','두유크림','마늘','소금','후추'] },
-        { name: '상추를 곁들인 보리 된장 보들밥', price: 22000, materials: ['보리','된장양념','상추','채소'] },
-        { name: '해초 꼬시래기 냉면', price: 24000, materials: ['면','해초','꼬시래기','채소','비건육수'] },
-        { name: '크림 파스타 (나물 듬뿍)', price: 19000, materials: ['파스타','두유크림','나물','마늘'] },
-        { name: '버섯 리조토', price: 21000, materials: ['쌀','버섯','채수','올리브오일'] },
-        { name: '채식 그라탕', price: 15000, materials: ['감자','두유크림','치즈대체'] },
-        { name: '비건 페스토 파스타', price: 18000, materials: ['파스타','바질','견과류','올리브오일'] },
+        {
+          name: '세상의 모든 버섯 샐러드 (Mixed Mushroom Salad)',
+          price: 24000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/AN_MUS_SAL.png',
+          materials: ['각종버섯', '채소', '올리브오일', '발사믹', '소금'],
+        },
+        {
+          name: '콩 듬뿍 토마토 라구 파스타 (Bean-rich Tomato Ragu Pasta)',
+          price: 24000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/AN_RAGU.png',
+          materials: ['파스타', '콩단백', '토마토소스', '마늘', '올리브오일'],
+        },
+        {
+          name: '나물 듬뿍 크림 파스타 (Cream Pasta with Seasonal Namul Herbs)',
+          price: 25000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/AN_NAMUL_CREAM.png',
+          materials: ['파스타', '각종나물', '두유크림', '마늘', '소금', '후추'],
+        },
+        {
+          name: '상추를 곁들인 보리 된장 보들밥 (Soft Barley Doenjang Rice with Lettuce)',
+          price: 23000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/AN_SANG.png',
+          materials: ['보리', '된장', '상추', '채소', '치즈'],
+        },
       ],
     },
     {
       phone: PHONE['CHICKPEACE_SINSA_GAROSU_GIL'],
       items: [
-        { name: '팔라펠 피타 (Falafel Pita)', price: 6000, materials: ['팔라펠','피타','양상추','토마토','타히니'] },
-        { name: '비건 샐러드 (Vegan Salad)', price: 11500, materials: ['팔라펠','아보카도','허무스','피타칩','채소'] },
-        { name: '아보카도 샐러드 (Avocado Salad)', price: 14000, materials: ['아보카도','채소','올리브오일','레몬','견과'] },
-        { name: '팔라펠 라이스 (Falafel Rice)', price: 9900, materials: ['팔라펠','밥','샐러드','소스'] },
-        { name: '오리지널 허무스 (Original Hummus)', price: 5000, materials: ['병아리콩','타히니','레몬','올리브오일','마늘'] },
+        {
+          name: '비건 샐러드 (Vegan Salad)',
+          price: 13000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/CHICK_VEG_SAL.png',
+          materials: ['팔라펠', '아보카도', '허무스', '피타칩', '채소'],
+        },
+        {
+          name: '아보카도 샐러드 (Avocado Salad)',
+          price: 15000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/CHICK_AVO_SAL.png',
+          materials: ['아보카도', '채소', '올리브오일', '레몬', '견과'],
+        },
+        {
+          name: '오리지널 허무스 (Original Hummus)',
+          price: 10000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/CHICK_ORI_HUM.png',
+          materials: ['병아리콩', '타히니', '레몬', '올리브오일', '마늘'],
+        },
       ],
     },
   ].filter((b) => !!b.phone);
@@ -460,7 +987,7 @@ DO UPDATE SET
           foo_name: nameKo,
           foo_material: item.materials,
           foo_price: item.price,
-          foo_img: null,
+          foo_img: item.foo_img || null, // ✅ 메뉴 데이터의 foo_img 사용
           foo_status: 0,
           foo_sa_id: store.sto_sa_id,
           foo_store_id: store.sto_id,

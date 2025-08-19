@@ -364,19 +364,18 @@ export class UserService {
             foo_vegan: true,
             foo_status: true,
             foo_material: true,
+            foo_price: true, // ✅ 항상 Food 테이블의 foo_price 선택
             CommonAl: {
               select: { coal_id: true },
             },
             ...(lang === 'ko' && {
               foo_name: true,
-              foo_price: true,
             }),
             ...(lang === 'en' && {
               food_translate_en: {
                 select: {
                   ft_en_name: true,
                   ft_en_mt: true,
-                  ft_en_price: true,
                 },
               },
             }),
@@ -386,7 +385,6 @@ export class UserService {
                 select: {
                   ft_ar_name: true,
                   ft_ar_mt: true,
-                  ft_ar_price: true,
                 },
               },
               food_translate_en: {
@@ -408,14 +406,15 @@ export class UserService {
       let foo_material: string[] | undefined;
       let foo_price: string | undefined;
 
+      // ✅ 가격은 항상 Food 테이블의 foo_price 사용
+      foo_price = (food as any).foo_price?.toString();
+
       if (lang === 'ko') {
         foo_name = (food as any).foo_name;
         foo_material = (food as any).foo_material;
-        foo_price = (food as any).foo_price?.toString();
       } else if (lang === 'en') {
         foo_name = food.food_translate_en?.ft_en_name ?? undefined;
         foo_material = food.food_translate_en?.ft_en_mt ?? undefined;
-        foo_price = food.food_translate_en?.ft_en_price ?? undefined;
       } else if (lang === 'ar') {
         const arName = this.nonEmpty(food.food_translate_ar?.ft_ar_name);
         const enName = this.nonEmpty(
@@ -426,7 +425,6 @@ export class UserService {
         foo_name = arName ?? enName ?? koName;
 
         foo_material = food.food_translate_ar?.ft_ar_mt ?? undefined;
-        foo_price = food.food_translate_ar?.ft_ar_price ?? undefined;
       }
 
       // 알러지 필터링, 언어별로 필터링 분기 추가

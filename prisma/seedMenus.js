@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 // prisma/seedMenus.js
 /** @param {import('@prisma/client').PrismaClient} prisma */
+
+// 할랄 매장 데이터 import
+const { YONGSAN_HALAL_STORES } = require('./yongsan_halal');
+
 module.exports = async function seedMenus(prisma) {
   const { v4: uuidv4 } = require('uuid');
   const axios = require('axios');
@@ -255,6 +259,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '비빔밥 (Bibimbap)',
           price: 8000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_BIBIM.jpg',
           materials: [
             '쌀',
             '계란',
@@ -269,6 +274,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '불고기 (Bulgogi)',
           price: 10000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_BUL.jpg',
           materials: [
             '소고기',
             '간장',
@@ -283,16 +289,19 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '김치볶음밥 소고기',
           price: 8000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_KIMCHI.jpg',
           materials: ['쌀', '김치', '소고기', '양파', '대파', '식용유', '간장'],
         },
         {
           name: '삼계탕 (Ginseng Chicken Soup)',
           price: 12000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_SAM.jpg',
           materials: ['닭고기', '인삼', '대추', '마늘', '쌀', '소금'],
         },
         {
           name: '생선구이 (Grilled Fish)',
           price: 8000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_SANG.jpg',
           materials: ['생선', '소금', '식용유', '레몬'],
         },
       ],
@@ -303,6 +312,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '치킨 케밥 (Chicken Kebab)',
           price: 10000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/SULTAN_CHI_KE.png',
           materials: [
             '닭고기',
             '또띠야',
@@ -316,6 +326,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '램 케밥 (Lamb Kebab)',
           price: 10000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/SULTAN_LAM_KE.png',
           materials: [
             '양고기',
             '또띠야',
@@ -328,16 +339,19 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '믹스 도네르 박스 (Mixed Doner Box)',
           price: 10000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/SULTAN_MIX.png',
           materials: ['닭고기', '양고기', '밥', '양파', '샐러드', '요거트소스'],
         },
         {
           name: '이스켄더 케밥 (Iskender Kebab)',
           price: 13000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/SULTAN_ESKEN.jpg',
           materials: ['도네르슬라이스', '토마토소스', '요거트', '피데빵'],
         },
         {
           name: '치킨 필라프 (Chicken Pilaf)',
           price: 11000,
+          foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/SULTAN_CHI_PIL.png',
           materials: ['밥', '닭고기', '양파', '향신료', '버터대체'],
         },
       ],
@@ -347,27 +361,32 @@ module.exports = async function seedMenus(prisma) {
       items: [
         {
           name: '치킨 시쉬 케밥 (Chicken Shish Kebab)',
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_CHI_KE.png",
           price: 21000,
           materials: ['닭안심', '올리브오일', '양파', '파프리카', '허브'],
         },
         {
-          name: '아다나 케밥 (Adana Kebab)',
-          price: 22000,
-          materials: ['다진고기', '파프리카가루', '양파', '향신료'],
+          name: '아다나 랩 (Adana Wrap)',
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_ADA.png",
+          price: 19900,
+          materials: ['다진고기', '파프리카가루', '양파', '향신료', '소고기'],
         },
         {
-          name: '이스켄더 케밥 (Iskender Kebab)',
+          name: '이스켄더 비프 (Iskender Beef)',
           price: 27000,
-          materials: ['도네르', '토마토소스', '비건요거트대체*', '피데빵'],
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_BEEF.png",
+          materials: ['도네르', '토마토소스', '비건요거트대체*', '피데빵', '소고기'],
         },
         {
-          name: '람 칩 (Lamb Chops)',
+          name: '양갈비 스테이크 (Steak Pirzola Lamb 2pcs)',
           price: 28000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_LAMB_STEAK.png",
           materials: ['양갈비', '올리브오일', '허브', '소금', '후추'],
         },
         {
           name: '버섯 치즈 피데 (Mushroom Cheese Pide)',
           price: 17900,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_CHEESE.png",
           materials: ['피데도우', '버섯', '치즈대체*', '올리브오일'],
         },
       ],
@@ -378,26 +397,31 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '바클라바 (6pcs)',
           price: 13000,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_B_BACLE.png",
           materials: ['필로', '피스타치오/호두', '설탕시럽', '비건마가린'],
         },
         {
           name: '터키쉬 쿠키 (400g)',
           price: 11000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_B_COOKIE.png",
           materials: ['밀가루', '설탕', '오일', '견과'],
         },
         {
           name: '터키쉬 딜라이트 (Lokum 100g)',
           price: 7000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_B_DEL.png",
           materials: ['설탕', '전분', '시럽', '견과'],
         },
         {
           name: '터키쉬 딜라이트 (Lokum 200g)',
           price: 13000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_B_DEL.png",
           materials: ['설탕', '전분', '시럽', '견과'],
         },
         {
           name: '바클라바 (1pc)',
           price: 2500,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/KERVAN_B_BACLE.png",
           materials: ['필로', '견과', '시럽'],
         },
       ],
@@ -408,16 +432,19 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '불고기 한상',
           price: 15000,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HOME_KIM_BUGO.png",
           materials: ['소고기', '간장', '마늘', '양파', '당근', '쌀'],
         },
         {
           name: '불닭 한상',
           price: 15000,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HOME_KIM_BULDAK.png",
           materials: ['닭고기', '고춧가루', '고추장', '간장', '마늘', '쌀'],
         },
         {
           name: '잡채 (Japchae)',
           price: 11000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/HOME_KIM_JAP.png",
           materials: [
             '당면',
             '소고기',
@@ -432,11 +459,13 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '떡볶이 (Tteokbokki)',
           price: 13000,
+          foo_img:"https://checkeatfood.blob.core.windows.net/foods-dummy/HOME_KIM_TTEOK.png",
           materials: ['쌀떡', '고추장', '고춧가루', '설탕', '대파'],
         },
         {
           name: '후라이드 치킨',
           price: 15000,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HOME_KIM_FRID_CHI.png",
           materials: ['닭고기', '밀가루/전분', '소금', '식용유'],
         },
       ],
@@ -447,6 +476,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '치킨 케밥 (Chicken Kebab)',
           price: 7900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/MR_KE_CHI_KE.png",
           materials: [
             '닭고기',
             '또띠야',
@@ -459,6 +489,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '램 케밥 (Lamb Kebab)',
           price: 8900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/MR_KE_LAM_KE.png",
           materials: [
             '양고기',
             '또띠야',
@@ -471,16 +502,19 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '믹스 케밥 (Mix Kebab)',
           price: 9900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/MR_KE_RICE.png",
           materials: ['닭고기', '양고기', '또띠야', '샐러드', '요거트소스'],
         },
         {
           name: '치킨 라이스볼 (Chicken Rice Bowl)',
           price: 10500,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/MR_KE_RICE.png",
           materials: ['밥', '닭고기', '샐러드', '요거트소스'],
         },
         {
           name: '램 라이스볼 (Lamb Rice Bowl)',
           price: 11500,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/MR_KE_RICE.png",
           materials: ['밥', '양고기', '샐러드', '요거트소스'],
         },
       ],
@@ -491,6 +525,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '샌드위치 치킨 (Chicken Sandwich)',
           price: 10900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_CHI_KE.png",
           materials: [
             '피타/빵',
             '닭고기',
@@ -503,6 +538,7 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '샌드위치 비프 (Beef Sandwich)',
           price: 11900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_COMBO.png",
           materials: [
             '피타/빵',
             '비프자이로',
@@ -514,11 +550,13 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '샌드위치 콤보 (Combo Sandwich)',
           price: 12900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_COMBO.png",
           materials: ['피타/빵', '닭고기', '비프자이로', '양상추', '토마토'],
         },
         {
           name: '플래터 치킨 (Chicken Platter)',
           price: 17900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_CHI_PLA.png",
           materials: [
             '밥',
             '닭고기',
@@ -531,11 +569,13 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '플래터 비프 (Beef Platter)',
           price: 19900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_BEEF_PLA.png",
           materials: ['밥', '비프자이로', '양상추', '토마토', '화이트소스'],
         },
         {
           name: '자이로 플래터 (Gyro Platter)',
           price: 13900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_GYRO.png",
           materials: [
             '자이로',
             '시즈닝 라이스',
@@ -548,11 +588,13 @@ module.exports = async function seedMenus(prisma) {
         {
           name: '자이로 샌드위치 (Gyro Sandwich)',
           price: 15900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_GYRO_SAN.png",
           materials: ['자이로', '피타', '양상추', '토마토', '화이트소스'],
         },
         {
           name: '팔라펠 샌드위치 (Falafel Sandwich)',
           price: 15900,
+          foo_img: "https://checkeatfood.blob.core.windows.net/foods-dummy/HALAL_GUY_PALA_SAN.png",
           materials: ['팔라펠', '피타', '양상추', '토마토', '화이트소스'],
         },
       ],
@@ -627,7 +669,7 @@ module.exports = async function seedMenus(prisma) {
           foo_name: nameKo,
           foo_material: item.materials,
           foo_price: item.price,
-          foo_img: null,
+          foo_img: item.foo_img || null, // ✅ 메뉴 데이터의 foo_img 사용
           foo_status: 0,
           foo_sa_id: store.sto_sa_id,
           foo_store_id: store.sto_id,
