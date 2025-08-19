@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDecimal, IsString } from 'class-validator';
+import { IsDecimal, IsOptional, IsString } from 'class-validator';
 
 export class UserLocationDto {
   //Latitude 위도, longitude 경도
@@ -14,5 +14,6 @@ export class UserLocationDto {
 
   @ApiProperty({ example: '1000', description: '반경, 1km === 1000' })
   @IsString()
-  radius: string;
+  @IsOptional()
+  radius?: string;
 }

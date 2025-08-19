@@ -110,8 +110,9 @@ export class UserController {
   })
   async userMain(@Body() body: UserLocationDto) {
     // 혹시 몰라서 반경은 변수로 두기
-    const radius = 2000;
+    const radius = body.radius ? Number(body.radius) : 2000;
     const lang = '';
+  
     const result = await this.userService.mainPageStoresData(
       body.user_la,
       body.user_long,

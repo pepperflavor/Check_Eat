@@ -184,7 +184,7 @@ export class UserService {
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
-        sto_id, sto_name, sto_latitude, sto_longitude,
+        sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
         sto_type, sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
           geography(ST_MakePoint(sto_longitude, sto_latitude)),
@@ -225,7 +225,7 @@ export class UserService {
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
-        sto_id, sto_name, sto_latitude, sto_longitude,
+        sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
         sto_type,  sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
           geography(ST_MakePoint(sto_longitude, sto_latitude)),
@@ -268,7 +268,7 @@ export class UserService {
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
-        s.sto_id, s.sto_name, s.sto_latitude, s.sto_longitude,
+        s.sto_id, s.sto_name, s.sto_name_en, s.sto_latitude, s.sto_longitude,
         s.sto_type, s.sto_img, s.sto_address, s.sto_halal, sto_status,
         ST_Distance(
           geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
@@ -990,6 +990,7 @@ export class UserService {
           select: {
             sto_id: true,
             sto_name: true,
+            sto_name_en: true,
             sto_img: true,
             sto_address: true,
             // 휴무/영업시간 1:1 관계라면 이렇게 선택
@@ -1033,6 +1034,7 @@ export class UserService {
       return {
         sto_id: store.sto_id,
         sto_name: store.sto_name,
+        sto_name_en: store.sto_name_en,
         sto_img: store.sto_img,
         sto_address: store.sto_address,
 
