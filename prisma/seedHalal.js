@@ -394,7 +394,7 @@ async function ensureSalladyStore() {
   // 2) Store 생성
   await prisma.store.upsert({
     where: {
-      sto_sa_id_sto_bs_id_sto_name_sto_latitude_sto_longitude: {
+      uniq_store_owner_cert_name_geo: {
         sto_sa_id: sajangId,
         sto_bs_id: businessCerti.bs_id,
         sto_name: '샐러디 강남삼성타운점',
