@@ -1420,11 +1420,6 @@ export class SajangService {
     // 휴무일 없으면 생성
     if (!existing) {
       const createPayload = {
-        holi_weekday:
-          Number.isInteger(data?.holi_weekday) &&
-          (data!.holi_weekday as number) >= 0
-            ? (data!.holi_weekday as number)
-            : 0,
         holi_break: toStringOrEmpty(data.holi_break),
         holi_runtime_sun: toNull(data.holi_runtime_sun),
         holi_runtime_mon: toNull(data.holi_runtime_mon),
@@ -1444,7 +1439,6 @@ export class SajangService {
         select: {
           holi_id: true,
           store_id: true,
-          holi_weekday: true,
           holi_break: true,
           holi_runtime_sun: true,
           holi_runtime_mon: true,
@@ -1468,12 +1462,6 @@ export class SajangService {
     // 기존 데이터 있으면 업데이트
     const updateData: Record<string, any> = {};
 
-    if (
-      data.holi_weekday !== undefined &&
-      Number.isInteger(data.holi_weekday)
-    ) {
-      updateData.holi_weekday = Number(data.holi_weekday);
-    }
 
     if (data.holi_break !== undefined) {
       updateData.holi_break = toStringOrEmpty(data.holi_break);
@@ -1509,7 +1497,6 @@ export class SajangService {
       select: {
         holi_id: true,
         store_id: true,
-        holi_weekday: true,
         holi_break: true,
         holi_runtime_sun: true,
         holi_runtime_mon: true,

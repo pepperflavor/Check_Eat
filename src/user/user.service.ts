@@ -166,7 +166,7 @@ export class UserService {
 
       return {
         ...store,
-        holi_weekday: today,
+        holi_weekday: dayjs().tz('Asia/Seoul').day(),
         today_runtime: holiday ? ((holiday as any)[runtimeKey] ?? null) : null,
         holi_break: holiday?.holi_break ?? null,
         holi_regular: holiday?.holi_regular ?? null,
@@ -336,7 +336,6 @@ export class UserService {
         holiday: {
           select: {
             holi_id: true,
-            holi_weekday: true,
             holi_break: true,
             holi_runtime_sun: true,
             holi_runtime_mon: true,
@@ -506,7 +505,7 @@ export class UserService {
       food_list: transformedFoods,
       holiday: h
         ? {
-            holi_weekday: today, // 오늘 요일(0~6)
+            holi_weekday: dayjs().tz('Asia/Seoul').day(), // 오늘 요일(0~6)
             today: todayRuntime, // 예: "11:30~21:00"
             holi_break: h.holi_break,
             holi_regular: h.holi_regular,
@@ -1016,6 +1015,7 @@ export class UserService {
     const storesWithTodayRuntime = favorites.map((f) => {
       const store = f.store;
       const h = store.holiday as {
+        holi_weekday: number;
         holi_break: string | null;
         holi_regular: string | null;
         holi_public: string | null;
@@ -1037,6 +1037,7 @@ export class UserService {
         sto_address: store.sto_address,
 
         today_runtime, // 오늘의 영업시간
+        holi_weekday: dayjs().tz('Asia/Seoul').day(), // 오늘 요일
         holi_break: h?.holi_break ?? null,
         holi_regular: h?.holi_regular ?? null,
         holi_public: h?.holi_public ?? null,

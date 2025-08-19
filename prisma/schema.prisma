@@ -140,7 +140,6 @@ model FoodTranslateAR{ //
 
 model Holiday{ //
   holi_id Int @id @default(autoincrement())
-  holi_weekday Int // 요일, 0: 일요일, 1:월요일 ...
   holi_break String // 브레이크 타임
   holi_runtime_sun String? // 일요일 영업시간
   holi_runtime_mon String? // 월요일 영업시간... 이런식으로 요일별 컬럼 추가하기

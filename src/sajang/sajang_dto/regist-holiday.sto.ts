@@ -1,9 +1,6 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class HolidayDto {
-  @IsNumber()
-  @IsOptional()
-  holi_weekday?: number;
 
   @IsString()
   @IsOptional()

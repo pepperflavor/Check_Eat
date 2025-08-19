@@ -166,7 +166,6 @@ module.exports = async function seedHolidays(prisma) {
     const breakStr = h.break ?? '';
 
     const data = {
-      holi_weekday: 0, // (현재 미사용) 고정
       holi_break: breakStr,
       holi_runtime_mon: h.hours.mon,
       holi_runtime_tue: h.hours.tue,

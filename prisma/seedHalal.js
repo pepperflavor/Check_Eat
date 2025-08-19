@@ -171,6 +171,7 @@ async function ensureOwnersSeed(total = 10) {
       continue;
     }
 
+    // 1) Sajang 테이블 생성
     const sajang = await prisma.sajang.create({
       data: {
         sa_phone: `010-1234-${String(5600 + i).padStart(4, '0')}`,
@@ -179,6 +180,7 @@ async function ensureOwnersSeed(total = 10) {
       },
     });
 
+    // 2) LoginData 생성하고 Sajang과만 연결 (User 연결 안함)
     const hashedPwd = await bcrypt.hash(`passwordOwner${i}`, 12);
     await prisma.loginData.create({
       data: {
@@ -187,6 +189,7 @@ async function ensureOwnersSeed(total = 10) {
         ld_email: `owner${i}@example.com`,
         ld_pwd: hashedPwd,
         ld_status: 0,
+        ld_user_id: null, // ✅ 사장님은 User 테이블 연결 안함
         ld_sajang_id: sajang.sa_id,
       },
     });
@@ -209,6 +212,17 @@ async function ensureTestUsers(total = 3) {
       continue;
     }
 
+    // 1) User 테이블에 일반 유저 데이터 생성
+    const user = await prisma.user.create({
+      data: {
+        user_nick: `테스트유저${i}`,
+        user_is_halal: 0,
+        user_apple: 0,
+        user_vegan: null, // 비건이 아님
+      },
+    });
+
+    // 2) LoginData 생성하고 User와 연결
     const hashedPwd = await bcrypt.hash(`test${i}123`, 12);
     await prisma.loginData.create({
       data: {
@@ -217,11 +231,12 @@ async function ensureTestUsers(total = 3) {
         ld_email: `test.user${i}@example.com`,
         ld_pwd: hashedPwd,
         ld_status: 0,
+        ld_user_id: user.user_id, // ✅ User 테이블과 연결
         ld_sajang_id: null, // 일반 유저라서 사장님 X
       },
     });
 
-    console.log(`  ✅ 생성 완료: ${ld_log_id} / test${i}123`);
+    console.log(`  ✅ 생성 완료: ${ld_log_id} / test${i}123 (user_id=${user.user_id})`);
   }
 }
 
@@ -266,6 +281,7 @@ async function createHalalLoginData() {
     });
 
     if (!exists) {
+      // LoginData 생성하고 Sajang과만 연결 (User 연결 안함)
       const hashedPwd = await bcrypt.hash(`halal${i + 1}123`, 12);
       await prisma.loginData.create({
         data: {
@@ -274,6 +290,7 @@ async function createHalalLoginData() {
           ld_email: `halal.owner${i + 1}@example.com`,
           ld_pwd: hashedPwd,
           ld_status: 0,
+          ld_user_id: null, // ✅ 사장님은 User 테이블 연결 안함
           ld_sajang_id: sajang.sa_id,
         },
       });
@@ -317,6 +334,7 @@ async function createVeganLoginData() {
     });
 
     if (!exists) {
+      // LoginData 생성하고 Sajang과만 연결 (User 연결 안함)
       const hashedPwd = await bcrypt.hash(`vegan${i + 1}123`, 12);
       await prisma.loginData.create({
         data: {
@@ -325,6 +343,7 @@ async function createVeganLoginData() {
           ld_email: `vegan.owner${i + 1}@example.com`,
           ld_pwd: hashedPwd,
           ld_status: 0,
+          ld_user_id: null, // ✅ 사장님은 User 테이블 연결 안함
           ld_sajang_id: sajang.sa_id,
         },
       });
@@ -335,6 +354,79 @@ async function createVeganLoginData() {
       console.log(`  ↪️ 이미 존재: ${ld_log_id}`);
     }
   }
+}
+
+/** 샐러디 강남삼성타운점 Store 추가 */
+async function ensureSalladyStore() {
+  console.log('🥗 샐러디 강남삼성타운점 Store 생성');
+
+  // 첫 번째 테스트 사장님 계정 조회 (owner1_id)
+  const ownerLogin = await prisma.loginData.findUnique({
+    where: { ld_log_id: 'owner1_id' },
+    select: { ld_sajang_id: true },
+  });
+
+  if (!ownerLogin || !ownerLogin.ld_sajang_id) {
+    console.log('⚠️ owner1_id 사장님 계정을 찾을 수 없습니다. 건너뜁니다.');
+    return;
+  }
+
+  const sajangId = ownerLogin.ld_sajang_id;
+
+  // 1) BusinessCerti 생성
+  const businessCerti = await prisma.businessCerti.upsert({
+    where: { bs_no: 'SALADY_SAMSUNG_TOWN' },
+    create: {
+      bs_no: 'SALADY_SAMSUNG_TOWN_001',
+      bs_name: '샐러디 강남삼성타운점',
+      bs_type: 'Restaurant',
+      bs_address: '서울 서초구 강남대로 359',
+      bs_sa_id: sajangId,
+    },
+    update: {
+      bs_name: '샐러디 강남삼성타운점',
+      bs_type: 'Restaurant',
+      bs_address: '서울 서초구 강남대로 359',
+      bs_sa_id: sajangId,
+    },
+  });
+
+  // 2) Store 생성
+  await prisma.store.upsert({
+    where: {
+      sto_sa_id_sto_bs_id_sto_name_sto_latitude_sto_longitude: {
+        sto_sa_id: sajangId,
+        sto_bs_id: businessCerti.bs_id,
+        sto_name: '샐러디 강남삼성타운점',
+        sto_latitude: 37.494840143,
+        sto_longitude: 127.028591115,
+      },
+    },
+    create: {
+      sto_name: '샐러디 강남삼성타운점',
+      sto_name_en: 'Salady Gangnam Samsung Town',
+      sto_img: null,
+      sto_address: '서울 서초구 강남대로 359',
+      sto_phone: '02-1234-5678',
+      sto_status: 0, // 정상영업
+      sto_halal: 0, // 비할랄
+      sto_type: '음식점',
+      sto_latitude: 37.494840143,
+      sto_longitude: 127.028591115,
+      sto_sa_id: sajangId,
+      sto_bs_id: businessCerti.bs_id,
+    },
+    update: {
+      sto_name_en: 'Salady Gangnam Samsung Town',
+      sto_address: '서울 서초구 강남대로 359',
+      sto_phone: '02-1234-5678',
+      sto_status: 0,
+      sto_halal: 0,
+      sto_type: '음식점',
+    },
+  });
+
+  console.log(`✅ 샐러디 강남삼성타운점 Store 생성 완료 (sajang_id=${sajangId})`);
 }
 
 const seedHolidays = require('./seedHolidays');
@@ -364,6 +456,8 @@ async function main() {
   await ensureOwnersSeed(3); // 테스트용 사장님 계정 3개 생성
   await ensureTestUsers(3) // 테스트용 유저계정
 
+  // 0-1) 샐러디 강남삼성타운점 Store 추가 (첫 번째 테스트 사장님 계정과 연결)
+  await ensureSalladyStore();
 
   // 1) 7개 업장 upsert (Sajang/BusinessCerti/Store 1:1 관계 + sto_halal=1)
   await runHalalYongsanSeed();
