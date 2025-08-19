@@ -375,7 +375,7 @@ async function ensureSalladyStore() {
 
   // 1) BusinessCerti 생성
   const businessCerti = await prisma.businessCerti.upsert({
-    where: { bs_no: 'SALADY_SAMSUNG_TOWN' },
+    where: { bs_no: 'SALADY_SAMSUNG_TOWN_001' },
     create: {
       bs_no: 'SALADY_SAMSUNG_TOWN_001',
       bs_name: '샐러디 강남삼성타운점',
