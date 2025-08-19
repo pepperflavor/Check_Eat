@@ -215,31 +215,34 @@ export class UserService {
   }
 
   // 이름으로 가게 검색
-  // 언어별 리턴...?
   async getStoreByName(lang: string, data: SearchStoreByNameDto) {
     const { sto_name, user_la, user_long, radius } = data;
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
     const Parseradius = Number(radius);
 
+    const isEnglish = /^[a-zA-Z\s]+$/.test(sto_name);
+    const searchColumn = isEnglish ? 'sto_name_en' : 'sto_name';
+
     const stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
         sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
-        sto_type,  sto_address, sto_halal, sto_status, sto_img,
+        sto_type, sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
-          geography(ST_MakePoint(sto_longitude, sto_latitude)),
-          geography(ST_MakePoint($1, $2))
+          location,
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
         ) AS distance
       FROM "Store"
       WHERE sto_status != 2
-        AND sto_name ILIKE '%' || $3 || '%'
         AND ST_DWithin(
-          geography(ST_MakePoint(sto_longitude, sto_latitude)),
-          geography(ST_MakePoint($1, $2)),
+          location,
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
           $4
         )
-      ORDER BY distance ASC;
+        AND ${searchColumn} ILIKE '%' || $3 || '%'
+      ORDER BY distance ASC
+      LIMIT 50;
       `,
       LONG,
       LA,
@@ -269,28 +272,31 @@ export class UserService {
       `
       SELECT
         s.sto_id, s.sto_name, s.sto_name_en, s.sto_latitude, s.sto_longitude,
-        s.sto_type, s.sto_img, s.sto_address, s.sto_halal, sto_status,
+        s.sto_type, s.sto_img, s.sto_address, s.sto_halal, s.sto_status,
         ST_Distance(
-          geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
-          geography(ST_MakePoint($1, $2))
+          s.location,
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
         ) AS distance
       FROM "Store" s
-      WHERE sto_status != 2
+      WHERE s.sto_status != 2
         AND ST_DWithin(
-        geography(ST_MakePoint(s.sto_longitude, s.sto_latitude)),
-        geography(ST_MakePoint($1, $2)),
-        $3
-      )
-      AND EXISTS (
-        SELECT 1 FROM "Food" f
-        WHERE f.foo_sa_id = s.sto_sa_id AND f.foo_vegan = $4
-      )
-      ORDER BY distance ASC;
+          s.location,
+          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+          $3
+        )
+        AND EXISTS (
+          SELECT 1
+          FROM "Food" f
+          WHERE f.foo_sa_id = s.sto_sa_id
+            AND f.foo_vegan = $4
+        )
+      ORDER BY distance ASC
+      LIMIT 50;
       `,
-      LONG,
-      LA,
-      Parseradius,
-      parseVegan,
+      LONG,       
+      LA,          
+      Parseradius, 
+      parseVegan,  
     );
 
     if (!stores || stores.length === 0) {
