@@ -374,22 +374,31 @@ async function ensureSalladyStore() {
   const sajangId = ownerLogin.ld_sajang_id;
 
   // 1) BusinessCerti 생성
-  const businessCerti = await prisma.businessCerti.upsert({
-    where: { bs_no: 'SALADY_SAMSUNG_TOWN_001' },
-    create: {
-      bs_no: 'SALADY_SAMSUNG_TOWN_001',
-      bs_name: '샐러디 강남삼성타운점',
-      bs_type: 'Restaurant',
-      bs_address: '서울 서초구 강남대로 359',
-      bs_sa_id: sajangId,
-    },
-    update: {
-      bs_name: '샐러디 강남삼성타운점',
-      bs_type: 'Restaurant',
-      bs_address: '서울 서초구 강남대로 359',
-      bs_sa_id: sajangId,
-    },
+  let businessCerti = await prisma.businessCerti.findUnique({
+    where: { bs_no: 'SALADY_SAMSUNG_TOWN_001' }
   });
+
+  if (!businessCerti) {
+    businessCerti = await prisma.businessCerti.create({
+      data: {
+        bs_no: 'SALADY_SAMSUNG_TOWN_001',
+        bs_name: '샐러디 강남삼성타운점',
+        bs_type: 'Restaurant',
+        bs_address: '서울 서초구 강남대로 359',
+        bs_sa_id: sajangId,
+      }
+    });
+  } else {
+    businessCerti = await prisma.businessCerti.update({
+      where: { bs_no: 'SALADY_SAMSUNG_TOWN_001' },
+      data: {
+        bs_name: '샐러디 강남삼성타운점',
+        bs_type: 'Restaurant',
+        bs_address: '서울 서초구 강남대로 359',
+        bs_sa_id: sajangId,
+      }
+    });
+  }
 
   // 2) Store 생성
   await prisma.store.upsert({
