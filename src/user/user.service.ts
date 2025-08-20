@@ -221,10 +221,17 @@ export class UserService {
     const LONG = new Decimal(user_long);
     const Parseradius = Number(radius);
 
-    const isEnglish = /^[a-zA-Z\s]+$/.test(sto_name);
-    const searchColumn = isEnglish ? 'sto_name_en' : 'sto_name';
+    // 입력값 정제: 앞뒤 공백 제거 및 안전성 확보
+    const searchTerm = sto_name?.trim() || '';
+    if (!searchTerm) {
+      return {
+        message: '검색어를 입력해주세요.',
+        status: 'false',
+      };
+    }
 
-    const stores = await this.prisma.$queryRawUnsafe<any[]>(
+    // 1차: sto_name(한국어 이름)에서 검색 (ILIKE로 대소문자 구분 없이)
+    let stores = await this.prisma.$queryRawUnsafe<any[]>(
       `
       SELECT
         sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
@@ -240,15 +247,44 @@ export class UserService {
           ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
           $4
         )
-        AND ${searchColumn} ILIKE '%' || $3 || '%'
+        AND sto_name ILIKE '%' || $3 || '%'
       ORDER BY distance ASC
       LIMIT 50;
       `,
       LONG,
       LA,
-      sto_name,
+      searchTerm,
       Parseradius,
     );
+
+    // 2차: 1차에서 결과가 없으면 sto_name_en(영어 이름)에서 검색 (ILIKE로 대소문자 구분 없이)
+    if (!stores || stores.length === 0) {
+      stores = await this.prisma.$queryRawUnsafe<any[]>(
+        `
+        SELECT
+          sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
+          sto_type, sto_address, sto_halal, sto_status, sto_img,
+          ST_Distance(
+            location,
+            ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+          ) AS distance
+        FROM "Store"
+        WHERE sto_status != 2
+          AND ST_DWithin(
+            location,
+            ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
+            $4
+          )
+          AND sto_name_en ILIKE '%' || $3 || '%'
+        ORDER BY distance ASC
+        LIMIT 50;
+        `,
+        LONG,
+        LA,
+        searchTerm,
+        Parseradius,
+      );
+    }
 
     if (!stores || stores.length === 0) {
       return {
