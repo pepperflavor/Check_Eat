@@ -146,6 +146,15 @@ export class SajangService {
           select: { sto_id: true, sto_name: true, sto_bs_id: true },
         });
 
+        // 5) location 컬럼 업데이트 (PostGIS geography 타입)
+        if (lat && lon) {
+          await tx.$executeRaw`
+            UPDATE "Store" 
+            SET location = ST_SetSRID(ST_MakePoint(${lon}, ${lat}), 4326)::geography 
+            WHERE sto_id = ${store.sto_id}
+          `;
+        }
+
         return { cert, store };
       });
 

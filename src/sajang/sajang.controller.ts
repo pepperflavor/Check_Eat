@@ -73,6 +73,7 @@ export class SajangController {
   async registHalal() {}
 
   // 회원가입시 사업자 등록증 등록
+  // 가게등록
   @Post('regist-certification')
   @ApiOperation({
     summary: '사장님이 정보 수정후 취합해서 요청보내기',
