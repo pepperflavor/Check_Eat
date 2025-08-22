@@ -317,6 +317,7 @@ DO UPDATE SET
             '브로콜리',
             '고구마',
           ],
+          vegan_level: 6, // 비건 베지테리언
         },
         {
           name: '시그니처블랙온면 & 교자만두 (Signature Black Warm Noodles & Gyoza Dumplings)',
@@ -331,6 +332,7 @@ DO UPDATE SET
             '건 타이고추',
             '비건 면',
           ],
+          vegan_level: 6, // 비건 베지테리언
         },
         {
           name: '크럼블 두부비빔밥 & 토마토 순두부 스튜 (Crumbled Tofu Bibimbap & Tomato Soft Tofu Stew)',
@@ -349,6 +351,7 @@ DO UPDATE SET
             '토마토',
             '순두부',
           ],
+          vegan_level: 6, // 비건 베지테리언
         },
         {
           name: '모둠 버섯 두부 강정 (Assorted Mushroom & Tofu Gangjeong)',
@@ -539,6 +542,7 @@ DO UPDATE SET
             '올리브',
             '비건 아일랜드 드레싱',
           ],
+          vegan_level: 3, // 락토 오보 베지테리언 (계란, 페타치즈 포함)
         },
         {
           name: '다시마 숙성 연어덮밥 (Kombu-aged Salmon Rice Bowl)',
@@ -554,6 +558,7 @@ DO UPDATE SET
             '귀리',
             '퀴노아',
           ],
+          vegan_level: 2, // 페스코 베지테리언 (연어 포함)
         },
         {
           name: '[비건] 케일 시저 샐러드 (Vegan Kale Caesar Salad)',
@@ -971,15 +976,25 @@ DO UPDATE SET
         continue;
       }
 
-      // 1) 비건 단계 추론
+      // 1) 비건 단계 추론 (수동 지정이 있으면 우선 사용)
       let veganId = 7; // 기본값: 비건 아님
-      try {
-        const judged = await judgeVeganByIngredientsLLM(item.materials);
-        const validVeganId = await veganIdIfExists(judged?.veg_id);
-        if (validVeganId) {
-          veganId = validVeganId;
+      
+      // 수동으로 지정된 vegan_level이 있는지 확인
+      if (item.vegan_level !== undefined) {
+        const validManualId = await veganIdIfExists(item.vegan_level);
+        if (validManualId) {
+          veganId = validManualId;
         }
-      } catch {}
+      } else {
+        // 수동 지정이 없으면 LLM으로 자동 판정
+        try {
+          const judged = await judgeVeganByIngredientsLLM(item.materials);
+          const validVeganId = await veganIdIfExists(judged?.veg_id);
+          if (validVeganId) {
+            veganId = validVeganId;
+          }
+        } catch {}
+      }
 
       // 2) Food 생성
       const created = await prisma.food.create({

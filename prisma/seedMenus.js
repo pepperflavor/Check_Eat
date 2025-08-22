@@ -270,6 +270,7 @@ module.exports = async function seedMenus(prisma) {
             '고추장',
             '참기름',
           ],
+          vegan_level: 3, // 락토 오보 베지테리언 (계란 포함)
         },
         {
           name: '불고기 (Bulgogi)',
@@ -285,24 +286,28 @@ module.exports = async function seedMenus(prisma) {
             '참기름',
             '후추',
           ],
+          vegan_level: 0, // 비건 아님 (소고기 포함)
         },
         {
           name: '김치볶음밥 소고기',
           price: 8000,
           foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_KIMCHI.jpg',
           materials: ['쌀', '김치', '소고기', '양파', '대파', '식용유', '간장'],
+          vegan_level: 0, // 비건 아님 (소고기 포함)
         },
         {
           name: '삼계탕 (Ginseng Chicken Soup)',
           price: 12000,
           foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_SAM.jpg',
           materials: ['닭고기', '인삼', '대추', '마늘', '쌀', '소금'],
+          vegan_level: 1, // 폴로 베지테리언 (닭고기 포함)
         },
         {
           name: '생선구이 (Grilled Fish)',
           price: 8000,
           foo_img: 'https://checkeatfood.blob.core.windows.net/foods-dummy/EID_SANG.jpg',
           materials: ['생선', '소금', '식용유', '레몬'],
+          vegan_level: 2, // 페스코 베지테리언 (생선 포함)
         },
       ],
     },
@@ -653,15 +658,25 @@ module.exports = async function seedMenus(prisma) {
         continue;
       }
 
-      // 1) 비건 판정
+      // 1) 비건 판정 (수동 지정이 있으면 우선 사용)
       let veganId = 7; // 기본값: 비건 아님
-      try {
-        const judged = await judgeVeganByIngredientsLLM(item.materials);
-        const validVeganId = await veganIdIfExists(judged?.veg_id);
-        if (validVeganId) {
-          veganId = validVeganId;
+      
+      // 수동으로 지정된 vegan_level이 있는지 확인
+      if (item.vegan_level !== undefined) {
+        const validManualId = await veganIdIfExists(item.vegan_level);
+        if (validManualId) {
+          veganId = validManualId;
         }
-      } catch {}
+      } else {
+        // 수동 지정이 없으면 LLM으로 자동 판정
+        try {
+          const judged = await judgeVeganByIngredientsLLM(item.materials);
+          const validVeganId = await veganIdIfExists(judged?.veg_id);
+          if (validVeganId) {
+            veganId = validVeganId;
+          }
+        } catch {}
+      }
 
       // 2) Food 생성
       const created = await prisma.food.create({

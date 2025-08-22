@@ -22,6 +22,7 @@ import { UpdateUserAllDto } from './user_dto/update-user-all.dto';
 import { UpdateUserLangDto } from './user_dto/update-user-lang.dto';
 import { FavoritStoreDto } from './user_dto/favorite-store.dto';
 import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
+import { SearchStoreMyfilterDto } from './user_dto/search-myfilter.dto';
 
 @Controller('user')
 export class UserController {
@@ -153,6 +154,17 @@ export class UserController {
     const result = await this.userService.getStoreByVegan(body);
     return result;
   }
+
+  @ApiOperation({ description : '로그인 한 유저가 자기 알러지 기준으로 가게 찾기'})
+  @Post('my-filter')
+  @UseGuards(JwtAuthGuard)
+  async myfilterStore(@Req() req, @Body() body:SearchStoreMyfilterDto){
+    const user_common_al = req.user.user_allergy_common
+    const user_personal_al = req.user.user_allergy
+    const lang = req.user.lang || 'ko'; // 언어값 입력안되면 'ko'
+    return await this.userService.myFilterStore(user_common_al, user_personal_al, lang, body);
+  }
+  
 
   // 가게 디테일 페이지
   // 로그인한 유저인지 아닌지에 따라서 언어 추출하는 곳 달라짐

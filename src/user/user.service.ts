@@ -20,6 +20,7 @@ import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import { SearchStoreMyfilterDto } from './user_dto/search-myfilter.dto';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault('Asia/Seoul');
@@ -180,33 +181,29 @@ export class UserService {
   async mainPageStoresData(user_la: string, user_long: string, radius = 2000) {
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
+    const R = Number(radius);
 
-    const stores = await this.prisma.$queryRawUnsafe<any[]>(
-      `
-      SELECT
-        sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
-        sto_type, sto_address, sto_halal, sto_status, sto_img,
-        ST_Distance(
-          geography(ST_MakePoint(sto_longitude, sto_latitude)),
-          geography(ST_MakePoint($1, $2))
-        ) AS distance
-      FROM "Store"
-      WHERE ST_DWithin(
-        geography(ST_MakePoint(sto_longitude, sto_latitude)),
-        geography(ST_MakePoint($1, $2)),
-        $3
+    const stores = await this.prisma.$queryRaw<any[]>`
+    SELECT
+      sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
+      sto_type, sto_address, sto_halal, sto_status, sto_img,
+      ST_Distance(
+        location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography
+      ) AS distance
+    FROM "Store"
+    WHERE sto_status != 2
+      AND ST_DWithin(
+        location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography,
+        ${R}
       )
-      AND sto_status != 2
-      ORDER BY distance ASC;
-      `,
-      LONG,
-      LA,
-      radius,
-    );
+    ORDER BY distance ASC;
+  `;
 
     if (!stores || stores.length === 0) {
       return {
-        message: `반경 ${radius}m 내의 위치한 가게가 없습니다`,
+        message: `반경 ${R}m 내의 위치한 가게가 없습니다`,
         status: 'success',
       };
     }
@@ -219,6 +216,7 @@ export class UserService {
     const { sto_name, user_la, user_long, radius } = data;
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
+    const R = Number(radius);
     const Parseradius = Number(radius);
 
     // 입력값 정제: 앞뒤 공백 제거 및 안전성 확보
@@ -231,59 +229,47 @@ export class UserService {
     }
 
     // 1차: sto_name(한국어 이름)에서 검색 (ILIKE로 대소문자 구분 없이)
-    let stores = await this.prisma.$queryRawUnsafe<any[]>(
-      `
+    let stores = await this.prisma.$queryRaw<any[]>`
+    SELECT
+      sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
+      sto_type, sto_address, sto_halal, sto_status, sto_img,
+      ST_Distance(
+        location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography
+      ) AS distance
+    FROM "Store"
+    WHERE sto_status != 2
+      AND ST_DWithin(
+        location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography,
+        ${R}
+      )
+      AND sto_name ILIKE '%' || ${searchTerm} || '%'
+    ORDER BY distance ASC
+    LIMIT 50;
+  `;
+
+    // 2차: 1차에서 결과가 없으면 sto_name_en(영어 이름)에서 검색 (ILIKE로 대소문자 구분 없이)
+    if (!stores || stores.length === 0) {
+      stores = await this.prisma.$queryRaw<any[]>`
       SELECT
         sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
         sto_type, sto_address, sto_halal, sto_status, sto_img,
         ST_Distance(
           location,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
+          ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography
         ) AS distance
       FROM "Store"
       WHERE sto_status != 2
         AND ST_DWithin(
           location,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-          $4
+          ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography,
+          ${R}
         )
-        AND sto_name ILIKE '%' || $3 || '%'
+        AND sto_name_en ILIKE '%' || ${searchTerm} || '%'
       ORDER BY distance ASC
       LIMIT 50;
-      `,
-      LONG,
-      LA,
-      searchTerm,
-      Parseradius,
-    );
-
-    // 2차: 1차에서 결과가 없으면 sto_name_en(영어 이름)에서 검색 (ILIKE로 대소문자 구분 없이)
-    if (!stores || stores.length === 0) {
-      stores = await this.prisma.$queryRawUnsafe<any[]>(
-        `
-        SELECT
-          sto_id, sto_name, sto_name_en, sto_latitude, sto_longitude,
-          sto_type, sto_address, sto_halal, sto_status, sto_img,
-          ST_Distance(
-            location,
-            ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-          ) AS distance
-        FROM "Store"
-        WHERE sto_status != 2
-          AND ST_DWithin(
-            location,
-            ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-            $4
-          )
-          AND sto_name_en ILIKE '%' || $3 || '%'
-        ORDER BY distance ASC
-        LIMIT 50;
-        `,
-        LONG,
-        LA,
-        searchTerm,
-        Parseradius,
-      );
+    `;
     }
 
     if (!stores || stores.length === 0) {
@@ -299,41 +285,38 @@ export class UserService {
   // 비건 단계별 검색
   async getStoreByVegan(data: SearchStoreByVeganDto) {
     const { vegan_level, user_la, user_long, radius } = data;
-    const parseVegan = Number(vegan_level);
+
     const LA = new Decimal(user_la);
     const LONG = new Decimal(user_long);
-    const Parseradius = Number(radius);
 
-    const stores = await this.prisma.$queryRawUnsafe<any[]>(
-      `
-      SELECT
-        s.sto_id, s.sto_name, s.sto_name_en, s.sto_latitude, s.sto_longitude,
-        s.sto_type, s.sto_img, s.sto_address, s.sto_halal, s.sto_status,
-        ST_Distance(
-          s.location,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography
-        ) AS distance
-      FROM "Store" s
-      WHERE s.sto_status != 2
-        AND ST_DWithin(
-          s.location,
-          ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography,
-          $3
-        )
-        AND EXISTS (
-          SELECT 1
-          FROM "Food" f
-          WHERE f.foo_sa_id = s.sto_sa_id
-            AND f.foo_vegan = $4
-        )
-      ORDER BY distance ASC
-      LIMIT 50;
-      `,
-      LONG,       
-      LA,          
-      Parseradius, 
-      parseVegan,  
-    );
+    const R = Number(radius);
+    const VEG = Number(vegan_level);
+
+    const stores = await this.prisma.$queryRaw<any[]>`
+    SELECT
+      s.sto_id, s.sto_name, s.sto_name_en, s.sto_latitude, s.sto_longitude,
+      s.sto_type, s.sto_img, s.sto_address, s.sto_halal, s.sto_status,
+      ST_Distance(
+        s.location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography
+      ) AS distance
+    FROM "Store" s
+    WHERE s.sto_status != 2
+      AND ST_DWithin(
+        s.location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography,
+        ${R}
+      )
+      AND EXISTS (
+        SELECT 1
+        FROM "Food" f
+        WHERE f.foo_store_id = s.sto_id
+          AND f.foo_status != 2
+          AND f.foo_vegan = ${VEG}
+      )
+    ORDER BY distance ASC
+    LIMIT 50;
+  `;
 
     if (!stores || stores.length === 0) {
       return { message: '조건에 맞는 가게가 없습니다', status: 'success' };
@@ -560,6 +543,97 @@ export class UserService {
           }
         : null,
     };
+  }
+
+  async myFilterStore(
+    user_common_al: number[] | null | undefined,
+    user_personal_al: string | null | undefined,
+    lang: string,
+    data: SearchStoreMyfilterDto,
+  ) {
+    const { user_la, user_long, radius } = data;
+
+    const LA = new Decimal(user_la);
+    const LONG = new Decimal(user_long);
+
+    const R = Number(radius);
+
+    // ✅ 공통 알러지 배열: int[]
+    const commonArr: number[] | null =
+      Array.isArray(user_common_al) && user_common_al.length > 0
+        ? user_common_al.map((n) => Number(n)).filter((n) => Number.isFinite(n))
+        : null;
+
+    // ✅ 개인 알러지(문자열 콤마 분리) → text[]
+    //    "마늘, 생강 , 계란" → ["마늘","생강","계란"]
+    const personalArr: string[] | null = (user_personal_al ?? '')
+      .split(',')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const personalArrayParam = personalArr.length > 0 ? personalArr : null;
+
+    // ✅ 반경 내 Store + "해당 Store의 Food 중 안전한 음식이 하나라도 있는지" 검사
+    //
+    // - ST_DWithin(s.location, POINT(user), R)
+    // - EXISTS (
+    //     SELECT 1 FROM "Food" f
+    //     WHERE f.foo_store_id = s.sto_id
+    //       AND f.foo_status != 2
+    //       AND (개인 알러지 교집합 없음)
+    //       AND (공통 알러지 교집합 없음)
+    //   )
+    //
+    // 개인 알러지 교집합 없음: NOT (f.foo_material && $personal::text[])
+    // 공통 알러지 교집합 없음: NOT EXISTS (SELECT 1 FROM "_CommonAlFood" caf
+    //                                     WHERE caf."A"=f.foo_id AND caf."B"=ANY($common::int[]))
+    const stores = await this.prisma.$queryRaw<any[]>`
+    SELECT
+      s.sto_id, s.sto_name, s.sto_name_en, s.sto_latitude, s.sto_longitude,
+      s.sto_type, s.sto_address, s.sto_halal, s.sto_status, s.sto_img,
+      ST_Distance(
+        s.location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography
+      ) AS distance
+    FROM "Store" s
+    WHERE s.sto_status != 2
+      AND ST_DWithin(
+        s.location,
+        ST_SetSRID(ST_MakePoint(${LONG}, ${LA}), 4326)::geography,
+        ${R}
+      )
+      AND EXISTS (
+        SELECT 1
+        FROM "Food" f
+        WHERE f.foo_store_id = s.sto_id
+          AND f.foo_status != 2
+
+          -- ✅ 개인 알러지 교집합 없음(개인 알러지가 없으면 조건 패스)
+          AND (
+            ${personalArrayParam}::text[] IS NULL
+            OR NOT (f.foo_material && ${personalArrayParam}::text[])
+          )
+
+          -- ✅ 공통 알러지 교집합 없음(공통 알러지가 없으면 조건 패스)
+          AND (
+            ${commonArr}::int[] IS NULL
+            OR NOT EXISTS (
+              SELECT 1
+              FROM "_CommonAlFood" caf
+              WHERE caf."A" = f.foo_id
+                AND caf."B" = ANY(${commonArr}::int[])
+            )
+          )
+      )
+    ORDER BY distance ASC
+    LIMIT 50;
+  `;
+
+    if (!stores?.length) {
+      return { message: '조건에 맞는 가게가 없습니다', status: 'success' };
+    }
+
+    // ✅ 오늘 영업시간/휴무 정보 머지(기존 함수 재활용)
+    return await this.mergeStoresWithHoliday(stores);
   }
 
   //========================= 유저 마이페이지 관련 시작
