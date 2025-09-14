@@ -31,7 +31,7 @@ export class TranslateService {
         responseType: 'json',
       });
 
-      //   console.log(JSON.stringify(response.data, null, 4));
+
       const translations = response.data[0]?.translations;
 
       console.log(translations[0].text); // 텍스트만 나옴, 첫번째 언어 번역본

@@ -1,5 +1,4 @@
 services:
-  # NestJS Application
   app:
     build:
       context: .
@@ -32,7 +31,6 @@ services:
       retries: 3
       start_period: 40s
 
-  # PostgreSQL with PostGIS
   postgres:
     image: postgis/postgis:15-3.3-alpine
     container_name: check-eat-postgres
@@ -58,7 +56,6 @@ services:
       retries: 5
       start_period: 30s
 
-  # Redis
   redis:
     image: redis:7-alpine
     env_file:
@@ -79,7 +76,7 @@ services:
       retries: 5
       start_period: 30s
 
-  # Nginx Reverse Proxy
+
   nginx:
     image: nginx:alpine
     container_name: check-eat-nginx
@@ -101,7 +98,7 @@ services:
       retries: 3
       start_period: 30s
 
-  # Certbot for SSL certificates
+
   certbot:
     image: certbot/certbot
     container_name: check-eat-certbot

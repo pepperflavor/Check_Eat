@@ -1,0 +1,4 @@
+services:
+  app:
+    image: ghcr.io/pepperflavor/Check_Eat:product-latest
+    pull_policy: always
