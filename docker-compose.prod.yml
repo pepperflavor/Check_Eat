@@ -1,0 +1,5 @@
+services:
+  app:
+    image: ghcr.io/pepperflavor/Check_Eat:product-latest
+    build: null # 빌드 시도 없이 바로 이미지 갖다쓰기~
+    pull_policy: always
