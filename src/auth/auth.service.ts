@@ -45,7 +45,8 @@ export class AuthService {
     const isEmail = await this.commonService.isExistEmail(data.email);
 
     if (isId.status !== 200 && isEmail.status !== 200) {
-      throw new UnauthorizedException(
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
         '이미 존재하는 아이디 또는 이메일입니다.',
       );
     }
@@ -111,7 +112,6 @@ export class AuthService {
       },
     );
 
-
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
 
@@ -125,8 +125,10 @@ export class AuthService {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
     if (!data) {
-      throw new CustomException(ErrorCode.UNAUTHORIZED, '로그인 정보가 존재하지 않습니다.');
-      
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '로그인 정보가 존재하지 않습니다.',
+      );
     }
 
     const isWithdraw = await this.commonService.isWithdraw(inputId);
@@ -144,7 +146,10 @@ export class AuthService {
     );
 
     if (isMatch == false) {
-      throw new UnauthorizedException('비밀번호가 일치하지 않습니다.');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '비밀번호가 일치하지 않습니다.',
+      );
     }
 
     // 토큰 발급
@@ -167,7 +172,6 @@ export class AuthService {
         expiresIn: this.config.get<string>('JWT_REFRESH_EXPIRATION_TIME'),
       },
     );
-
 
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
@@ -212,7 +216,6 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
-
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,
@@ -234,12 +237,18 @@ export class AuthService {
     const user = await this.commonService.findById(inputId);
 
     if (!user || !user.ld_refresh_token) {
-      throw new UnauthorizedException('리프레시 토큰이 존재하지 않습니다.');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '리프레시 토큰이 존재하지 않습니다.',
+      );
     }
 
     // db에 저장돼 있던 로큰이랑 비교
     if (user.ld_refresh_token !== refreshToken) {
-      throw new UnauthorizedException('리프레시 토큰이 일치하지 않습니다.');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '리프레시 토큰이 일치하지 않습니다.',
+      );
     }
 
     try {
@@ -284,7 +293,8 @@ export class AuthService {
         refreshToken: newRefreshToken,
       };
     } catch (error) {
-      throw new UnauthorizedException(
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
         '리프레시 토큰이 유효하지 않습니다. 다시 로그인해주세요.',
       );
     }
@@ -325,7 +335,10 @@ export class AuthService {
         await this.emailService.sendVerificationCode(email, code, language, 0);
       } catch (error) {
         this.logger.error('이메일 인증 코드 생성 실패', error);
-        throw new Error('인증코드 생성중 오류가 발생했습니다.');
+        throw new CustomException(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          '인증코드 생성중 오류가 발생했습니다.',
+        );
       }
     } else if (type == 1) {
       // 아이디 찾기 일때 이메일 발송
@@ -340,7 +353,10 @@ export class AuthService {
 
         await this.emailService.sendVerificationCode(email, code, language, 1);
       } catch (error) {
-        throw new Error('인증코드 발송중 오류가 발생했습니다.');
+        throw new CustomException(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          '인증코드 발송중 오류가 발생했습니다.',
+        );
       }
     } else if (type == 2) {
       const key = `find-pwd-${trimEmail}`;
@@ -355,7 +371,10 @@ export class AuthService {
       } catch (error) {
         this.logger.error('비밀번호 찾기 인증코드 발송 실패 ', error);
         this.logger.error(` type : ${type}`);
-        throw new Error('인증코드 발송중 오류가 발생했습니다.');
+        throw new CustomException(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          '인증코드 발송중 오류가 발생했습니다.',
+        );
       }
     }
   }
@@ -392,7 +411,10 @@ export class AuthService {
     const data = await this.commonService.findById(username);
 
     if (!data?.ld_log_id) {
-      throw new UnauthorizedException('유저가 존재하지 않습니다');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '유저가 존재하지 않습니다',
+      );
     }
 
     const isMatch = await this.commonService.comparePassword(
@@ -401,7 +423,10 @@ export class AuthService {
     );
 
     if (!isMatch) {
-      throw new UnauthorizedException('비밀번호가 일치하지 않습니다');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        '비밀번호가 일치하지 않습니다',
+      );
     }
 
     return data;
@@ -416,7 +441,10 @@ export class AuthService {
     const privateKey = this.config.get<string>('APPLE_PRIVATE_KEY');
 
     if (!privateKey) {
-      throw new Error('APPLE_PRIVATE_KEY is not defined in the configuration');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        'APPLE_PRIVATE_KEY is not defined in the configuration',
+      );
     }
     const formattedPrivateKey = privateKey.replace(/\\n/g, '\n');
 
@@ -455,7 +483,10 @@ export class AuthService {
       return res.data;
     } catch (err) {
       this.logger.error('Apple Token API 호출 실패', err.response?.data || err);
-      throw new UnauthorizedException('Apple 로그인 토큰 발급 실패');
+      throw new CustomException(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        'Apple 로그인 토큰 발급 실패',
+      );
     }
   }
 

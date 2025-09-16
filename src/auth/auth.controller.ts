@@ -99,7 +99,6 @@ export class AuthController {
   })
   @Post('check-email-unique')
   async checkEmailUnique(@Body() body: EmailUniqueDto) {
-
     return await this.commonService.isExistEmail(body.email);
   }
 
@@ -269,7 +268,10 @@ export class AuthController {
   })
   async appleLogin(@Query('code') code: string) {
     if (!code) {
-      throw new UnauthorizedException('Apple Authorization Code가 필요합니다.');
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
+        'Apple Authorization Code가 필요합니다.',
+      );
     }
     return await this.authService.handleAppleLogin(code);
   }
