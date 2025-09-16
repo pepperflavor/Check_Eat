@@ -30,6 +30,8 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { UpdateRefreshDto } from './dto/update-refresh.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Controller('auth')
 export class AuthController {
@@ -145,7 +147,8 @@ export class AuthController {
     const { log_Id, refreshToken } = body;
 
     if (!log_Id || !refreshToken) {
-      throw new UnauthorizedException(
+      throw new CustomException(
+        ErrorCode.UNAUTHORIZED,
         '아이디 또는 리프레시 토큰이 누락되었습니다.',
       );
     }

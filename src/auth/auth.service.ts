@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  Logger,
+  HttpStatus,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { CacheService } from 'src/cache/cache.service';
@@ -17,6 +22,8 @@ import axios from 'axios';
 import * as qs from 'qs';
 import * as jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class AuthService {
@@ -37,7 +44,6 @@ export class AuthService {
     const isId = await this.commonService.isExistID(data.log_Id);
     const isEmail = await this.commonService.isExistEmail(data.email);
 
-
     if (isId.status !== 200 && isEmail.status !== 200) {
       throw new UnauthorizedException(
         '이미 존재하는 아이디 또는 이메일입니다.',
@@ -46,7 +52,6 @@ export class AuthService {
 
     const result = await this.userService.createUser(data);
 
-   
     return result;
   }
 
@@ -68,10 +73,12 @@ export class AuthService {
     const isWithdraw = await this.commonService.isWithdraw(inputId);
 
     if (isWithdraw == 2 || isWithdraw == undefined) {
-      return {
-        message: '탈퇴한 회원입니다.',
-        status: 'false',
-      };
+      throw new CustomException(ErrorCode.UNAUTHORIZED, '탈퇴한 회원입니다.');
+
+      // return {
+      //   message: '탈퇴한 회원입니다.',
+      //   status: 'false',
+      // };
     }
     // // 비밀번호 확인
     // const isMatch = await this.commonService.comparePassword(
@@ -114,18 +121,19 @@ export class AuthService {
     };
   }
 
-  async loginSajang(inputId: string, inputPwd:string) {
+  async loginSajang(inputId: string, inputPwd: string) {
     // 가입한 유저인지 확인
     const data = await this.commonService.findById(inputId);
     if (!data) {
-      throw new UnauthorizedException('로그인 정보가 존재하지 않습니다.');
+      throw new CustomException(ErrorCode.UNAUTHORIZED, '로그인 정보가 존재하지 않습니다.');
+      
     }
 
     const isWithdraw = await this.commonService.isWithdraw(inputId);
 
     if (isWithdraw == 2 || isWithdraw == undefined) {
       return {
-        message: '탈퇴한 회원입니다.',
+        message: '탈퇴한 회원입니다.', // 커스텀 에러 핸들링 추가하기
         status: 'false',
       };
     }
@@ -190,10 +198,8 @@ export class AuthService {
         ld_usergrade,
       );
 
-
       // user 가 실제로 객체에 존재하는지 확인
       if (user && 'user' in user && user.user) {
-   
         payload = {
           ...payload,
           user_vegan: user.user.user_vegan,
@@ -212,7 +218,6 @@ export class AuthService {
         ld_usergrade,
       )) as SajangLoginToken;
 
- 
       payload = {
         ...payload,
         sa_id: sajang.ld_sajang_id,
