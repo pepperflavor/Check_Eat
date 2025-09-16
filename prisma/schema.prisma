@@ -141,7 +141,7 @@ model FoodTranslateAR{ //
 
 model Holiday{ //
   holi_id Int @id @default(autoincrement())
-  holi_break String // 브레이크 타임
+  holi_break String? // 브레이크 타임
   holi_runtime_sun String? // 일요일 영업시간
   holi_runtime_mon String? // 월요일 영업시간... 이런식으로 요일별 컬럼 추가하기
   holi_runtime_tue String? // 화요일 영업시간  
@@ -149,6 +149,7 @@ model Holiday{ //
   holi_runtime_thu String? // 목요일 영업시간
   holi_runtime_fri String? // 금요일 영업시간
   holi_runtime_sat String? // 토요일 영업시간
+
   
   holi_regular String[] // 정기 휴일
   holi_public String[] // 한국 공휴일들 중에 쉬는날

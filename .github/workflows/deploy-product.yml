@@ -2,9 +2,9 @@ name: Deploy to VM on product merge
 
 on:
   pull_request:
-    branches: [ product ]
-    types: [ closed ]         
-  workflow_dispatch:          
+    branches: [product]
+    types: [closed]
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -13,7 +13,7 @@ jobs:
     environment: product
     permissions:
       contents: read
-      packages: write         # GHCR 푸시를 위해 필요
+      packages: write
     concurrency:
       group: deploy-product
       cancel-in-progress: false
@@ -30,7 +30,6 @@ jobs:
           username: ${{ secrets.GHCR_USERNAME }}
           password: ${{ secrets.GHCR_TOKEN }}
 
-      # 앱 이미지 빌드 & 푸시 (태그: product-latest, 커밋SHA)
       - name: Build and push app image
         uses: docker/build-push-action@v6
         with:
@@ -41,7 +40,6 @@ jobs:
             ghcr.io/${{ github.repository }}:product-latest
             ghcr.io/${{ github.repository }}:sha-${{ github.sha }}
 
-      # 서버에 컴포즈/설정 동기화 (env, 업로드 데이터는 서버에만!)
       - name: Copy compose & configs to VM
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -57,7 +55,6 @@ jobs:
             docker/postgres/**
           target: /srv/check-eat
 
-      # 배포 (pull → up -d)
       - name: Deploy on VM
         uses: appleboy/ssh-action@v1.2.0
         with:
