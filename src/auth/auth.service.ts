@@ -111,8 +111,7 @@ export class AuthService {
       },
     );
 
-    // console.log('액세스토큰 : ' + accessToken);
-    // console.log('리프레시 토큰 : ' + refreshToken);
+
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
 
@@ -169,8 +168,7 @@ export class AuthService {
       },
     );
 
-    // console.log('액세스토큰 : ' + accessToken);
-    // console.log('리프레시 토큰 : ' + refreshToken);
+
     // 리프레시 토큰 저장해주기~
     await this.commonService.updateRefreshToken(data.ld_id, refreshToken);
 
@@ -214,6 +212,7 @@ export class AuthService {
 
       return payload;
     } else if (ld_usergrade == 1) {
+
       const sajang = (await this.commonService.isExistLoginData(
         ld_id,
         ld_usergrade,

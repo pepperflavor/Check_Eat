@@ -8,7 +8,7 @@ let restaurantData = [];
 try {
   restaurantData = require('./gangnam_restaurants.json');
 } catch (error) {
-  console.log('⚠️ JSON 파일을 찾을 수 없어 빈 배열 사용');
+
   restaurantData = [];
 }
 

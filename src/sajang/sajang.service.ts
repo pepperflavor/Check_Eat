@@ -263,12 +263,7 @@ export class SajangService {
 
     const requestUrl = `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`;
 
-    console.log('=== 국세청 API 요청 디버깅 ===');
-    console.log('요청 URL:', requestUrl);
-    console.log('요청 Payload:', JSON.stringify(payload, null, 2));
-    console.log('IRS_URL:', IRS_URL);
-    console.log('SERVICE_KEY 존재:', !!SERVICE_KEY);
-    console.log('SERVICE_KEY 앞 10자:', SERVICE_KEY?.substring(0, 10));
+
 
     try {
       const { data: response } = await axios.post(requestUrl, payload, {
@@ -279,36 +274,21 @@ export class SajangService {
         timeout: 30000, // 30초 타임아웃
       });
 
-      console.log('=== 국세청 API 응답 ===');
-      console.log('전체 응답:', JSON.stringify(response, null, 2));
-      console.log('응답 데이터:', response?.data);
+
 
       const result = response?.data?.[0];
 
       if (!result || result.valid !== '01') {
-        console.log('=== 검증 실패 ===');
-        console.log('result:', result);
-        console.log('valid 값:', result?.valid);
-        console.log('valid_msg:', result?.valid_msg);
 
         throw new BadRequestException(
           result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
         );
       }
-
-      console.log('=== 검증 성공 ===');
       return {
         message: '진위여부 확인 완료',
         status: 'success',
       };
     } catch (axiosError: any) {
-      console.log('=== axios 오류 상세 ===');
-      console.log('오류 메시지:', axiosError.message);
-      console.log('오류 코드:', axiosError.code);
-      console.log('응답 상태:', axiosError.response?.status);
-      console.log('응답 헤더:', axiosError.response?.headers);
-      console.log('응답 데이터:', axiosError.response?.data);
-      console.log('요청 설정:', axiosError.config?.url);
 
       throw axiosError;
     }
@@ -1050,10 +1030,10 @@ export class SajangService {
 
   // 음식 수정 페이지 진입시 뿌려줄 음식 데이터
   async getFoodListUpdatePage(sa_id: number, sto_id?: number) {
-    // 0) 사장 존재/권한 검증
+
     await this.assertOwner(sa_id);
 
-    // 1) 대상 매장 결정: sto_id가 없으면 사장의 첫 매장 사용
+    // sto_id가 없으면 첫번째 매장 사용
     const storeWhere =
       sto_id !== undefined
         ? { sto_id, sto_sa_id: sa_id }
@@ -1069,7 +1049,7 @@ export class SajangService {
       throw new NotFoundException('해당 사장님의 매장을 찾을 수 없습니다.');
     }
 
-    // 2) 해당 매장에 속한 음식들 조회 (삭제된 음식 제외: 0,1만 노출)
+  
     const foods = await this.prisma.food.findMany({
       where: {
         foo_sa_id: sa_id,
@@ -1085,14 +1065,14 @@ export class SajangService {
         foo_status: true,
         foo_vegan: true,
         foo_material: true,
-        // 번역 필드
+
         food_translate_en: {
           select: { ft_en_name: true, ft_en_price: true, ft_en_mt: true },
         },
         food_translate_ar: {
           select: { ft_ar_name: true, ft_ar_price: true, ft_ar_mt: true },
         },
-        // 알러지(공통) 선택 여부가 필요하면 주석 해제
+        // 알러지(공통) 선택 여부가 필요하면
         // CommonAl: { select: { coal_id: true, coal_name: true } },
       },
     });
@@ -1121,10 +1101,10 @@ export class SajangService {
     });
 
     // 소유 가게인지 확인
-    if (!store) throw new BadRequestException('해당 매장을 찾을 수 없습니다.');
-    if (store.sto_sa_id !== sa_id) {
-      throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
-    }
+    // if (!store) throw new BadRequestException('해당 매장을 찾을 수 없습니다.');
+    // if (store.sto_sa_id !== sa_id) {
+    //   throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
+    // }
     const foods = await this.prisma.food.findMany({
       where: {
         foo_sa_id: sa_id,
@@ -1169,7 +1149,7 @@ export class SajangService {
       throw new BadRequestException('유효하지 않은 foo_id 입니다.');
     }
 
-    // 2) 해당 가게의 메뉴인지 확인 (가게-음식 M:N 연결 확인 + 소유자 일치 보조 확인)
+ 
     const food = await this.prisma.food.findUnique({
       where: { foo_id: fooId },
       select: { foo_id: true, foo_sa_id: true, foo_name: true },
@@ -1179,7 +1159,7 @@ export class SajangService {
       throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
     }
 
-    // 업데이트 데이터 구성하기
+
     const updateData: any = {};
     let nameChanged = false;
     let materialsChanged = false;
@@ -1201,9 +1181,9 @@ export class SajangService {
       updateData.foo_price = priceNum;
     }
 
-    // 재료 (foo_material 또는 오타 foo_meterial 둘 다 지원)
+
     const incomingMaterials =
-      (data as any).foo_material ?? (data as any).foo_meterial;
+      (data as any).foo_material
     if (incomingMaterials !== undefined) {
       if (!Array.isArray(incomingMaterials)) {
         throw new BadRequestException(

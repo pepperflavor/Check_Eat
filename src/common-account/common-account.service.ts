@@ -299,8 +299,7 @@ export class CommonAccountService {
 
     try {
       const savedCode = await this.cache.get(key);
-      // console.log(`저장되어있던 코드 : ${savedCode}`);
-      // console.log(`입력들어온 코드 : ${inputCode}`);
+
 
       if (!savedCode) {
         throw new UnauthorizedException(
