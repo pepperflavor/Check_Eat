@@ -7,6 +7,8 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { foodClassifierModels } from './types/food-models';
 import { AzurePrediction, ModelResult } from './types/result-model';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 // 애저- CUSTOM VISION
 @Injectable()
@@ -33,7 +35,7 @@ export class AzureFoodClassifierService {
 
   async predictFromAllModels(file: Express.Multer.File) {
     if (!file?.buffer?.length) {
-      throw new BadRequestException('image file is required');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '파일이 업로드되지 않았습니다.');
     }
 
     const headers = {
@@ -58,8 +60,8 @@ export class AzureFoodClassifierService {
 
       if (res.status >= 400) {
         // 서버/권한/요청 오류 로깅
-        console.error(`[${model.name}] ${res.status}`, res.data);
-        throw new Error(`[${model.name}] ${res.status} ${res.statusText}`);
+        console.error(`[${model.name}] ${res.status} ${res.statusText}`, res.data);
+        throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '음식 분류에 실패했습니다.');
       }
 
       const predictions = Array.isArray(res.data?.predictions)
@@ -89,10 +91,10 @@ export class AzureFoodClassifierService {
           (r) => (r as PromiseRejectedResult).reason?.toString?.() || 'unknown',
         );
       console.error('Azure prediction failed:', reasons);
-      throw new InternalServerErrorException('Prediction failed');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '음식 분류에 실패했습니다.');
     }
 
-    // 각 모델별 Top1 로깅/추적용
+    // 각 모델별 Top1 
     const topPerModel = valids.map((r) => {
       const top = [...r.predictions].sort(
         (a, b) => b.probability - a.probability,

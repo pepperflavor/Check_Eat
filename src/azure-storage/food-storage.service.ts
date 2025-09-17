@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BaseStorageService } from './azure-base-storage.service';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class FoodStorageService extends BaseStorageService {
   constructor(config: ConfigService) {
     const conn = config.get<string>('AZURE_STORAGE_STRING_FOOD');
     if (!conn) {
-      throw new Error(
-        '[FoodStorageService] AZURE_STORAGE_STRING_FOOD 환경변수가 누락되었습니다.',
-      );
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '서버 오류: AZURE_STORAGE_STRING_FOOD 환경변수가 누락되었습니다.');
     }
     super(conn);
   }

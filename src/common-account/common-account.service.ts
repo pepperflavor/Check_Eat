@@ -7,6 +7,8 @@ import { PrismaService } from 'src/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { CacheService } from 'src/cache/cache.service';
 import { ConfigService } from '@nestjs/config';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 // 로그인, 회원가입시 공통 기능 부분 분리
 @Injectable()
@@ -125,7 +127,8 @@ export class CommonAccountService {
 
       return data! as SajangLoginToken;
     }
-    throw new Error('유저데이터 조회안됨');
+    throw new CustomException(ErrorCode.UNAUTHORIZED, '유저 조회가 불가능합니다.');
+
   }
 
   // 비밀번호 재설정
@@ -170,7 +173,8 @@ export class CommonAccountService {
   async comparePassword(plainPWD: string, hashedPWD): Promise<boolean> {
 
     if (!hashedPWD || !hashedPWD.startsWith('$2')) {
-      throw new Error('저장된 비밀번호 형식이 잘못되었습니다.');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '비밀번호 형식이 잘못되었습니다.')
+
     }
 
     const result = await bcrypt.compare(plainPWD, hashedPWD);
@@ -226,7 +230,7 @@ export class CommonAccountService {
     });
 
     if (!result || result == null || result == undefined) {
-      throw new Error('비밀번호 재설정중 오류가 발생했습니다.');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '비밀번호 재설정중 오류가 발생했습니다.');
     }
 
     return {
@@ -294,7 +298,8 @@ export class CommonAccountService {
     }
 
     if (key == '' || key == undefined || key == null) {
-      throw new Error('레디트 키값을 설정하는 도중 오류가 발생했습니다.');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '레디스 키값을 설정하는 도중 오류가 발생했습니다.');
+
     }
 
     try {
@@ -302,15 +307,13 @@ export class CommonAccountService {
 
 
       if (!savedCode) {
-        throw new UnauthorizedException(
-          '인증 코드가 만료되었거나 존재하지 않습니다.',
-        );
+        throw new CustomException(ErrorCode.UNAUTHORIZED, '인증 코드가 만료되었거나 존재하지 않습니다.');
+
       }
 
       if (savedCode !== inputCode.trim()) {
-        throw new UnauthorizedException(
-          '인증 코드가 일치하지 않습니다. 다시 시도해주세요',
-        );
+        throw new CustomException(ErrorCode.UNAUTHORIZED, '인증 코드가 일치하지 않습니다. 다시 시도해주세요');
+
       }
 
       await this.cache.del(key);
@@ -327,9 +330,8 @@ export class CommonAccountService {
         });
 
         if (ID == null || ID == undefined) {
-          throw new UnauthorizedException(
-            '해당 이메일로 가입한 아이디가 없습니다.',
-          );
+          throw new CustomException(ErrorCode.UNAUTHORIZED, '해당 이메일로 가입한 아이디가 없습니다.');
+  
         }
 
         return {
@@ -344,7 +346,8 @@ export class CommonAccountService {
         status: 'success',
       };
     } catch (error) {
-      throw new Error('인증 코드 검증 중 문제가 발생했습니다.');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '인증 코드 검증 중 문제가 발생했습니다.');
+
     }
   }
 }

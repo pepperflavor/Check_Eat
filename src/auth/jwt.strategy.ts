@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -9,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     const secret = config.get<string>('JWT_ACCESS_SECRET');
 
     if (!secret) {
-      throw new Error('JWT_ACCESS_SECRET is not defined ERROR');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '서버 오류: JWT_ACCESS_SECRET이 설정되지 않았습니다.');
     }
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -48,6 +50,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     // 잘못된 권한
-    throw new Error('Invalid role in JWT payload');
+    throw new CustomException(ErrorCode.UNAUTHORIZED, '잘못된 권한입니다.');
+
   }
 }

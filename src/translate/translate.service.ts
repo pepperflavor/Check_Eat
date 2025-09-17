@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 import { v4 as uuidv4 } from 'uuid';
 import qs from 'qs';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class TranslateService {
@@ -59,7 +61,8 @@ export class TranslateService {
         'Translation error:',
         error.response?.data || error.message,
       );
-      throw new InternalServerErrorException('번역 실패');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '번역 실패');
+   
     }
   }
 
@@ -157,7 +160,7 @@ export class TranslateService {
         'Translation error:',
         error?.response?.data || error?.message,
       );
-      throw new InternalServerErrorException('배열 번역 실패');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '배열 번역 실패');
     }
   }
 }

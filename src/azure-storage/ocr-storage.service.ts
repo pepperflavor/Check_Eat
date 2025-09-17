@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BaseStorageService } from './azure-base-storage.service';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class OcrStorageService extends BaseStorageService {
@@ -9,9 +11,8 @@ export class OcrStorageService extends BaseStorageService {
   constructor(config: ConfigService) {
     const conn = config.get<string>('AZURE_STORAGE_STRING_OCR');
     if (!conn) {
-      throw new Error(
-        '[OCRstorageService] AZURE_STORAGE_STRING_OCR 환경변수가 누락되었습니다.',
-      );
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '[OcrStorageService] 환경변수가 누락되었습니다.');
+
     }
     super(conn);
     this.containerName =

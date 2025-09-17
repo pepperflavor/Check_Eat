@@ -16,6 +16,8 @@ import { PredictMtDto } from './dto/predict-mt.dto';
 import { SaveMtDto } from './dto/save-mt.dto';
 import { ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 // 테스트용
 type ReqUser = Request & {
@@ -55,7 +57,7 @@ export class AzureFoodRecognizerController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const sa_id = Number(req.user.sa_id);
-    if (!file) throw new BadRequestException('file is required');
+    if (!file) throw new CustomException(ErrorCode.BAD_REQUEST, '파일이 업로드되지 않았습니다.');
     return this.azureFoodRecognizerService.inferAndCache(file, sa_id);
   }
 
@@ -73,7 +75,8 @@ export class AzureFoodRecognizerController {
   ) {
     // this.ensureUser(req);
     const sa_id = Number(req.user.sa_id);
-    if (!body?.cacheId) throw new BadRequestException('cacheId is required');
+    if (!body?.cacheId) throw new CustomException(ErrorCode.BAD_REQUEST, 'cacheId is required');
+
 
     const foodName = await this.azureFoodRecognizerService.saveFromCache(
       body.cacheId,

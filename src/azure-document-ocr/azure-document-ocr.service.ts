@@ -8,6 +8,8 @@ import {
   AzureKeyCredential,
   DocumentAnalysisClient,
 } from '@azure/ai-form-recognizer';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class AzureDocumentOcrService {
@@ -45,14 +47,20 @@ export class AzureDocumentOcrService {
 
       if (isUnexpected(response)) {
         console.error('[OCR] 분석 실패');
-        throw new InternalServerErrorException(response.body.error);
+        throw new CustomException(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          'Azure OCR 분석에 실패했습니다.',
+        );
       }
 
       const document = await this.pollAndParse(client, response);
       return this.buildResult(document);
     } catch (error) {
       console.error('[Azure OCR] 분석 실패:', error);
-      throw new InternalServerErrorException('Azure OCR 분석에 실패했습니다.');
+      throw new CustomException(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        'Azure OCR 분석에 실패했습니다.',
+      );
     }
   }
 
@@ -65,7 +73,7 @@ export class AzureDocumentOcrService {
     const result = pollResult.body.analyzeResult;
     const document = result?.documents?.[0];
     if (!document) {
-      throw new Error('분석 결과에서 문서를 찾을 수 없습니다.');
+            throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '분석 결과에서 문서를 찾을 수 없습니다.');
     }
     return document;
   }
@@ -112,7 +120,7 @@ export class AzureDocumentOcrService {
       const result = await poller.pollUntilDone();
       const doc = result.documents?.[0];
       if (!doc) {
-        throw new Error('영수증 분석 결과가 없습니다.');
+        throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '영수증 분석 결과가 없습니다.');
       }
 
       const fields = doc.fields ?? {};
@@ -176,7 +184,8 @@ export class AzureDocumentOcrService {
       return response;
     } catch (error) {
       console.error('[Azure Receipt OCR] 실패:', error);
-      throw new InternalServerErrorException('영수증 분석에 실패했습니다.');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '영수증 분석에 실패했습니다.');
+  
     }
   }
 }

@@ -18,6 +18,8 @@ import { Candidate, LlmResult } from './types/llm-types';
 import { VeganJudgeResult } from './types/vegan-judge-type';
 import { judgeVeganByRules } from './utils/vegan';
 import { reconcileVeganIds } from './utils/vegan-reconcile';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class AzureFoodRecognizerService {
@@ -80,7 +82,7 @@ export class AzureFoodRecognizerService {
       where: { sa_id: saId },
     });
     if (!isExist || !saId) {
-      throw new ForbiddenException('업주 권한이 필요합니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '업주 권한이 필요합니다.');
     }
     return { saId: Number(saId) };
   }
@@ -141,7 +143,10 @@ export class AzureFoodRecognizerService {
   async inferAndCache(file: Express.Multer.File, sa_id: number) {
     const { saId } = await this.assertOwner(sa_id);
     if (!file?.buffer?.length)
-      throw new BadRequestException('file is required');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '파일이 업로드되지 않았습니다.',
+      );
 
     // 1) Custom Vision로 음식명 추론
     const cv = await this.classifier.predictFromAllModels(file);
@@ -226,14 +231,26 @@ export class AzureFoodRecognizerService {
     opts: { ok?: string; foodName?: string },
   ) {
     const { ok, foodName } = opts;
-    if (!cacheId) throw new BadRequestException('cacheId is required');
+    if (!cacheId)
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '캐시 데이터가 만료되었습니다.',
+      );
 
     const { saId } = await this.assertOwner(sa_id);
 
     const cached = await this.getImageFromCache(cacheId);
-    if (!cached) throw new BadRequestException('cache expired or not found');
+    if (!cached)
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '캐시 데이터가 만료되었습니다.',
+      );
+
     if (cached.saId !== saId)
-      throw new ForbiddenException('권한이 없습니다(소유자 불일치).');
+      throw new CustomException(
+        ErrorCode.FORBIDDEN,
+        '권한이 없습니다(소유자 불일치).',
+      );
 
     // ✅ 최종 저장할 이름 결정
     let finalName: string | undefined;
@@ -244,8 +261,9 @@ export class AzureFoodRecognizerService {
     }
 
     if (!finalName) {
-      throw new BadRequestException(
-        'either ok="ok" or foodName must be provided',
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        ' ok="ok" 또는 foodName이 필요합니다.',
       );
     }
 
@@ -348,9 +366,9 @@ export class AzureFoodRecognizerService {
         raw: resp,
       };
     } catch (e: any) {
-      throw new HttpException(
+      throw new CustomException(
+        ErrorCode.BAD_GATEWAY,
         `Azure OpenAI 호출 실패(${deployment}): ${e?.response?.status || e?.message}`,
-        HttpStatus.BAD_GATEWAY,
       );
     }
   }
@@ -366,7 +384,7 @@ export class AzureFoodRecognizerService {
       where: { sa_id: saId },
     });
     if (!owner) {
-      throw new BadRequestException(`Sajang(sa_id=${saId}) not found`);
+      throw new CustomException(ErrorCode.BAD_REQUEST, `Sajang(sa_id=${saId}) not found`);
     }
 
     let ext = (file.mimetype?.split('/')[1] || 'jpg').toLowerCase();
@@ -485,9 +503,11 @@ export class AzureFoodRecognizerService {
       where: { foo_id },
       select: { foo_id: true, foo_name: true, foo_sa_id: true },
     });
-    if (!food) throw new BadRequestException('Food not found');
+    if (!food) throw new CustomException(ErrorCode.BAD_REQUEST, '음식이 존재하지 않습니다.');
+
     if (food.foo_sa_id !== saId)
-      throw new ForbiddenException('권한이 없습니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '권한이 없습니다.')
+
 
     const systemPrompt = `You are a culinary expert. Output a concise list of common ingredients for the dish. Do not include quantities or steps.`;
     const userPrompt = `
@@ -552,7 +572,8 @@ export class AzureFoodRecognizerService {
     const { saId } = await this.assertOwner(sa_id);
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
-      throw new BadRequestException('ingredients must be a non-empty array');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '음식 재료는 필수, 배열형태여야 함');
+  
     }
     // 항목 수/ 길이 제한
     const normalized = Array.from(
@@ -570,9 +591,13 @@ export class AzureFoodRecognizerService {
       where: { foo_id },
       select: { foo_id: true, foo_sa_id: true, foo_name: true },
     });
-    if (!food) throw new BadRequestException('Food not found');
+    if (!food)
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '음식이 존재하지 않습니다.',
+      );
     if (food.foo_sa_id !== saId)
-      throw new ForbiddenException('권한이 없습니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '권한이 없습니다.');
 
     // 규칙 기반으로 판단
     let ruleVegId: number | null = judgeVeganByRules(normalized);

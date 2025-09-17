@@ -13,6 +13,8 @@ import { OcrStorageService } from 'src/azure-storage/ocr-storage.service';
 import { ApiOkResponse, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt.guard';
 import { AnalyzeReceiptResponseDto } from './types/receipt-type';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Controller('azure-document-ocr')
 export class AzureDocumentOcrController {
@@ -30,7 +32,8 @@ export class AzureDocumentOcrController {
   @UseInterceptors(FileInterceptor('file'))
   async analyzeDocument(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
-      throw new BadRequestException('파일이 업로드되지 않았습니다.');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '파일이 업로드되지 않았습니다.');
+
     }
 
     // ✅ OCR 스토리지에 업로드

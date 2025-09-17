@@ -7,6 +7,8 @@ import {
   BlobSASPermissions,
   SASProtocol,
 } from '@azure/storage-blob';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 export abstract class BaseStorageService {
   protected blobServiceClient: BlobServiceClient;
@@ -50,7 +52,8 @@ export abstract class BaseStorageService {
 
   async deleteFile(blobUrl: string, containerName: string): Promise<void> {
     const blobName = new URL(blobUrl).pathname.split('/').pop();
-    if (!blobName) throw new Error('Invalid blob URL');
+    if (!blobName) throw new CustomException(ErrorCode.BAD_REQUEST, 'blob 주소가 올바르지 않습니다.');
+
 
     const containerClient = this.getContainerClient(containerName);
     const blobClient = containerClient.getBlockBlobClient(blobName);
@@ -82,7 +85,8 @@ export abstract class BaseStorageService {
     const chunks: Uint8Array[] = [];
     const stream = downloadResponse.readableStreamBody;
     if (!stream)
-      throw new Error('No readable stream in blob download response');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '');
+    Error('blob 다운 실패');
     for await (const chunk of stream) {
       chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
     }

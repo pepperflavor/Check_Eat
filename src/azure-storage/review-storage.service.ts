@@ -1,6 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BaseStorageService } from './azure-base-storage.service';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class ReviewStorageService extends BaseStorageService {
@@ -9,9 +11,8 @@ export class ReviewStorageService extends BaseStorageService {
   constructor(config: ConfigService) {
     const conn = config.get<string>('REVIEW_CONNECT_STRING');
     if (!conn) {
-      throw new Error(
-        '[ReviewStorageService] REVIEW_CONNECT_STRING 환경변수가 누락되었습니다.',
-      );
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '[ReviewStorageService] 환경변수가 누락되었습니다.');
+
     }
     super(conn);
   }
@@ -44,7 +45,8 @@ export class ReviewStorageService extends BaseStorageService {
     reviewId: number,
   ): Promise<string[]> {
     if (files.length > 4) {
-      throw new Error('리뷰 이미지는 최대 4개까지만 업로드 가능합니다.');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '리뷰 이미지는 최대 4개까지만 업로드 가능합니다.');
+
     }
 
     const urls: string[] = [];
@@ -63,7 +65,8 @@ export class ReviewStorageService extends BaseStorageService {
 
   async uploadReviewImages(files: Express.Multer.File[]): Promise<string[]> {
     if (files.length > 4) {
-      throw new Error('리뷰 이미지는 최대 4개까지만 업로드 가능합니다.');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '리뷰 이미지는 최대 4개까지만 업로드 가능합니다.');
+
     }
 
     const uploadResults = await this.uploadFiles(files, this.containerName);

@@ -1,6 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import sgMail from '@sendgrid/mail';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class EmailService implements OnModuleInit {
@@ -12,7 +14,8 @@ export class EmailService implements OnModuleInit {
       sgMail.setApiKey(apiKEY);
     } else {
 
-      throw new Error('SEND_GRID_MAILER_API_KEY is not defined');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '이메일 API 키가 설정되지 않았습니다.');
+
     }
   }
 
@@ -25,7 +28,8 @@ export class EmailService implements OnModuleInit {
     const from = this.config.get<string>('SEND_GRID_SENDER_EMAIL');
 
     if (!from) {
-      throw new Error('SEND_GRID_SENDER_EMAIL is not defined');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '이메일 sender가 설정되지 않았습니다.');
+
     }
 
     // 유저가 지정한 언어에 따라서 안내 메일 언어
@@ -81,7 +85,8 @@ export class EmailService implements OnModuleInit {
     }
 
     if (sendHtml.length == 0 || sendSubject.length == 0) {
-      throw new Error('이메일 언어 설정중 에러가 발생되었습니다.');
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '이메일 언어 설정중 에러가 발생되었습니다.');
+  
     }
 
     const msg = {
@@ -92,9 +97,10 @@ export class EmailService implements OnModuleInit {
     };
 
     await sgMail.send(msg).catch((error) => {
-      console.error('Error sending email:', error);
-      console.error('Error sending email:', JSON.stringify(error, null, 2));
-      throw new Error('Failed to send verification email');
+      // console.error('Error sending email:', error);
+      // console.error('Error sending email:', JSON.stringify(error, null, 2));
+      throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR, '인증 이메일 전송에 실패했습니다.');
+
     });
   }
 }

@@ -23,6 +23,8 @@ import { UpdateUserLangDto } from './user_dto/update-user-lang.dto';
 import { FavoritStoreDto } from './user_dto/favorite-store.dto';
 import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 import { SearchStoreMyfilterDto } from './user_dto/search-myfilter.dto';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Controller('user')
 export class UserController {
@@ -41,7 +43,7 @@ export class UserController {
   @ApiOperation({ summary: '닉네입 변경하기', description: '닉네임 변경하기' })
   async changeNickName(@Req() req, @Body() body: UpdateNickDto) {
     const log_id = req.user.sub;
- 
+
     return await this.userService.updateNick(log_id, body.nickname);
   }
 
@@ -113,7 +115,7 @@ export class UserController {
     // 혹시 몰라서 반경은 변수로 두기
     const radius = body.radius ? Number(body.radius) : 2000;
     const lang = '';
-  
+
     const result = await this.userService.mainPageStoresData(
       body.user_la,
       body.user_long,
@@ -155,16 +157,22 @@ export class UserController {
     return result;
   }
 
-  @ApiOperation({ description : '로그인 한 유저가 자기 알러지 기준으로 가게 찾기'})
+  @ApiOperation({
+    description: '로그인 한 유저가 자기 알러지 기준으로 가게 찾기',
+  })
   @Post('my-filter')
   @UseGuards(JwtAuthGuard)
-  async myfilterStore(@Req() req, @Body() body:SearchStoreMyfilterDto){
-    const user_common_al = req.user.user_allergy_common
-    const user_personal_al = req.user.user_allergy
+  async myfilterStore(@Req() req, @Body() body: SearchStoreMyfilterDto) {
+    const user_common_al = req.user.user_allergy_common;
+    const user_personal_al = req.user.user_allergy;
     const lang = req.user.lang || 'ko'; // 언어값 입력안되면 'ko'
-    return await this.userService.myFilterStore(user_common_al, user_personal_al, lang, body);
+    return await this.userService.myFilterStore(
+      user_common_al,
+      user_personal_al,
+      lang,
+      body,
+    );
   }
-  
 
   // 가게 디테일 페이지
   // 로그인한 유저인지 아닌지에 따라서 언어 추출하는 곳 달라짐
@@ -198,7 +206,10 @@ export class UserController {
 
     // 중복 응답일 경우 409 반환하도록 처리 가능
     if (response.status === 'duplicate') {
-      throw new HttpException(response.message, HttpStatus.CONFLICT);
+      throw new CustomException(
+        ErrorCode.CONFLICT,
+        '이미 즐겨찾기에 추가된 가게입니다.',
+      );
     }
 
     return response;
@@ -222,6 +233,4 @@ export class UserController {
     const log_id = req.user.sub;
     return await this.userService.getListFavoriteStore(log_id);
   }
-
-
 }

@@ -21,6 +21,8 @@ import { SearchStoreByNameDto } from './user_dto/search-store-by-name.dto';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import { SearchStoreMyfilterDto } from './user_dto/search-myfilter.dto';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.tz.setDefault('Asia/Seoul');
@@ -57,7 +59,10 @@ export class UserService {
     }
 
     if (!nickname || nickname == '') {
-      throw new Error('닉네임 생성중 오류가 발생했습니다.');
+      throw new CustomException(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        '닉네임 생성중 오류가 발생했습니다.',
+      );
     }
 
     await this.prisma.$transaction(async (tx) => {
@@ -109,9 +114,9 @@ export class UserService {
     });
 
     if (!user) {
-      throw new HttpException(
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
         '사용자 아이디가 존재하지 않습니다.',
-        HttpStatus.NOT_FOUND,
       );
     }
 
@@ -783,7 +788,10 @@ export class UserService {
       userID.ld_user_id == null ||
       userID.ld_user_id == undefined
     ) {
-      throw new Error('[updateNick] 해당하는 유저를 찾을 수 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '[updateNick] 해당하는 유저를 찾을 수 없습니다.',
+      );
     }
 
     const result = await this.prisma.user.update({
@@ -796,7 +804,10 @@ export class UserService {
     });
 
     if (!result) {
-      throw new Error('[updateNick] 닉네임 변경 중 오류가 발생했습니다.');
+      throw new CustomException(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        '[updateNick] 닉네임 변경 중 오류가 발생했습니다.',
+      );
     }
 
     const tokenPayload = await this.authService.generateToken(
@@ -824,7 +835,10 @@ export class UserService {
     });
 
     if (!loginData?.ld_user_id) {
-      throw new HttpException('유저를 찾을 수 없습니다.', HttpStatus.NOT_FOUND);
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '유저를 찾을 수 없습니다.',
+      );
     }
 
     const skip = (page - 1) * limit;
@@ -935,7 +949,10 @@ export class UserService {
     });
 
     if (!loginData?.ld_user_id) {
-      throw new HttpException('유저를 찾을 수 없습니다.', HttpStatus.NOT_FOUND);
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '유저를 찾을 수 없습니다.',
+      );
     }
 
     const skip = (page - 1) * limit;
@@ -989,7 +1006,10 @@ export class UserService {
     });
 
     if (!user?.ld_user_id) {
-      throw new Error('유저를 찾을 수 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '유저를 찾을 수 없습니다.',
+      );
     }
 
     const existing = await this.prisma.favoriteStore.findUnique({
@@ -1035,7 +1055,10 @@ export class UserService {
     });
 
     if (!user?.ld_user_id) {
-      throw new Error('유저를 찾을 수 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '유저를 찾을 수 없습니다.',
+      );
     }
 
     const target = await this.prisma.favoriteStore.findUnique({
@@ -1077,7 +1100,10 @@ export class UserService {
     });
 
     if (!user?.ld_user_id) {
-      throw new Error('유저를 찾을 수 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '유저를 찾을 수 없습니다.',
+      );
     }
 
     const today = dayjs().tz().day();

@@ -25,6 +25,8 @@ import { AzureFoodRecognizerService } from 'src/azure-food-recognizer/azure-food
 import { HolidayDto } from './sajang_dto/regist-holiday.sto';
 import { FoodStorageService } from 'src/azure-storage/food-storage.service';
 import { UpdateFoodImgDto } from './sajang_dto/update-foodimg.dto';
+import { CustomException } from 'src/common/errors/custom.exception';
+import { ErrorCode } from 'src/common/errors/error-codes';
 
 @Injectable()
 export class SajangService {
@@ -49,7 +51,7 @@ export class SajangService {
       where: { sa_id: saId },
     });
     if (!isExist || !saId) {
-      throw new ForbiddenException('업주 권한이 필요합니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '업주 권한이 필요합니다.');
     }
     return { saId: Number(saId) };
   }
@@ -90,8 +92,9 @@ export class SajangService {
           select: { bs_sa_id: true },
         });
         if (existing && existing.bs_sa_id !== saID) {
-          throw new ConflictException(
-            '이미 다른 사장에게 등록된 사업자번호입니다.',
+          throw new CustomException(
+            ErrorCode.CONFLICT,
+            '이미 다른 사장님에게 등록된 사업자번호입니다.',
           );
         }
 
@@ -263,8 +266,6 @@ export class SajangService {
 
     const requestUrl = `${IRS_URL}?serviceKey=${SERVICE_KEY}&returnType=JSON`;
 
-
-
     try {
       const { data: response } = await axios.post(requestUrl, payload, {
         headers: {
@@ -274,13 +275,11 @@ export class SajangService {
         timeout: 30000, // 30초 타임아웃
       });
 
-
-
       const result = response?.data?.[0];
 
       if (!result || result.valid !== '01') {
-
-        throw new BadRequestException(
+        throw new CustomException(
+          ErrorCode.BAD_REQUEST,
           result?.valid_msg || '유효하지 않은 사업자 등록 정보입니다.',
         );
       }
@@ -289,7 +288,6 @@ export class SajangService {
         status: 'success',
       };
     } catch (axiosError: any) {
-
       throw axiosError;
     }
   }
@@ -311,7 +309,8 @@ export class SajangService {
     });
 
     if (existing) {
-      throw new ConflictException(
+      throw new CustomException(
+        ErrorCode.CONFLICT,
         '이미 사용 중인 로그인 아이디 또는 이메일입니다.',
       );
     }
@@ -345,7 +344,10 @@ export class SajangService {
         sa_id: result,
       };
     } catch (error) {
-      throw new InternalServerErrorException('사장 생성중 오류 발생', error);
+      throw new CustomException(
+        ErrorCode.INTERNAL_SERVER_ERROR,
+        '사장 생성중 오류 발생',
+      );
     }
   }
 
@@ -356,7 +358,10 @@ export class SajangService {
 
     const fooId = Number(input.foo_id);
     if (!fooId || Number.isNaN(fooId)) {
-      throw new BadRequestException('foo_id가 유효하지 않습니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '음식 아이디가 유효하지 않습니다.',
+      );
     }
 
     const targetStore = await this.prisma.store.findUnique({
@@ -364,7 +369,10 @@ export class SajangService {
       select: { sto_id: true },
     });
     if (!targetStore)
-      throw new ForbiddenException('해당 사장님의 가게가 아닙니다.');
+      throw new CustomException(
+        ErrorCode.FORBIDDEN,
+        '해당 사장님의 가게가 아닙니다.',
+      );
 
     // 실제 사장님이 등록하던 음식이 맞는지 검증
     const food = await this.prisma.food.findUnique({
@@ -377,7 +385,12 @@ export class SajangService {
       },
     });
 
-    if (!food) throw new NotFoundException('해당 음식이 존재하지 않습니다.');
+    if (!food)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 음식이 존재하지 않습니다.',
+      );
+
     if (food.foo_sa_id !== saId) {
       return {
         message: '본인 소유의 음식만 수정할 수 있습니다.',
@@ -403,7 +416,10 @@ export class SajangService {
           ? Number(input.foo_price)
           : Number(input.foo_price);
       if (Number.isNaN(priceNum) || priceNum < 0) {
-        throw new BadRequestException('가격이 유효한 숫자가 아닙니다.');
+        throw new CustomException(
+          ErrorCode.BAD_REQUEST,
+          '가격이 유효한 숫자가 아닙니다.',
+        );
       }
       updateData.foo_price = priceNum;
     }
@@ -411,16 +427,22 @@ export class SajangService {
     // 비건 단계 (필수값, 1-7 범위)
     const veganId = Number(input.foo_vegan);
     if (Number.isNaN(veganId) || veganId < 1 || veganId > 7) {
-      throw new BadRequestException('비건 단계는 1~7 사이의 값이어야 합니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '비건 단계는 1~7 사이의 값이어야 합니다.',
+      );
     }
-    
+
     // FK 존재 확인
     const vegan = await this.prisma.vegan.findUnique({
       where: { veg_id: veganId },
       select: { veg_id: true },
     });
     if (!vegan) {
-      throw new BadRequestException('존재하지 않는 비건 단계입니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '존재하지 않는 비건 단계입니다.',
+      );
     }
     // foo_vegan 필드 직접 업데이트가 안되므로 관계를 통해 업데이트
     updateData.foo_vegan_data = { connect: { veg_id: veganId } };
@@ -429,9 +451,10 @@ export class SajangService {
     if (food.foo_store_id == null) {
       updateData.store = { connect: { sto_id: stoId } };
     } else if (food.foo_store_id !== input.sto_id) {
-      throw new BadRequestException('이미 다른 매장에 연결된 메뉴입니다.'); // 정책에 따라 이동 허용으로 바꿀 수 있음
-      // 이동 허용하려면:
-      // data.store = { connect: { sto_id: stoId } };
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '이미 다른 가게에 등록된 메뉴입니다.',
+      );
     }
 
     // 업데이트할 필드가 하나도 없으면 패스
@@ -523,7 +546,10 @@ export class SajangService {
     });
 
     if (!firstStore) {
-      throw new Error('해당 사장님이 등록한 가게가 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 사장님이 등록한 가게가 없습니다.',
+      );
     }
 
     // 2. 해당 Store의 sto_status 업데이트
@@ -595,7 +621,10 @@ export class SajangService {
       });
 
       if (stores.length === 0) {
-        throw new NotFoundException('해당 사장님 소유의 가게가 없습니다.');
+        throw new CustomException(
+          ErrorCode.NOT_FOUND,
+          '해당 사장님 소유의 가게가 없습니다.',
+        );
       }
       if (stores.length > 1) {
         return {
@@ -686,7 +715,8 @@ export class SajangService {
     });
 
     if (!targetStore) {
-      throw new NotFoundException(
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
         '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
       );
     }
@@ -723,9 +753,13 @@ export class SajangService {
       where: { sto_id: body.sto_id },
       select: { sto_id: true, sto_sa_id: true },
     });
-    if (!target) throw new BadRequestException('해당 매장을 찾을 수 없습니다.');
+    if (!target)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 매장을 찾을 수 없습니다.',
+      );
     if (target.sto_sa_id !== sa_id)
-      throw new ForbiddenException('권한이 없습니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '권한이 없습니다.');
 
     const data: Record<string, any> = {};
 
@@ -840,7 +874,8 @@ export class SajangService {
         });
 
         if (!existingCert) {
-          throw new NotFoundException(
+          throw new CustomException(
+            ErrorCode.NOT_FOUND,
             '기존 사업자 등록증 정보를 찾을 수 없습니다.',
           );
         }
@@ -853,7 +888,8 @@ export class SajangService {
           });
 
           if (conflictCert && conflictCert.bs_sa_id !== saID) {
-            throw new ConflictException(
+            throw new CustomException(
+              ErrorCode.CONFLICT,
               '이미 다른 사장에게 등록된 사업자번호입니다.',
             );
           }
@@ -932,7 +968,7 @@ export class SajangService {
       select: { sa_certification: true, sa_certi_status: true },
     });
     if (!sajangStatus) {
-      throw new ForbiddenException('업주 권한이 필요합니다.');
+      throw new CustomException(ErrorCode.FORBIDDEN, '업주 권한이 없습니다.');
     }
     const { sa_certification, sa_certi_status } = sajangStatus;
     if (sa_certification !== 1 || sa_certi_status !== 1) {
@@ -951,7 +987,8 @@ export class SajangService {
         select: { sto_id: true, sto_name: true, sto_bs_id: true },
       });
       if (!store) {
-        throw new NotFoundException(
+        throw new CustomException(
+          ErrorCode.NOT_FOUND,
           '해당 사장님의 가게가 아니거나 존재하지 않습니다.',
         );
       }
@@ -987,7 +1024,10 @@ export class SajangService {
         },
       });
       if (!cert || cert.bs_sa_id !== sa_id) {
-        throw new ForbiddenException('이 사업자증 정보에 접근할 수 없습니다.');
+        throw new CustomException(
+          ErrorCode.FORBIDDEN,
+          '사업자등록증 정보에 접근할 수 없습니다.',
+        );
       }
 
       return {
@@ -1030,7 +1070,6 @@ export class SajangService {
 
   // 음식 수정 페이지 진입시 뿌려줄 음식 데이터
   async getFoodListUpdatePage(sa_id: number, sto_id?: number) {
-
     await this.assertOwner(sa_id);
 
     // sto_id가 없으면 첫번째 매장 사용
@@ -1046,10 +1085,12 @@ export class SajangService {
     });
 
     if (!targetStore) {
-      throw new NotFoundException('해당 사장님의 매장을 찾을 수 없습니다.');
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 사장님의 매장을 찾을 수 없습니다.',
+      );
     }
 
-  
     const foods = await this.prisma.food.findMany({
       where: {
         foo_sa_id: sa_id,
@@ -1141,24 +1182,29 @@ export class SajangService {
     });
 
     if (!store) {
-      throw new ForbiddenException('해당 가게에 대한 권한이 없습니다.');
+      throw new CustomException(
+        ErrorCode.FORBIDDEN,
+        '해당 가게에 대한 권한이 없습니다.',
+      );
     }
 
     const fooId = Number(data.foo_id);
     if (!fooId || Number.isNaN(fooId)) {
-      throw new BadRequestException('유효하지 않은 foo_id 입니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '유효하지 않은 음식정보 입니다.',
+      );
     }
 
- 
     const food = await this.prisma.food.findUnique({
       where: { foo_id: fooId },
       select: { foo_id: true, foo_sa_id: true, foo_name: true },
     });
-    if (!food) throw new NotFoundException('음식을 찾을 수 없습니다.');
-    if (food.foo_sa_id !== sa_id) {
-      throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
-    }
-
+    if (!food)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '음식을 찾을 수 없습니다.',
+      );
 
     const updateData: any = {};
     let nameChanged = false;
@@ -1176,18 +1222,20 @@ export class SajangService {
     if (data.foo_price !== undefined) {
       const priceNum = Number(data.foo_price);
       if (Number.isNaN(priceNum) || priceNum < 0) {
-        throw new BadRequestException('가격이 유효한 숫자가 아닙니다.');
+        throw new CustomException(
+          ErrorCode.BAD_REQUEST,
+          '가격이 유효한 숫자가 아닙니다.',
+        );
       }
       updateData.foo_price = priceNum;
     }
 
-
-    const incomingMaterials =
-      (data as any).foo_material
+    const incomingMaterials = (data as any).foo_material;
     if (incomingMaterials !== undefined) {
       if (!Array.isArray(incomingMaterials)) {
-        throw new BadRequestException(
-          'foo_material은 문자열 배열이어야 합니다.',
+        throw new CustomException(
+          ErrorCode.BAD_REQUEST,
+          '음식 재료는 문자열 배열이어야 합니다.',
         );
       }
       const normalized = Array.from(
@@ -1338,9 +1386,14 @@ export class SajangService {
       where: { foo_id },
       select: { foo_id: true, foo_sa_id: true, foo_status: true },
     });
-    if (!food) throw new BadRequestException('음식을 찾을 수 없습니다.');
-    if (food.foo_sa_id !== sa_id)
-      throw new ForbiddenException('권한이 없습니다.');
+    if (!food)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '음식을 찾을 수 없습니다.',
+      );
+
+    // if (food.foo_sa_id !== sa_id)
+    //   throw new ForbiddenException('권한이 없습니다.');
 
     if (food.foo_status === 2) {
       return { message: '이미 삭제된 음식입니다.', status: 'success', foo_id };
@@ -1364,7 +1417,10 @@ export class SajangService {
 
     const sto_id = Number(data?.sto_id);
     if (!sto_id || Number.isNaN(sto_id)) {
-      throw new BadRequestException('유효한 sto_id가 필요합니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '유효한 가게정보가 필요합니다.',
+      );
     }
 
     // 본인 소유 매장인지 확인
@@ -1372,12 +1428,16 @@ export class SajangService {
       where: { sto_id },
       select: { sto_id: true, sto_sa_id: true, sto_status: true },
     });
-    if (!store) throw new NotFoundException('해당 매장을 찾을 수 없습니다.');
-    if (store.sto_sa_id !== sa_id) {
-      throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
-    }
+    if (!store)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 매장을 찾을 수 없습니다.',
+      );
+    // if (store.sto_sa_id !== sa_id) {
+    //   throw new ForbiddenException('해당 매장에 대한 권한이 없습니다.');
+    // }
     if (store.sto_status === 2) {
-      throw new BadRequestException('영업 종료된 매장입니다.');
+      throw new CustomException(ErrorCode.BAD_REQUEST, '폐업한 매장입니다.');
     }
 
     // 문자열로 들어와도 배열로 변환 처리
@@ -1451,7 +1511,6 @@ export class SajangService {
     // 기존 데이터 있으면 업데이트
     const updateData: Record<string, any> = {};
 
-
     if (data.holi_break !== undefined) {
       updateData.holi_break = toStringOrEmpty(data.holi_break);
     }
@@ -1516,18 +1575,31 @@ export class SajangService {
 
     // 파일 검증
     if (!file)
-      throw new BadRequestException('업로드할 이미지 파일이 필요합니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '업로드할 이미지 파일이 필요합니다.',
+      );
+
     const MAX_MB = 5;
     if (file.size > MAX_MB * 1024 * 1024) {
-      throw new BadRequestException(`이미지 용량은 최대 ${MAX_MB}MB입니다.`);
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        `이미지 용량은 최대 ${MAX_MB}MB입니다.`,
+      );
     }
     if (!/^image\/(png|jpe?g|webp)$/i.test(file.mimetype)) {
-      throw new BadRequestException('png/jpg/jpeg/webp 형식만 허용됩니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        'png/jpg/jpeg/webp 형식만 허용됩니다.',
+      );
     }
 
     const foo_id = Number(body.foo_id);
     if (!foo_id || Number.isNaN(foo_id)) {
-      throw new BadRequestException('유효한 foo_id가 필요합니다.');
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '유효한 음식정보가 필요합니다.',
+      );
     }
 
     // 음식 소유 및 (선택) 매장 일치 검증
@@ -1540,13 +1612,16 @@ export class SajangService {
         foo_store_id: true,
       },
     });
-    if (!food) throw new NotFoundException('해당 음식을 찾을 수 없습니다.');
-    if (food.foo_sa_id !== sa_id) {
-      throw new ForbiddenException('본인 소유의 음식만 수정할 수 있습니다.');
-    }
-    if (body.sto_id && food.foo_store_id !== body.sto_id) {
-      throw new ForbiddenException('해당 매장의 메뉴가 아닙니다.');
-    }
+    if (!food)
+      throw new CustomException(
+        ErrorCode.NOT_FOUND,
+        '해당 음식을 찾을 수 없습니다.',
+      );
+
+    // if (body.sto_id && food.foo_store_id !== body.sto_id) {
+    //   throw new CustomException(ErrorCode.FORBIDDEN, '해당 매장의 메뉴가 아닙니다.');
+
+    // }
 
     // 기존 이미지 삭제(있으면)
     if (food.foo_img && food.foo_img !== '0') {
