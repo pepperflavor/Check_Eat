@@ -1,98 +1,65 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 🍽️ Check EAT  
+**비건, 알러지, 할랄 음식점 리뷰·추천 및 데이터 분석 플랫폼**  
+> NestJS · PostgreSQL · Prisma · Azure AI 기반 음식 데이터 서비스  
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+---
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 📖 프로젝트 소개
+Check EAT은 사용자가 음식점을 쉽게 찾고 리뷰를 남길 수 있는 **음식점 리뷰 플랫폼**입니다.  
+Azure AI를 활용하여 **영수증 이미지에서 자동으로 가게와 메뉴를 추출**하고, **다국어 번역 기능**을 통해 다양한 언어권 사용자들이 접근할 수 있도록 설계했습니다.  
 
-## Description
+또한, PostGIS 기반 반경 검색으로 **위치 중심 음식점 추천 서비스**를 제공합니다.  
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## 🚀 핵심 기능
 
-```bash
-$ npm install
-```
+- **회원 관리**
+  - 회원가입 / 로그인 (JWT 인증)
+  - 마이페이지에서 작성 리뷰 및 즐겨찾기 관리  
 
-## Compile and run the project
+- **가게 관리**
+  - 음식점 기본 정보 조회
+  - 반경 기반 검색 (PostGIS 활용)
+  - 다국어 지원 (영어/아랍어 번역 데이터 반환)
 
-```bash
-# development
-$ npm run start
+- **리뷰**
+  - 리뷰 등록 및 이미지 업로드 (Azure Blob Storage 연동)
+  - 자동 번역 지원 (Azure OpenAI)
+  - "나중에 쓰기" 기능 제공
 
-# watch mode
-$ npm run start:dev
+- **즐겨찾기**
+  - 음식점 즐겨찾기 등록/삭제
+  - 즐겨찾기 순서 유지 (`order_index`)
 
-# production mode
-$ npm run start:prod
-```
+- **자동화**
+  - 공공데이터 API 기반 음식 레시피 자동 수집 및 DB 시드 데이터 저장
+  - KBO 경기 정보 크롤링 (선발투수, 경기 시간, 중계 이미지 등)
 
-## Run tests
+- **AI/ML**
+  - Azure Document Intelligence: 영수증 이미지 분석 (가게명·메뉴 추출)
+  - Azure OpenAI: 텍스트 후처리 및 번역
+  - Azure Machine Learning: 음식 이미지 분류 모델 학습 및 배포  
 
-```bash
-# unit tests
-$ npm run test
+---
 
-# e2e tests
-$ npm run test:e2e
+## 🛠 기술 스택
 
-# test coverage
-$ npm run test:cov
-```
+- **Backend**: [NestJS](https://nestjs.com/), TypeScript  
+- **Database**: [PostgreSQL](https://www.postgresql.org/), [Prisma ORM](https://www.prisma.io/), PostGIS  
+- **Infra & DevOps**: Docker, Redis, Bull Queue  
+- **Cloud & AI**: Azure Blob Storage, Azure Document Intelligence, Azure OpenAI, Azure Machine Learning  
 
-## Deployment
+---
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 📂 프로젝트 구조
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+src/
+ ├── azure-document-ocr/   # Azure Document Intelligence 모듈
+ ├── azure-storage/        # Azure Storage 업로드/다운로드 기능
+ ├── review/               # 리뷰 관련 서비스
+ ├── store/                # 음식점 관련 서비스
+ ├── user/                 # 유저 관리
+ ├── common/               # 예외처리, 유틸 함수
+ └── main.ts               # 앱 엔트리포인트
