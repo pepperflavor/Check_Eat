@@ -5,7 +5,7 @@ import { CacheConfigModule } from './cache/cache.module';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { CrawlingModule } from './crawling/crawling.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PrismaService } from './prisma.service';
 import { EmailModule } from './email/email.module';
 import { AzureStorageModule } from './azure-storage/azure-storage.module';
@@ -20,6 +20,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AzureFoodClassifierModule } from './azure-food-classifier/azure-food-classifier.module';
 import { AzureFoodRecognizerModule } from './azure-food-recognizer/azure-food-recognizer.module';
 import { PortoneModule } from './portone/portone.module';
+import { BullModule } from '@nestjs/bull';
 // import { PortoneModule } from './portone/portone.module';
 
 @Module({
@@ -47,6 +48,19 @@ import { PortoneModule } from './portone/portone.module';
     AzureFoodRecognizerModule,
 
     PortoneModule,
+
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        redis: {
+          host: config.get<string>('REDIS_HOST', 'localhost'),
+          port: config.get<number>('REDIS_PORT', 6379),
+          db: config.get<number>('BULL_REDIS_DB', 1),
+        },
+        prefix: config.get<string>('BULL_PREFIX', 'bull:checkeat'),
+      }),
+    }),
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

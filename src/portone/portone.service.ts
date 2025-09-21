@@ -1,4 +1,4 @@
-// src/portone/portone.service.ts
+
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma.service';
 import axios from 'axios';
@@ -106,7 +106,7 @@ export class PortoneService {
     return { token };
   }
 
-  // src/portone/portone.service.ts  (추가)
+
   // service
   async startSdk(dto: { method?: 'SMS' | 'APP' }) {
     const iv_id = `idv_${randomUUID()}`;

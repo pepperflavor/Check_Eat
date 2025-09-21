@@ -21,9 +21,7 @@ import { FoodStorageService } from 'src/azure-storage/food-storage.service';
     TranslateModule,
     AzureStorageModule,
     AzureFoodRecognizerModule,
-    BullModule.registerQueue({
-      name: 'check-business',
-    }),
+    BullModule.registerQueue({ name: 'check-business' }),
   ],
   controllers: [SajangController],
   providers: [
@@ -33,7 +31,7 @@ import { FoodStorageService } from 'src/azure-storage/food-storage.service';
     TranslateService,
     AzureFoodRecognizerService,
     AzureFoodClassifierService,
-    FoodStorageService
+    FoodStorageService,
   ],
   exports: [SajangService],
 })

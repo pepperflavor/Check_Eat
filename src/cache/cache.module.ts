@@ -17,6 +17,9 @@ import { RedisCache, redisStore } from 'cache-manager-ioredis-yet';
           host: config.get('REDIS_HOST', 'redis'),
           port: config.get('REDIS_PORT', 6379),
           password: config.get('REDIS_PASSWORD'),
+
+          db: config.get<number>('CACHE_REDIS_DB', 0),
+          keyPrefix: config.get<string>('CACHE_PREFIX', 'cache:'),
         });
 
         return {

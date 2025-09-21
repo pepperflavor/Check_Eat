@@ -32,7 +32,7 @@ export class AzureFoodRecognizerController {
     private readonly azureFoodRecognizerService: AzureFoodRecognizerService,
   ) {}
 
-  // /** 테스트 편의: JWT 미적용 시 헤더로 임시 주입 (prod에선 제거 가능) */
+  // /** 테스트용 : JWT 미적용 시 헤더로 임시 주입 */
   // private ensureUser(req: ReqUser) {
   //   if (!req.user) {
   //     const ug = Number(req.headers?.['x-usergrade']);
@@ -57,7 +57,11 @@ export class AzureFoodRecognizerController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     const sa_id = Number(req.user.sa_id);
-    if (!file) throw new CustomException(ErrorCode.BAD_REQUEST, '파일이 업로드되지 않았습니다.');
+    if (!file)
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '파일이 업로드되지 않았습니다.',
+      );
     return this.azureFoodRecognizerService.inferAndCache(file, sa_id);
   }
 
@@ -75,9 +79,10 @@ export class AzureFoodRecognizerController {
   ) {
     // this.ensureUser(req);
     const sa_id = Number(req.user.sa_id);
-    if (!body?.cacheId) throw new CustomException(ErrorCode.BAD_REQUEST, 'cacheId is required');
+    if (!body?.cacheId)
+      throw new CustomException(ErrorCode.BAD_REQUEST, '캐시아이디는 필수입니다.');
 
-
+    // 음식저장
     const foodName = await this.azureFoodRecognizerService.saveFromCache(
       body.cacheId,
       sa_id,
@@ -87,11 +92,13 @@ export class AzureFoodRecognizerController {
       },
     );
 
-    const meterial = await this.azureFoodRecognizerService.predictMaterials(
+
+    const materials = await this.azureFoodRecognizerService.predictMaterials(
       foodName.record.foo_id,
       sa_id,
     );
-    return meterial;
+
+    return materials;
   }
 
   @Post('predict-mt')

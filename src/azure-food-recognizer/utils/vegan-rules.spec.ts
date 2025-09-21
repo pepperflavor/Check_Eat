@@ -1,5 +1,3 @@
-// src/azure-food-recognizer/utils/vegan-rules.spec.ts
-
 import { judgeVeganByRules } from "./vegan";
 
 

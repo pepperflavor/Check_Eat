@@ -1,4 +1,3 @@
-// azure-food-recognizer/azure-food-recognizer.service.ts
 import {
   Injectable,
   ForbiddenException,
@@ -20,6 +19,8 @@ import { judgeVeganByRules } from './utils/vegan';
 import { reconcileVeganIds } from './utils/vegan-reconcile';
 import { CustomException } from 'src/common/errors/custom.exception';
 import { ErrorCode } from 'src/common/errors/error-codes';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue } from 'bull';
 
 @Injectable()
 export class AzureFoodRecognizerService {
@@ -43,6 +44,8 @@ export class AzureFoodRecognizerService {
     private readonly cache: CacheService,
     private readonly translate: TranslateService,
     private readonly prisma: PrismaService,
+
+    @InjectQueue('food-pipeline') private readonly pipelineQueue: Queue,
   ) {
     this.threshold = Number(
       this.config.get('FOOD_CONF_THRESHOLD') ??
@@ -76,7 +79,7 @@ export class AzureFoodRecognizerService {
     this.fourODeployment = this.config.get<string>('AZURE_4O_DEPLOYMENT', '');
   }
 
-  /** 토큰에서 업주 권한/sa_id 확인 */
+  /** 토큰에서 업주인지 확인 */
   private async assertOwner(saId: any) {
     const isExist = await this.prisma.sajang.findUnique({
       where: { sa_id: saId },
@@ -87,8 +90,7 @@ export class AzureFoodRecognizerService {
     return { saId: Number(saId) };
   }
 
-  // ===== Redis 캐시 헬퍼 =====
-
+  // ===== Redis 캐시 =====
   private async putImageToCache(
     buffer: Buffer,
     mime: string,
@@ -137,9 +139,34 @@ export class AzureFoodRecognizerService {
     await this.cache.del(key);
   }
 
+  // 비건단계 추론 헬퍼
+  private async tryCallVeganJudgeLLM(
+    client: AzureOpenAI,
+    model: string,
+    userPrompt: string,
+    schema: any,
+  ): Promise<VeganJudgeResult> {
+    const resp = await client.chat.completions.create({
+      messages: [
+        { role: 'system', content: this.veganSystemPrompt() },
+        { role: 'user', content: userPrompt },
+      ],
+      model,
+      temperature: 0.0,
+      max_tokens: 400,
+      response_format: {
+        type: 'json_schema',
+        json_schema: { name: 'VeganJudge', schema, strict: true },
+      } as any,
+    });
+
+    const content = resp.choices?.[0]?.message?.content ?? '{}';
+    return JSON.parse(content) as VeganJudgeResult;
+  }
+
   //======================================
 
-  /** 1~6단계: 이미지 추론만 수행 (저장은 프론트 '확인' 시) */
+  /**  이미지 추론 (저장은 프론트 '확인' 시) */
   async inferAndCache(file: Express.Multer.File, sa_id: number) {
     const { saId } = await this.assertOwner(sa_id);
     if (!file?.buffer?.length)
@@ -148,7 +175,7 @@ export class AzureFoodRecognizerService {
         '파일이 업로드되지 않았습니다.',
       );
 
-    // 1) Custom Vision로 음식명 추론
+    // Custom Vision로 음식명 추론
     const cv = await this.classifier.predictFromAllModels(file);
     if (cv.accepted) {
       const cacheId = await this.putImageToCache(
@@ -167,7 +194,7 @@ export class AzureFoodRecognizerService {
       };
     }
 
-    // 2) 4o-mini
+    //  4o-mini
     const mini = await this.callLLM(
       this.miniClient,
       this.miniDeployment,
@@ -191,7 +218,7 @@ export class AzureFoodRecognizerService {
       };
     }
 
-    // 3) 4o
+    //  4o
     const fourO = await this.callLLM(
       this.fourOClient,
       this.fourODeployment,
@@ -216,7 +243,7 @@ export class AzureFoodRecognizerService {
     }
 
     // 실패
-    return { status: 'false' as const, message: '사진으로 음식명 추론 실패' };
+    return { status: 'false', message: '사진으로 음식명 추론 실패' };
   }
 
   /**
@@ -252,7 +279,7 @@ export class AzureFoodRecognizerService {
         '권한이 없습니다(소유자 불일치).',
       );
 
-    // ✅ 최종 저장할 이름 결정
+  
     let finalName: string | undefined;
     if (typeof ok === 'string' && ok.toLowerCase() === 'ok') {
       finalName = cached.predictedLabel; // ok면 예측값 사용
@@ -348,7 +375,7 @@ export class AzureFoodRecognizerService {
             ] as any,
           },
         ],
-        model: modelName, // (Azure는 deployment 기준이지만 명시해도 무해)
+        model: modelName, 
         temperature: 0.2,
         max_tokens: 1024,
         response_format: { type: 'json_schema', json_schema: schema } as any,
@@ -379,26 +406,29 @@ export class AzureFoodRecognizerService {
     saId: number,
     file: Express.Multer.File,
   ) {
-    // 0) 사장 FK 사전 검증 (예외로 통일)
+    
     const owner = await this.prisma.sajang.findUnique({
       where: { sa_id: saId },
     });
     if (!owner) {
-      throw new CustomException(ErrorCode.BAD_REQUEST, `Sajang(sa_id=${saId}) not found`);
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        `Sajang(sa_id=${saId}) not found`,
+      );
     }
 
     let ext = (file.mimetype?.split('/')[1] || 'jpg').toLowerCase();
     if (ext === 'jpeg') ext = 'jpg';
     const customFileName = `${foodName}_${saId}.${ext}`;
 
-    // 1) Blob 업로드
+    
     const { url } = await this.storage.upload(
       { ...file, originalname: customFileName },
       this.container,
     );
 
     try {
-      // 2) Food 생성
+      // Food 생성해주기
       const created = await this.prisma.food.create({
         data: {
           foo_name: foodName,
@@ -414,7 +444,7 @@ export class AzureFoodRecognizerService {
         },
       });
 
-      // 3) 음식명 번역 → EN/AR upsert (배열은 빈 배열로 초기화)
+      // 음식명 번역
       try {
         const resp = await this.translate.translateMany(
           foodName,
@@ -435,7 +465,7 @@ export class AzureFoodRecognizerService {
           create: {
             food_id: created.foo_id,
             ft_en_name: enName,
-            ft_en_mt: [], // ✅ 안전하게 초기화
+            ft_en_mt: [],
             ft_en_price: null,
           },
         });
@@ -446,7 +476,7 @@ export class AzureFoodRecognizerService {
           create: {
             food_id: created.foo_id,
             ft_ar_name: arName,
-            ft_ar_mt: [], // ✅ 안전하게 초기화
+            ft_ar_mt: [],
             ft_ar_price: null,
           },
         });
@@ -459,7 +489,7 @@ export class AzureFoodRecognizerService {
 
       return { url, record: created };
     } catch (e) {
-      // 4) DB 실패 시 Blob 보상 삭제
+      //  DB 실패 시 Blob  삭제
       try {
         await this.storage.delete(url, this.container);
       } catch {}
@@ -469,7 +499,7 @@ export class AzureFoodRecognizerService {
 
   //=================재료 추측 로직 시작
 
-  // --- JSON 스키마로 LLM 호출하는 유틸 (텍스트 전용) ---
+  // --- JSON 스키마로 LLM 호출하는 유틸 ---
   private async callLLMJson(
     client: AzureOpenAI,
     modelName: string,
@@ -494,20 +524,23 @@ export class AzureFoodRecognizerService {
     return JSON.parse(content);
   }
 
-  // --- [새] 1) foo_id 기준 재료 추천 ---
+
   async predictMaterials(foo_id: number, sa_id: any) {
     const { saId } = await this.assertOwner(sa_id);
 
-    // Food 소유 검증 + 이름 확보
+
     const food = await this.prisma.food.findUnique({
       where: { foo_id },
       select: { foo_id: true, foo_name: true, foo_sa_id: true },
     });
-    if (!food) throw new CustomException(ErrorCode.BAD_REQUEST, '음식이 존재하지 않습니다.');
+    if (!food)
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '음식이 존재하지 않습니다.',
+      );
 
     if (food.foo_sa_id !== saId)
-      throw new CustomException(ErrorCode.FORBIDDEN, '권한이 없습니다.')
-
+      throw new CustomException(ErrorCode.FORBIDDEN, '권한이 없습니다.');
 
     const systemPrompt = `You are a culinary expert. Output a concise list of common ingredients for the dish. Do not include quantities or steps.`;
     const userPrompt = `
@@ -533,7 +566,7 @@ export class AzureFoodRecognizerService {
       additionalProperties: false,
     };
 
-    // 4o-mini → 필요 시 4o
+    // 4o-mini, 필요 시 4o
     let parsed: { ingredients?: string[]; notes?: string } | null = null;
     try {
       parsed = await this.callLLMJson(
@@ -554,7 +587,7 @@ export class AzureFoodRecognizerService {
       );
     }
 
-    // 중복/공백 정리
+   
     const ingredients = Array.from(
       new Set((parsed?.ingredients ?? []).map((s) => s.trim()).filter(Boolean)),
     );
@@ -572,8 +605,10 @@ export class AzureFoodRecognizerService {
     const { saId } = await this.assertOwner(sa_id);
 
     if (!Array.isArray(ingredients) || ingredients.length === 0) {
-      throw new CustomException(ErrorCode.BAD_REQUEST, '음식 재료는 필수, 배열형태여야 함');
-  
+      throw new CustomException(
+        ErrorCode.BAD_REQUEST,
+        '음식 재료는 필수, 배열형태여야 함',
+      );
     }
     // 항목 수/ 길이 제한
     const normalized = Array.from(
@@ -586,7 +621,7 @@ export class AzureFoodRecognizerService {
       ),
     );
 
-    // 소유 검증
+
     const food = await this.prisma.food.findUnique({
       where: { foo_id },
       select: { foo_id: true, foo_sa_id: true, foo_name: true },
@@ -605,13 +640,17 @@ export class AzureFoodRecognizerService {
     // LLM 으로 추론하기
     let llmVegId: number | null = null;
     try {
-      const llm = await this.classifyVeganByIngredientsLLM(normalized);
-      llmVegId = typeof llm?.veg_id === 'number' ? llm.veg_id : null; // 0..6 or null
+      const llm = await this.classifyVeganByIngredientsLLM(normalized, {
+        fooId: foo_id,
+        saId,
+        persistOnRetry: true,
+      });
+      llmVegId = typeof llm?.veg_id === 'number' ? llm.veg_id : null; 
     } catch {
-      llmVegId = null; // 실패 시 null 취급
+      llmVegId = null;
     }
 
-    // 두 추론 값으로 비교결론
+    // 두 추론 값 비교
     const finalVegId = reconcileVeganIds(ruleVegId, llmVegId);
 
     let dbVegId: number | null = null;
@@ -623,7 +662,7 @@ export class AzureFoodRecognizerService {
       });
       dbVegId = exists ? finalVegId : null;
     } else {
-      dbVegId = null; // 비건 불가 또는 불명 → null
+      dbVegId = null; 
     }
 
     // 트랜잭션으로 업데이트 + 번역 해주기
@@ -632,7 +671,7 @@ export class AzureFoodRecognizerService {
         where: { foo_id },
         data: {
           foo_material: normalized,
-          foo_vegan: dbVegId, // ✅ 관계 컬럼(nullable)로 저장
+          foo_vegan: dbVegId,
         },
       });
 
@@ -676,7 +715,7 @@ export class AzureFoodRecognizerService {
       status: 'success',
       foo_id,
       vegan: {
-        stored: dbVegId, // 저장된 비건단계
+        stored: dbVegId, 
       },
     };
   }
@@ -726,7 +765,7 @@ export class AzureFoodRecognizerService {
   `;
   }
 
-  // LLM JSON 스키마 (내부 유틸)
+  // LLM JSON 스키마
   private veganJudgeSchema() {
     return {
       type: 'object',
@@ -748,6 +787,7 @@ export class AzureFoodRecognizerService {
 
   private async classifyVeganByIngredientsLLM(
     ingredients: string[],
+    opts?: { fooId?: number; saId?: number; persistOnRetry?: boolean },
   ): Promise<VeganJudgeResult> {
     const list = Array.isArray(ingredients)
       ? ingredients.map((s) => String(s).trim()).filter(Boolean)
@@ -758,38 +798,119 @@ export class AzureFoodRecognizerService {
       `재료 목록(JSON 배열): ${JSON.stringify(list)}\n` +
       `위 정의/규칙을 적용해 veg_id를 하나로 결정하라.`;
 
-    const call = async (client: AzureOpenAI, model: string) => {
-      const resp = await client.chat.completions.create({
-        messages: [
-          { role: 'system', content: this.veganSystemPrompt() },
-          { role: 'user', content: userPrompt },
-        ],
-        model,
-        temperature: 0.0,
-        max_tokens: 400,
-        response_format: {
-          type: 'json_schema',
-          json_schema: { name: 'VeganJudge', schema, strict: true },
-        } as any,
-      });
-      const content = resp.choices?.[0]?.message?.content ?? '{}';
-      return JSON.parse(content) as VeganJudgeResult;
-    };
+    const llmCandidates: Array<{
+      client: AzureOpenAI;
+      model: string;
+      label: string;
+    }> = [
+      { client: this.miniClient, model: this.miniModel, label: 'gpt-4o-mini' },
+      { client: this.fourOClient, model: 'gpt-4o', label: 'gpt-4o' },
+    ];
 
-    try {
-      return await call(this.miniClient, this.miniModel);
-    } catch {
+    for (const { client, model, label } of llmCandidates) {
       try {
-        return await call(this.fourOClient, 'gpt-4o');
-      } catch {
-        return { veg_id: 0, matched: {}, reasoning: 'LLM 판정 실패' };
+        const result = await this.tryCallVeganJudgeLLM(
+          client,
+          model,
+          userPrompt,
+          schema,
+        );
+        return result;
+      } catch (err: any) {
+        console.warn('모델 실패  다음 llm으로 시도 ');
+        continue;
       }
     }
+
+    // const call = async (client: AzureOpenAI, model: string) => {
+    //   const resp = await client.chat.completions.create({
+    //     messages: [
+    //       { role: 'system', content: this.veganSystemPrompt() },
+    //       { role: 'user', content: userPrompt },
+    //     ],
+    //     model,
+    //     temperature: 0.0,
+    //     max_tokens: 400,
+    //     response_format: {
+    //       type: 'json_schema',
+    //       json_schema: { name: 'VeganJudge', schema, strict: true },
+    //     } as any,
+    //   });
+    //   const content = resp.choices?.[0]?.message?.content ?? '{}';
+    //   return JSON.parse(content) as VeganJudgeResult;
+    // };
+
+    // try {
+    //   return await call(this.miniClient, this.miniModel);
+    // } catch {
+    //   try {
+    //     return await call(this.fourOClient, 'gpt-4o');
+    //   } catch {
+    //     return { veg_id: 0, matched: {}, reasoning: 'LLM 판정 실패' };
+    //   }
+    // }
+
+    // 모든 모델 실패하면 재시도 하기
+    if (opts?.fooId && opts?.saId) {
+      try {
+        await this.enqueueJudgeVegan({
+          fooId: opts.fooId,
+          saId: opts.saId,
+          ingredients: list,
+          persist: !!opts.persistOnRetry,
+        });
+        console.warn(
+          `[judge-vegan] 모든 모델 실패 → 큐 재등록 완료 (fooId=${opts.fooId}, persist=${!!opts.persistOnRetry})`,
+        );
+      } catch (quErro: any) {
+        throw new CustomException(
+          ErrorCode.INTERNAL_SERVER_ERROR,
+          '비건 추론 큐 재등록 실패',
+        );
+      }
+    }
+
+    return {
+      veg_id: 0,
+      matched: {},
+      reasoning: 'LLM 판정 실패(재시도 큐 등록됨)',
+    };
   }
 
   public async judgeVeganByIngredients(
     ingredients: string[],
+    opts?: { fooId?: number; saId?: number; persistOnRetry?: boolean }
   ): Promise<VeganJudgeResult> {
-    return this.classifyVeganByIngredientsLLM(ingredients);
+    return this.classifyVeganByIngredientsLLM(ingredients, opts);
+  }
+
+  //======= 큐 등록
+  async foodSaveInQueue(payload: {
+    cacheId: string;
+    saId: number;
+    ok?: string;
+    foodName?: string;
+  }) {
+    const job = await this.pipelineQueue.add('finalize-food', payload, {
+      attempts: 5,
+      backoff: { type: 'exponential', delay: 5000 },
+      removeOnComplete: true,
+    });
+    return { jobId: job.id };
+  }
+
+  // 비건 단계 판정
+  async enqueueJudgeVegan(payload: {
+    fooId: number;
+    saId: number;
+    ingredients: string[];
+    persist?: boolean;
+  }) {
+    const job = await this.pipelineQueue.add('judge-vegan', payload, {
+      attempts: 3,
+      backoff: { type: 'exponential', delay: 3000 },
+      removeOnComplete: true,
+    });
+    return { jobId: job.id };
   }
 }

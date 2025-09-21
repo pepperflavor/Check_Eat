@@ -1565,7 +1565,7 @@ export class SajangService {
     };
   }
 
-  // sajang.service.ts
+
   async updateFoodImg(
     sa_id: number,
     body: UpdateFoodImgDto,
@@ -1653,8 +1653,7 @@ export class SajangService {
     };
   }
 
-  //----------- 사장 홈 화면
-  // sajang.service.ts
+
   //----------- 사장 홈 화면
   async sajangHome(ld_log_id: string, sto_id?: number) {
     const login = await this.prisma.loginData.findUnique({

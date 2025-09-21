@@ -1,4 +1,4 @@
-// src/sajang/sajang_dto/update-food-img.dto.ts
+
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNumber, IsOptional } from 'class-validator';
 

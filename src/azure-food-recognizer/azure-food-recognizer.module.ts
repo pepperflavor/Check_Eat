@@ -7,9 +7,13 @@ import { CacheService } from 'src/cache/cache.service';
 import { TranslateService } from 'src/translate/translate.service';
 import { PrismaService } from 'src/prisma.service';
 import { AzureFoodClassifierModule } from 'src/azure-food-classifier/azure-food-classifier.module';
-
+import { BullModule } from '@nestjs/bull';
+//  BullModule.registerQueue({ name: 'check-business' }),
 @Module({
-  imports: [AzureFoodClassifierModule],
+  imports: [
+    AzureFoodClassifierModule,
+    BullModule.registerQueue({ name: 'food-pipeline' }),
+  ],
   controllers: [AzureFoodRecognizerController],
   providers: [
     AzureFoodRecognizerService,
