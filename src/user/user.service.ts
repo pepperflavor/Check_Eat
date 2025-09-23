@@ -58,7 +58,7 @@ export class UserService {
       nickname = randomNickMaker(ld_lang); // 닉네임도 랜덤으로 돌리기
     }
 
-    if (!nickname || nickname == '') {
+    if (!nickname || nickname == '' || nickname == undefined) {
       throw new CustomException(
         ErrorCode.INTERNAL_SERVER_ERROR,
         '닉네임 생성중 오류가 발생했습니다.',
@@ -69,7 +69,7 @@ export class UserService {
       // 1. User 생성
       const user = await tx.user.create({
         data: {
-          user_nick: nickname,
+          user_nick: nickname!,
           user_allergy: allergy,
           user_vegan: vegan != null && vegan > 0 ? vegan : null,
           user_is_halal: isHalal,
@@ -145,7 +145,7 @@ export class UserService {
 
     const storeIds = stores.map((s) => s.sto_id);
 
-    // ✅ 스키마 변경 반영: store_id 로 바로 찾기
+    // store_id 로 바로 찾기
     const holidays = await this.prisma.holiday.findMany({
       where: { store_id: { in: storeIds } },
       select: {
@@ -388,7 +388,7 @@ export class UserService {
             foo_vegan: true,
             foo_status: true,
             foo_material: true,
-            foo_price: true, // ✅ 항상 Food 테이블의 foo_price 선택
+            foo_price: true, 
             CommonAl: {
               select: { coal_id: true },
             },
@@ -425,12 +425,12 @@ export class UserService {
     if (!store) return null;
 
     const transformedFoods = store.Food.map((food) => {
-      // 언어별 필드 분기
+    
       let foo_name: string | undefined;
       let foo_material: string[] | undefined;
       let foo_price: string | undefined;
 
-      // ✅ 가격은 항상 Food 테이블의 foo_price 사용
+      // 일단 가격 foo_price 사용하기, 나중에 환율 반영해보기
       foo_price = (food as any).foo_price?.toString();
 
       if (lang === 'ko') {
@@ -445,7 +445,7 @@ export class UserService {
           (food as any).food_translate_en?.ft_en_name,
         );
         const koName = this.nonEmpty((food as any).foo_name);
-        // ✅ 아랍어 → 영어 → 한글 순으로 fallback
+        // 아랍어 → 영어 → 한글 순
         foo_name = arName ?? enName ?? koName;
 
         foo_material = food.food_translate_ar?.ft_ar_mt ?? undefined;
@@ -534,7 +534,7 @@ export class UserService {
       holiday: h
         ? {
             holi_weekday: dayjs().tz('Asia/Seoul').day(), // 오늘 요일(0~6)
-            today: todayRuntime, // 예: "11:30~21:00"
+            today: todayRuntime, // 이 형식 -> "11:30~21:00"
             holi_break: h.holi_break,
             holi_regular: h.holi_regular,
             holi_public: h.holi_public,
@@ -563,13 +563,13 @@ export class UserService {
 
     const R = Number(radius);
 
-    // ✅ 공통 알러지 배열: int[]
+    // 공통 알러지 배열: int[]
     const commonArr: number[] | null =
       Array.isArray(user_common_al) && user_common_al.length > 0
         ? user_common_al.map((n) => Number(n)).filter((n) => Number.isFinite(n))
         : null;
 
-    // ✅ 개인 알러지(문자열 콤마 분리) → text[]
+    // 개인 알러지(문자열 콤마 분리) → text[]
     //    "마늘, 생강 , 계란" → ["마늘","생강","계란"]
     const personalArr: string[] | null = (user_personal_al ?? '')
       .split(',')
@@ -577,7 +577,7 @@ export class UserService {
       .filter((s) => s.length > 0);
     const personalArrayParam = personalArr.length > 0 ? personalArr : null;
 
-    // ✅ 반경 내 Store + "해당 Store의 Food 중 안전한 음식이 하나라도 있는지" 검사
+    // 반경 내 Store + "해당 Store의 Food 중 안전한 음식이 하나라도 있는지" 검사
     //
     // - ST_DWithin(s.location, POINT(user), R)
     // - EXISTS (
@@ -612,13 +612,13 @@ export class UserService {
         WHERE f.foo_store_id = s.sto_id
           AND f.foo_status != 2
 
-          -- ✅ 개인 알러지 교집합 없음(개인 알러지가 없으면 조건 패스)
+          -- 개인 알러지 교집합 없음(개인 알러지가 없으면 조건 패스)
           AND (
             ${personalArrayParam}::text[] IS NULL
             OR NOT (f.foo_material && ${personalArrayParam}::text[])
           )
 
-          -- ✅ 공통 알러지 교집합 없음(공통 알러지가 없으면 조건 패스)
+          -- 공통 알러지 교집합 없음(공통 알러지가 없으면 조건 패스)
           AND (
             ${commonArr}::int[] IS NULL
             OR NOT EXISTS (
@@ -637,7 +637,7 @@ export class UserService {
       return { message: '조건에 맞는 가게가 없습니다', status: 'success' };
     }
 
-    // ✅ 오늘 영업시간/휴무 정보 머지(기존 함수 재활용)
+
     return await this.mergeStoresWithHoliday(stores);
   }
 
@@ -670,7 +670,7 @@ export class UserService {
 
     const data: any = {};
 
-    // 🟡 개별 알러지(문자열) 처리
+   
     if (lang === 'en') {
       if (personalAl === null) {
         data.user_allergy_en = null;
@@ -691,7 +691,7 @@ export class UserService {
       }
     }
 
-    // 🟢 보편 알러지(숫자 배열) 처리
+    // 보편 알러지
     if (coal === null) {
       // 모든 알러지 제거
       data.user_allergy_common = {
@@ -905,7 +905,6 @@ export class UserService {
           const arName = this.nonEmpty(f.food_translate_ar?.ft_ar_name);
           const enName = this.nonEmpty(f.food_translate_en?.ft_en_name);
           const koName = this.nonEmpty(f.foo_name);
-          // ✅ 아랍어 → 영어 → 한글
           foo_name = arName ?? enName ?? koName ?? '';
         }
 

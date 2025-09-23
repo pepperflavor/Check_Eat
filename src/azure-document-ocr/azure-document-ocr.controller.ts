@@ -36,10 +36,10 @@ export class AzureDocumentOcrController {
 
     }
 
-    // ✅ OCR 스토리지에 업로드
+    // OCR 스토리지에 업로드
     const { url } = await this.ocrStorage.upload(file);
 
-    // ✅ Azure Document Intelligence 분석 요청
+    // Azure Document Intelligence 분석 요청
     const result = await this.ocrService.analyzeImageUrl(url);
     return result;
   }

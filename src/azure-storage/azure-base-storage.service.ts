@@ -60,7 +60,7 @@ export abstract class BaseStorageService {
     await blobClient.deleteIfExists();
   }
 
-  // ✅ 1. listBlobs
+  // 1. listBlobs
   async listBlobs(
     containerName: string,
   ): Promise<{ blobName: string; url: string }[]> {
@@ -75,7 +75,7 @@ export abstract class BaseStorageService {
     return result;
   }
 
-  // ✅ 2. getBlob (버퍼 형태로 읽기)
+  // 2. getBlob (버퍼 형태로 읽기)
   async getBlob(containerName: string, blobName: string): Promise<Buffer> {
     const containerClient = this.getContainerClient(containerName);
     const blobClient = containerClient.getBlobClient(blobName);
@@ -94,7 +94,7 @@ export abstract class BaseStorageService {
     return Buffer.concat(chunks);
   }
 
-  // ✅ 3. generateSasUrl (임시 공개 링크 생성)
+  // 3. generateSasUrl (임시 공개 링크 생성)
   async generateSasUrl(
     containerName: string,
     blobName: string,
@@ -127,7 +127,7 @@ export abstract class BaseStorageService {
     return `${blobClient.url}?${sasToken}`;
   }
 
-  // 🔐 도우미: 계정 이름/키 추출
+  // 계정 이름/키 추출
   private extractAccountName(): string {
     const match = this.connectionString.match(/AccountName=([^;]+);/);
     return match?.[1] ?? '';

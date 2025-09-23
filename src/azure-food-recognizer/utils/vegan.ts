@@ -110,7 +110,7 @@ export function containsAny(haystack: string, arr: string[]) {
   return arr.some((k) => haystack.includes(k));
 }
 
-// ✅ 식물성 오일/향신료 화이트리스트 (전부 비건)
+// 식물성 오일/향신료 화이트리스트 (전부 비건)
 export const PLANT_OILS = [
   '올리브 오일',
   '올리브오일',

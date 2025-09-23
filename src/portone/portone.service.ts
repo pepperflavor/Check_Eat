@@ -58,7 +58,7 @@ export class PortoneService {
       throw e;
     }
 
-    // ✅ 웹뷰용 URL도 반환
+    // 웹뷰용 URL도 반환
     const baseUrl = this.config.get<string>('PUBLIC_BASE_URL')!;
     const webUrl = `${baseUrl}/portone/idv.html?id=${encodeURIComponent(iv_id)}`;
 

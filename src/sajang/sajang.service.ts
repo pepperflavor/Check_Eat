@@ -644,12 +644,12 @@ export class SajangService {
     file: Express.Multer.File,
     sto_id?: number,
   ) {
-    // 🔹 sto_id가 없으면 에러 반환
+    // sto_id가 없으면 에러 반환
     if (typeof sto_id !== 'number') {
       return { message: '가게 ID(sto_id)가 필요합니다.', status: 'false' };
     }
 
-    // 🔹 사장님의 가게인지 확인
+    // 사장님의 가게인지 확인
     const targetStore = await this.prisma.store.findFirst({
       where: { sto_id, sto_sa_id: sa_id },
       select: { sto_id: true, sto_img: true },
@@ -661,7 +661,7 @@ export class SajangService {
 
     const { sto_id: storeId, sto_img: existingImageUrl } = targetStore;
 
-    // 🔹 기존 이미지 삭제
+    // 기존 이미지 삭제
     if (existingImageUrl && existingImageUrl !== '0') {
       try {
         await this.storeStorageService.deleteStoreImage(existingImageUrl);
@@ -670,7 +670,7 @@ export class SajangService {
       }
     }
 
-    // 🔹 새 이미지 업로드
+    // 새 이미지 업로드
     const uploaded = await this.storeStorageService.uploadStoreImage(file);
 
     await this.prisma.store.update({

@@ -155,7 +155,7 @@ export class ReviewService {
     files?: Express.Multer.File[],
     lang: 'ko' | 'en' | 'ar' = 'ko',
   ) {
-    // ✅ string[] → number[] 변환 및 NaN 필터링
+    // string[] → number[] 변환 및 NaN 필터링
     const foodIds: number[] = Array.isArray(reviData.food_ids)
       ? reviData.food_ids.map((id) => Number(id)).filter((id) => !isNaN(id))
       : [];
@@ -186,7 +186,7 @@ export class ReviewService {
       };
     }
 
-    // ✅ 추천하지 않음인데 이유 없음 → 에러
+    // 추천하지 않음인데 이유 없음 → 에러
     if (
       parsingRecoStep === 2 &&
       (!reviData.revi_content || reviData.revi_content.trim().length === 0)
@@ -197,13 +197,13 @@ export class ReviewService {
       };
     }
 
-    // ✅ 이미지 업로드
+    // 이미지 업로드
     let imageUrls: string[] = [];
     if (files && files.length > 0) {
       imageUrls = await this.reviewStorageService.uploadReviewImages(files);
     }
 
-    // ✅ 유저 아이디 조회ld_log_id
+    // 유저 아이디 조회ld_log_id
     const user = await this.prisma.loginData.findUnique({
       where: { ld_log_id: ld_log_Id },
       select: { ld_user_id: true },
@@ -216,7 +216,7 @@ export class ReviewService {
       };
     }
 
-    // ✅ 리뷰 생성
+    // 리뷰 생성
     const review = await this.prisma.review.create({
       data: {
         revi_reco_step: parsingRecoStep,
@@ -236,7 +236,7 @@ export class ReviewService {
       },
     });
 
-    // ✅ 번역 처리
+    // 번역 처리
     if (review.revi_content && review.revi_content.length > 0) {
       try {
         const { from, to } = this.getFromToLanguages(lang);
@@ -276,7 +276,7 @@ export class ReviewService {
       }
     }
 
-    // ✅ 이미지 DB 저장
+    // 이미지 DB에 저장
     if (imageUrls.length > 0) {
       const reviewImages = imageUrls.map((url) => ({
         revi_img_url: url,

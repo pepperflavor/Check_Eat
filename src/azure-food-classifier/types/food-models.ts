@@ -2,7 +2,7 @@ export const foodClassifierModels = [
   {
     name: 'FoodClassifier-1',
     projectId: 'cebfa7a1-24d6-4bec-bf2c-c9972629aa50', // ✅ 새 프로젝트 ID
-    publishedName: 'prod', // ✅ 새 이터레이션 이름
+    publishedName: 'prod', // 새 이터레이션 이름
   },
   // {
   //   name: 'FoodClassifier-2',
