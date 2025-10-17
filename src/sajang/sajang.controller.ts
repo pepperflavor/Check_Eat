@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
   Req,
   UploadedFile,
@@ -103,7 +104,7 @@ export class SajangController {
 
   // 사장님 홈 - 리뷰데이터 보내주기
   // 여기도 가게 아이디 받는거 추가해야함
-  @Post('home')
+  @Get('home')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님 홈 화면 진입',
@@ -116,7 +117,7 @@ export class SajangController {
 
   //------------ 사장님 마이페이지 관련
   // 마이페이지 진입
-  @Post('mypage')
+  @Get('mypage')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '사장님 마이페이지 진입',
@@ -161,7 +162,7 @@ export class SajangController {
   }
 
   // 모달창에 띄워줄 가게 리스트 데이터
-  @Post('sto-modal')
+  @Get('sto-modal')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '사장님 마이페이지 모달창에 나올 가게 리스트' })
   async storeModalList(@Req() req) {
@@ -179,7 +180,7 @@ export class SajangController {
   }
 
   // 가게 메뉴 관리 입장
-  @Post('enter-update-food')
+  @Get('enter-update-food')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     description: '가게 메뉴관리 페이지 입장시 받아올 음식 리스트',

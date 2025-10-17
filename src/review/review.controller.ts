@@ -6,6 +6,7 @@ import {
   UseGuards,
   UploadedFiles,
   UseInterceptors,
+  Get,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ReviewService } from './review.service';
@@ -80,7 +81,7 @@ export class ReviewController {
   }
 
   // 리뷰 작성페이지 진입
-  @Post('regist-page')
+  @Get('regist-page')
   @ApiOperation({
     summary: '리뷰 작성페이지에 진입할때 필요한 음식 데이터',
     description: '리뷰 작성페이지에 진입할때 필요한 음식 데이터 리턴',
@@ -118,7 +119,7 @@ export class ReviewController {
   }
 
   // 한 메뉴에 대한 리뷰 조회
-  @Post('one-menu')
+  @Get('one-menu')
   @ApiOperation({
     summary: '가게 상세에서 한메뉴에 대한 리뷰들',
     description: '한 메뉴에 대한 리뷰들 데이터, 유저 언어값 보내주세요',
@@ -135,7 +136,7 @@ export class ReviewController {
   }
 
   // 유저 마이페이지에서 자기가쓴 쓴 리뷰들 조회
-  @Post('one-user-write-list')
+  @Get('one-user-write-list')
   @UseGuards(JwtAuthGuard)
   async getReviewsByUserID(@Req() req, @Body() body) {
     const log_id = req.user.sub;
@@ -146,7 +147,7 @@ export class ReviewController {
 
   // 나중에 쓰기로 등록한 리뷰들 리스트 조회
   // t삭제하기
-  @Post('one-user-later-list')
+  @Get('one-user-later-list')
   @UseGuards(JwtAuthGuard)
   async getLaterReviewsByUserID(@Req() req, @Body() body) {
     const log_id = req.user.sub;

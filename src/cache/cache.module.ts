@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { CacheService } from './cache.service';
 import { CacheController } from './cache.controller';
 import { RedisCache, redisStore } from 'cache-manager-ioredis-yet';
+import { REDIS_CLIENT, redisClientProvider } from './redis.provider';
 
 @Module({
   imports: [
@@ -31,7 +32,7 @@ import { RedisCache, redisStore } from 'cache-manager-ioredis-yet';
     ConfigModule,
   ],
   controllers: [CacheController],
-  providers: [CacheService, CacheModule],
-  exports: [CacheService],
+  providers: [CacheService, CacheModule, redisClientProvider],
+  exports: [CacheService, REDIS_CLIENT],
 })
 export class CacheConfigModule {}

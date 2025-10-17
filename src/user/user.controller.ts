@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
@@ -33,7 +34,7 @@ export class UserController {
   //==== 유저 마이페이지 관련
 
   // 마이페이지 진입시 뿌려줄 정보
-  @Post('mypage-enter')
+  @Get('mypage-enter')
   @UseGuards(JwtAuthGuard)
   async enterMypage() {}
 
@@ -74,8 +75,8 @@ export class UserController {
     return await this.userService.updateUserLang(ld_log_id, body.new_lang);
   }
 
-  // 내가쓴 리뷰 리스트
-  @Post('my-reviews')
+  // 내가쓴 리뷰 리스트 조회
+  @Get('my-reviews')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '마이페이지 - 내가 쓴 리뷰들',
@@ -89,7 +90,7 @@ export class UserController {
   }
 
   // 미작성한 리뷰 보기
-  @Post('my-pending-reviews')
+  @Get('my-pending-reviews')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({
     summary: '마이페이지 - 아직 미작성한 리뷰',
@@ -105,7 +106,7 @@ export class UserController {
   //====== 유저 메인 화면관련
   // 처음 접속했을 때
   // 본인 좌표 받고, 좌표 기준으로 반경 1km 내에 있는 음식점 좌표 리턴해줌
-  @Post('main')
+  @Get('main')
   // @UseGuards(JwtAuthGuard) // 일단 주석걸어둠
   @ApiOperation({
     summary: '유저 지도 홈화면 주변 가게',
@@ -128,7 +129,7 @@ export class UserController {
     summary: '가게 이름으로 검색하기',
     description: '가게이름 입력하면 관련 정보 찾아줌,',
   })
-  @Post('search-store-nm')
+  @Get('search-store-nm')
   @UseGuards(OptionalJwtAuthGuard)
   async searchStoreByName(
     @OptionalUser() user: any,
@@ -147,7 +148,7 @@ export class UserController {
     description: '비건 단계로 가게 검색하기, 반경 입력해야함',
   })
   @UseGuards(OptionalJwtAuthGuard)
-  @Post('search-store-vegan')
+  @Get('search-store-vegan')
   async searchStoreByVegan(
     @OptionalUser() user: any,
     @Body() body: SearchStoreByVeganDto,
@@ -160,7 +161,7 @@ export class UserController {
   @ApiOperation({
     description: '로그인 한 유저가 자기 알러지 기준으로 가게 찾기',
   })
-  @Post('my-filter')
+  @Get('my-filter')
   @UseGuards(JwtAuthGuard)
   async myfilterStore(@Req() req, @Body() body: SearchStoreMyfilterDto) {
     const user_common_al = req.user.user_allergy_common;
@@ -226,7 +227,7 @@ export class UserController {
   }
 
   // 즐겨찾기한 가게 목록조회
-  @Post('my-favorite-store')
+  @Get('my-favorite-store')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ description: '즐겨찾기 가게들 목록 조회' })
   async getFavoriteStores(@Req() req) {
