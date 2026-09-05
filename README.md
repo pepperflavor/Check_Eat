@@ -1,155 +1,220 @@
-# 🍽️ Check EAT  
-**비건, 알러지, 할랄 음식점 리뷰·추천 및 데이터 분석 플랫폼**  
-> NestJS · PostgreSQL · Prisma · Azure AI 기반 음식 데이터 서비스  
+# 🍽️ Check EAT
+**비건, 알러지, 할랄 식단 정보를 반영한 음식점 리뷰·추천 및 데이터 분석 플랫폼**
+
+> NestJS 기반 백엔드에서 PostgreSQL·PostGIS 위치 검색, OCR·AI 기반 음식 데이터 처리, Redis·Bull Queue 비동기 작업을 구현했습니다.
 
 ---
 
 ## 📖 프로젝트 소개
 <img src="assets/간판이미지1.jpeg" alt="간판사진" width="600"> <img src="assets/간판이미지2.jpeg" alt="간판사진2" width="600">
 
+Check EAT은 **일반 사용자용 서비스와 사업주용 서비스를 지원하는 NestJS 기반 백엔드**입니다.  
+사용자의 비건 단계, 알러지, 할랄 조건을 음식점·메뉴 데이터와 조합해 맞춤 검색을 제공하고, OCR과 Azure AI를 활용해 리뷰 검증과 음식 데이터 등록 과정을 지원합니다.
 
+### 일반 사용자
+- 사용자 좌표를 기준으로 PostGIS 반경 검색을 수행하고 주변 음식점을 조회합니다.
+- 비건 단계, 알러지, 할랄 조건을 반영해 음식점과 메뉴를 필터링합니다.
+- 영수증 이미지를 분석해 가게명과 메뉴 정보를 추출하고 리뷰 작성에 활용합니다.
+- 리뷰, 즐겨찾기, 식단·알러지 정보와 다국어 데이터를 관리합니다.
 
-Check EAT은 일반유저와 사업주 두 개의 앱으로 이루어진 서비스입니다.
+### 사업주
+- 사업자등록증 이미지에서 인증에 필요한 정보를 추출하고 국세청 API로 진위 여부를 확인합니다.
+- 음식 이미지를 분석해 음식명을 추론하고, LLM을 이용해 음식명·재료 정보를 보완합니다.
+- 입력된 재료를 정규화하고 내부 규칙과 LLM 결과를 조합해 비건 단계를 판정합니다.
+- 가게·메뉴 정보와 이미지를 등록하고 수정합니다.
 
-*일반유저는 자신의 비건단계와 알러지 정보가 반영된 음식점을 쉽게 검색할 수 있고, 리뷰를 남길 수 있는 **플랫폼**입니다.  
-- 리뷰 작성시 : Azure AI를 활용하여 **영수증 이미지에서 자동으로 가게와 메뉴를 추출**하여 실제 방문 여부를 확인합니다.
-- 다국어 지원 : **다국어 번역 기능**을 통해 다양한 언어권 사용자들이 접근할 수 있도록 설계했습니다.  
-- 음식점 검색 : PostGIS 기반 반경 검색으로 **사용자의 위치 기반 음식점 추천 서비스**를 기본적으로 제공합니다.
-- 필터링 검색 : 유저의 선호 식단과 할랄 식단 및 보유 알러지에 따라 맞춤 검색 기능을 제공합니다. 
+---
 
-*사업주는 자신의 사업자 등록증을 해당 플랫폼에서 검증 받은 후, 메뉴등록을 통해 유저에게 제공할 데이터를 등록할 수 있습니다.
-- 사업자 등록증 인증 : OCR을 통해 사업자 등록증의 사진을 업로드 하면, 검증에 필요한 필드를 추출합니다.
-- 메뉴등록 : 메뉴 등록시, Azure AI의 custom 모델과 LLM, classify 모델을 사용한 추론을 통해 손쉽게 등록할 수 있습니다. 특히 한식에 대해 미리 학습했기 때문에 재료 추출에 효율적입니다.
-- 재료 입력 : 재료에 대한 정보 입력시, 편의성 제공을 위해 LLM을 이용해 보편적인 재료 추론 서비스를 통해 쉽게 등록할 수 있습니다.
+## 🔍 백엔드 핵심 구현
+
+### PostGIS 기반 위치 검색
+
+PostgreSQL의 PostGIS 확장과 Prisma의 Raw Query를 사용해 사용자 좌표를 기준으로 반경 내 음식점을 조회합니다.
+
+- `ST_DWithin`으로 지정 반경 내 음식점을 검색합니다.
+- `ST_Distance`로 사용자 위치와 음식점 사이의 거리를 계산합니다.
+- 비건 단계, 알러지, 할랄 조건과 음식점·메뉴 데이터를 조합해 사용자 조건에 맞는 음식점을 조회합니다.
+
+```text
+사용자 좌표 + 검색 반경
+        ↓
+PostGIS 반경 검색
+        ↓
+음식점 / 메뉴 조건 조회
+        ↓
+비건 · 알러지 · 할랄 조건 반영
+        ↓
+맞춤 음식점 결과 반환
+```
+
+### Redis + Bull Queue 비동기 처리
+
+Redis와 Bull Queue를 사용해 외부 API 또는 AI 모델 호출처럼 실패하거나 처리 시간이 길어질 수 있는 작업의 재시도를 관리합니다.
+
+#### 사업자등록증 인증 재시도
+- 국세청 API의 서버 오류, 네트워크 오류, 타임아웃 등 재시도 가능한 오류를 구분합니다.
+- 재시도 대상은 Bull Queue에 등록하며 최대 5회까지 처리합니다.
+- 각 재시도는 10초 지연 및 고정 간격 backoff를 사용합니다.
+- 최종 실패 시 사업자 인증 상태를 실패 상태로 갱신합니다.
+
+#### 음식 데이터 처리 재시도
+- 음식 처리 파이프라인과 비건 단계 판정 작업을 Bull Queue에 등록합니다.
+- 음식 처리 작업은 최대 5회, 비건 단계 판정은 최대 3회 재시도합니다.
+- 해당 작업에는 exponential backoff를 적용합니다.
+
+### 사업자등록증 인증 파이프라인
+
+사업자등록증 인증은 OCR과 국세청 API를 연결해 처리합니다.
+
+```text
+사업자등록증 이미지
+        ↓
+OCR
+        ↓
+인증에 필요한 필드 추출
+        ↓
+국세청 API 진위 여부 검증
+        ↓
+인증 상태 갱신
+```
+
+Azure Document Intelligence를 통해 이미지에서 필요한 데이터를 추출하고, 추출된 사업자 정보를 국세청 API 검증에 사용합니다. 외부 API 오류 중 재시도 가능한 경우에는 Bull Queue로 재등록합니다.
+
+### AI 음식 데이터 처리 파이프라인
+
+음식 등록 과정에서는 이미지 분류 모델과 Azure OpenAI를 단계적으로 사용합니다.
+
+```text
+음식 이미지
+    ↓
+음식 이미지 분류
+    ↓
+1차 음식명 추론
+    ↓
+Azure OpenAI 기반 음식명 / 재료 추론
+    ↓
+재료 정규화
+    ↓
+내부 규칙 + LLM 기반 비건 단계 판정
+    ↓
+음식 데이터 저장
+```
+
+- **Azure Machine Learning / Custom Vision 계열 분류 모델**: 음식 이미지 분류와 1차 음식명 추론
+- **Azure OpenAI**: 음식명 보완, 재료 리스트 추론, 비건 단계 판정
+- **내부 규칙**: 정규화된 재료를 기준으로 비건 단계를 판정하고 LLM 결과와 조합
+- **Azure Blob Storage**: 리뷰·음식점·음식 이미지 저장
+- **다국어 처리**: 음식 재료와 리뷰 등 서비스 데이터의 번역 처리
 
 ---
 
 ## 🚀 핵심 기능
 
- ## 👩‍🦲 일반 유저 기능
- <br>
- <br>
- 
- <img src="assets/체크잇 로그인유저 화면.jpeg" alt="로그인유저" width="200" heigth="200"><img src="assets/체크잇 비로그인 유저메인화면.jpeg" alt="비로그인유저메인" width="200" heigth="150"> 
+## 👤 일반 사용자 기능
+<br>
+<br>
 
- 
-  - 회원가입 / 로그인 (JWT 인증)
-  - 마이페이지에서 작성 리뷰 및 즐겨찾기 관리
-  - 다국어 지원 (영어/아랍어 번역 데이터 반환)
-    
-    - **리뷰**
-  - 리뷰 등록 및 이미지 업로드 (Azure Blob Storage 연동)
-  - 자동 번역 지원 (Azure OpenAI - LLM)
-  - "나중에 쓰기" 기능 제공
- 
-    - **마이페이지**
-  - 닉네임 변경, 알러지, 식단 정보등 정보 수정
-  - 즐겨찾기 가게 목록 확인 및 수정
-  - 내가 작성한 리뷰 확인
-  - "나중에 쓰기" 리뷰 작성 
+<img src="assets/체크잇 로그인유저 화면.jpeg" alt="로그인유저" width="200" heigth="200"><img src="assets/체크잇 비로그인 유저메인화면.jpeg" alt="비로그인유저메인" width="200" heigth="150">
+
+### 계정 및 검색
+- 회원가입 / 로그인 (JWT 인증)
+- 사용자의 비건 단계, 알러지, 식단 정보 관리
+- PostGIS 기반 위치 반경 음식점 검색
+- 비건·알러지·할랄 조건 기반 필터링 검색
+- 다국어 지원 (영어 / 아랍어 번역 데이터 반환)
+
+### 리뷰
+- 리뷰 등록 및 이미지 업로드 (Azure Blob Storage 연동)
+- 영수증 이미지 분석을 통한 가게명·메뉴 정보 추출
+- 자동 번역 지원
+- "나중에 쓰기" 기능 제공
+
+### 마이페이지
+- 닉네임, 알러지, 식단 정보 수정
+- 즐겨찾기 가게 목록 확인 및 수정
+- 내가 작성한 리뷰 확인
+- "나중에 쓰기" 리뷰 작성
 
 <br>
 <br>
 
-  ## 🏪 사업주 기능
+## 🏪 사업주 기능
 <br>
 <br>
 
- <img src="assets/메뉴등록화면.jpeg" alt="메뉴등록화면" width="200" heigth="200"><img src="assets/사업자등록증 스캔화면.jpeg" alt="사업자등록증" width="200" heigth="200">
+<img src="assets/메뉴등록화면.jpeg" alt="메뉴등록화면" width="200" heigth="200"><img src="assets/사업자등록증 스캔화면.jpeg" alt="사업자등록증" width="200" heigth="200">
 
- 
-   - **가게 관리** 
-  - 사업주의 홈 화면에서 전반적인 가게의 정보 확인가능
-  - 메뉴 수정 및 가게의 메인 이미지 수정 가능
-  - OCR과 국세청 api를 통한 사업자 등록증 인증 및 인증 상태 확인
+### 사업자 인증
+- OCR을 통한 사업자등록증 정보 추출
+- 국세청 API를 통한 사업자등록증 진위 여부 검증
+- 인증 상태 확인 및 재시도 처리
 
+### 가게 관리
+- 사업주 홈 화면에서 가게 정보 확인
+- 가게 정보 및 메인 이미지 수정
+- 메뉴 등록 및 수정
 
-- **자동화**
-  ### 1) 큐 & 재시도 (Bull Queue)
-  - **사업자 등록증 진위여부 재시도**
-  - OCR 실패/국세청 API 지연 시 **지수 백오프(backoff)**로 재시도
-  - 성공 시 상태 갱신, 최종 실패 시 알림 발송  
-- **이미지 처리 파이프라인**
-  - 업로드 → 썸네일 생성 → 메타데이터 저장을 비동기 처리
-- **번역/분류 대량 작업**
-  - 긴 텍스트/다건 메뉴는 큐에 적재해 워커가 병렬 처리
- 
-  - ### 2) 데이터 파이프라인
-- **음식 사진 → 추론 → 정규화**
-  1) Azure OpenAI(Classifier)로 1차 음식명 추론.
-  2) Azure OpenAI(LLM/Classifier)로 2차 음식명 및 재료 리스트 추론 
-  3) 음식 재료입력 후, LLM과 내부 정규 규칙으로 비건 단계 추론 
-     
-
-
-- **AI/ML**
-  - Azure Document Intelligence: 영수증 이미지 분석 (가게명·메뉴 추출)
-  - Azure OpenAI: 텍스트 후처리 및 번역, 음식명 2차 추론, 재료 리스트 추론.
-  - Azure Machine Learning: 음식 이미지 분류 모델 학습, 음식명 1차 추론  
+### 음식 데이터 등록
+- 음식 이미지 기반 음식명 추론
+- Azure OpenAI 기반 음식명 및 재료 정보 추론
+- 재료 정규화 및 비건 단계 판정
+- 음식 이미지 저장 및 메뉴 데이터 관리
 
 ---
-
-<br>
 
 ## 🛠 기술 스택
 
-- **Backend**: [NestJS](https://nestjs.com/), TypeScript  
-- **Database**: [PostgreSQL](https://www.postgresql.org/), [Prisma ORM](https://www.prisma.io/), PostGIS  
-- **Infra & DevOps**: Docker, Redis, Bull Queue  
-- **Cloud & AI**: Azure Blob Storage, Azure Document Intelligence, Azure OpenAI, Azure Machine Learning  
+- **Backend**: [NestJS](https://nestjs.com/), TypeScript
+- **Database**: [PostgreSQL](https://www.postgresql.org/), [Prisma ORM](https://www.prisma.io/), PostGIS
+- **Async Processing**: Redis, Bull Queue
+- **Cloud & AI**: Azure Blob Storage, Azure Document Intelligence, Azure OpenAI, Azure Machine Learning
+- **Infra**: Docker
 
 ---
 
-<br>
 ## 📂 프로젝트 구조
 
 ```bash
 src/
- ├── auth/   # 인증 관련, jwt 토큰 전략
- ├── azure-document-ocr/   # Azure Document Intelligence 모듈, ocr 관련
- ├── azure-food-classifier/ # Azure Classify 모델, 1차 음식명 추론 관련 , 재료 추론 관련
- ├── azure-food-recognizer/ # Azure LLM, 2차 음식명 추론 및 재료 추론 관련
- ├── azure-storage/        # Azure Storage 업로드/다운로드 기능
- ├── translate/ # Azure translate 번역 관련.
- ├── cache/ # Redis 캐시 관련
- ├── common/ # 예외처리, 유틸 함수
- ├── common-account/ # 일반 유저, 업주 공통 로그인 관련
- ├── email/ # SendGrid 이메일 발송 관련
- ├── review/               # 리뷰 관련 서비스
- ├── user/                 # 유저 기능 관련
- ├── sajang/               # 업주 기능 관련
- └── main.ts               # 앱 엔트리포인트
+ ├── auth/                    # JWT 인증 및 인증 전략
+ ├── azure-document-ocr/      # Azure Document Intelligence OCR
+ ├── azure-food-classifier/   # 음식 이미지 분류 및 1차 음식명 추론
+ ├── azure-food-recognizer/   # Azure OpenAI 기반 음식명·재료·비건 단계 추론
+ ├── azure-storage/           # Azure Blob Storage 업로드 / 다운로드
+ ├── translate/               # 다국어 번역 처리
+ ├── cache/                   # Redis 캐시
+ ├── common/                  # 공통 예외 처리 및 유틸리티
+ ├── common-account/          # 일반 사용자·사업주 공통 로그인
+ ├── email/                   # SendGrid 이메일 발송
+ ├── review/                  # 리뷰 기능
+ ├── user/                    # 일반 사용자 기능
+ ├── sajang/                  # 사업주 기능 및 사업자 인증 Queue
+ └── main.ts                  # 애플리케이션 엔트리포인트
+```
 
+---
 
 ## ⚙️ 환경 변수 설정
 
-프로젝트 실행 전 `.env` 파일을 생성하고 아래 항목을 설정하세요:
+프로젝트 실행 전 repository의 `.env.example`을 참고해 `.env` 파일을 구성합니다.
 
-```env
-# Database
-DATABASE_URL=postgresql://user:password@localhost:5432/checkeat
+주요 설정 항목은 다음과 같습니다.
 
-# Redis
-REDIS_HOST="localhost"
-REDIS_PORT=6379
+- PostgreSQL / Prisma 연결 정보
+- Redis / Bull Queue 연결 정보
+- Azure Blob Storage
+- Azure Document Intelligence
+- Azure OpenAI 및 음식 분류 모델
+- 번역 API
+- 국세청 API
 
-# Azure Blob Storage
-AZURE_STORAGE_STRING_FOOD=your_azure_blob_storage_connection
-AZURE_STORAGE_STRING_OCR=your_azure_blob_storage_connection
+실제 credential이나 secret은 repository에 포함하지 않습니다.
 
-# Azure Document Intelligence (영수증 OCR)
-AZURE_OCR_KEY=your_azure_ocr_key
+---
 
-# Azure OCR
-OCR_ENDPOINT=your_azure_OCR_endpoint 
-OCR_KEY=your_azure_OCR_connection
-CUSTOM_MODEL_ID=your_cutom_modle_ID
+## ▶️ 실행 방법
 
-# Azure Translate (텍스트 처리 / 번역)
-TRANSLATE_API_KEY=your_azure_openai_key
-TRANSLATE_ENDPOINT="https://api.cognitive.microsofttranslator.com"
-TRANSLATE_API_REGION=your_region
-
-# 국세청 관련
-IRS_URL=https://api.odcloud.kr/api/nts-businessman/v1/validate
-IRS_SERVICE_KEY="your service key"
+```bash
+npm install
+npm run start:dev
+```
